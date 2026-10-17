@@ -101,10 +101,12 @@ describe('seeds', () => {
       'seed-quoc-ca-viet-nam',
       'seed-takediskrush',
       'seed-ji-mo-de-ren',
+      'seed-sao-minh-chua-nam-tay-nhau',
     ]);
     expect(isSeedId('seed-quoc-ca-viet-nam')).toBe(true);
     expect(isSeedId('seed-takediskrush')).toBe(true);
     expect(isSeedId('seed-ji-mo-de-ren')).toBe(true);
+    expect(isSeedId('seed-sao-minh-chua-nam-tay-nhau')).toBe(true);
     expect(isSeedId('seed-khac')).toBe(false);
     // Id seed không có (vd. bài mẫu đã bỏ ở bản cũ): không phải seed, không có trong thư viện.
     expect(getSong('seed-khac')).toBeNull();

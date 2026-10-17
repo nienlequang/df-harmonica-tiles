@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-17
+
+### Thêm
+
+- Bài mẫu thứ tư: "Sao Mình Chưa Nắm Tay Nhau" (Yan Nguyễn) — chủ dự án gửi sẵn dạng .harm; NOTICE + dòng ghi nhận bản quyền.
+
 ## [1.0.2] - 2026-10-17
 
 ### v1.0.2 — bài mẫu mới + ghi công bản quyền (2026-10-17)

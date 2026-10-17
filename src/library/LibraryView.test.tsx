@@ -79,6 +79,7 @@ const SEED_TITLES = [
   'Quốc ca Việt Nam',
   'TAKEDISKRUSH!',
   '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)',
+  'Sao Mình Chưa Nắm Tay Nhau',
 ];
 const SEED_1 = 'Quốc ca Việt Nam';
 const SEED_2 = 'TAKEDISKRUSH!';
@@ -147,6 +148,7 @@ describe('LibraryView', () => {
       'Bản quyền bài hát thuộc về tác giả: Văn Cao',
       'Bản quyền bài hát thuộc về tác giả: N2UtheHartlocker',
       'Bản quyền bài hát thuộc về tác giả: 龙梅子、杨海彪',
+      'Bản quyền bài hát thuộc về tác giả: Yan Nguyễn',
     ]);
     const copy = screen.getByRole('listitem', { name: entryTitleOf(copyId) });
     expect(copy.querySelector('.library-card-credit')).toBeNull();

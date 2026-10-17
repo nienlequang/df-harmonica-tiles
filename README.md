@@ -139,7 +139,7 @@ Sao lưu bằng nút **.json** / **.harm** trên thẻ bài — xóa dữ liệu
 
 ![Thư viện: mục Thêm bài với 4 cách, bên dưới là danh sách bài](docs/images/library.png)
 
-**Thư viện** có ba **bài mẫu** (huy hiệu **Mẫu**: _"Quốc ca Việt Nam"_, _"TAKEDISKRUSH!"_ và _"寂寞的人伤心的歌"_)
+**Thư viện** có bốn **bài mẫu** (huy hiệu **Mẫu**: _"Quốc ca Việt Nam"_, _"TAKEDISKRUSH!"_, _"寂寞的人伤心的歌"_ và _"Sao Mình Chưa Nắm Tay Nhau"_)
 và **bài của bạn**. Bài mẫu là bản ký âm giai điệu để minh họa — bản quyền bài hát thuộc về tác giả (ghi trên thẻ bài
 và màn chơi). Mỗi thẻ bài: **Phát**, **Sửa**, **Chia sẻ**, **Nhân bản**, xuất **.harm** / **.json**, **Xóa**. Mục **Thêm
 bài** ở đầu trang có 4 cách:

@@ -499,31 +499,31 @@ Link có dạng `https://df-harmonica-tiles.vercel.app/#/overlay/<id bài mẫu>
 `fit=canvas`; cửa sổ **Xem trước** thêm `preview=1`); bảng dưới để tự chỉnh. Đọc ở `src/overlay/overlayParams.ts` —
 đổi một bên thì sửa bên kia.
 
-| Tham số     | Giá trị                            | Mặc định                   | Ý nghĩa                                                                                                             |
-| ----------- | ---------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `song`      | id bài                             | —                          | bài mẫu (`seed-quoc-ca-viet-nam`, `seed-takediskrush`, `seed-ji-mo-de-ren`) hoặc bài đã lưu ở trình duyệt mở link   |
-| `data`      | chuỗi nén (như phần sau `#/s/`)    | —                          | nhúng cả bài vào link; thắng `song`                                                                                 |
-| `fit`       | `source` / `canvas`                | `source`                   | `canvas` = trang phủ cả canvas OBS, ô rơi tự nằm trên bảng phím game; `source` = trang chỉ là khung ô rơi (link cũ) |
-| `layout`    | `full` / `game`                    | `full`                     | `game` = kiểu Khớp bảng phím game                                                                                   |
-| `lanes`     | `vertical` / `horizontal`          | `vertical`                 | ô rơi dọc, hoặc chạy ngang từ phải sang trái (kiểu Dải ngang)                                                       |
-| `gamebar`   | `0` / `1`                          | `1` (`layout=game`: `0`)   | game bar mô phỏng bảng phím (kiểu Mobile, mọi kiểu lane: không game bar, không bàn nút — chỉ 4 vòng mờ; bỏ qua)     |
-| `banner`    | `0` / `1`                          | `1`                        | banner `ĐANG GIỮ …` / chế độ mobile                                                                                 |
-| `bg`        | `transparent` / `theme` / `chroma` | `transparent`              | nền trong suốt hoặc theo giao diện app; `chroma` (`#00FF00`) chỉ còn cho link cũ — hộp thoại không tạo nữa          |
-| `preview`   | `0` / `1`                          | `0`                        | `1` = cửa sổ **Xem trước**: nền tối, bảng phím game minh họa, nhãn "không dùng để quay"                             |
-| `opacity`   | 0.3–1                              | `1` (`layout=game`: 0.85)  | độ đậm thân ô (bỏ qua khi `bg=chroma`: luôn 1)                                                                      |
-| `scale`     | 0.5–3                              | `1`                        | `fit=canvas`: tinh chỉnh cỡ giao diện game (hộp thoại: 0.7–1.3); `fit=source`: phóng to ô và chữ                    |
-| `scheme`    | `pc` / `mobile`                    | `pc`                       | kiểu điều khiển \*                                                                                                  |
-| `semitone`  | `toggle` / `oneshot`               | `toggle`                   | chỉ với `scheme=mobile`: nút Nửa Cung bật / tắt giữ trạng thái, hay chỉ áp cho 1 nốt \*                             |
-| `nl` `nr`   | chữ (URI-encoded, ≤ 24 ký tự)      | tên mặc định theo ngôn ngữ | tên gọi Cúi Xuống (`nl`) / Ngẩng Lên (`nr`) trên game bar và banner \*                                              |
-| `nn` `ns`   | chữ (URI-encoded, ≤ 24 ký tự)      | tên mặc định theo ngôn ngữ | tên gọi Ngẩng Tự Nhiên (`nn`) / Nửa Cung (`ns`) \*                                                                  |
-| `lookahead` | 4–12                               | `6`                        | số beat thấy trước trên màn \*                                                                                      |
-| `tilescale` | 0.5–3                              | `1`                        | **Cỡ tile và nhãn** của màn chơi \*                                                                                 |
-| `sublabel`  | `solfege` / `number` / `none`      | theo trình duyệt mở link   | nhãn phụ trên ô \*                                                                                                  |
-| `lang`      | `vi` / `en`                        | theo trình duyệt mở link   | ngôn ngữ chữ trên overlay \*                                                                                        |
-| `theme`     | `dark` / `light`                   | theo trình duyệt mở link   | giao diện \*                                                                                                        |
-| `countin`   | `0` / `1`                          | `0`                        | khi tự chạy: ô chạy dẫn vào như đếm vào của màn chơi (không có số đếm)                                              |
-| `delay`     | 0–10 (giây)                        | `0`                        | khi tự chạy: đếm ngược trước mỗi lần chạy                                                                           |
-| `bpm`       | 20–400                             | tempo của bài              | khi tự chạy: đổi tempo                                                                                              |
+| Tham số     | Giá trị                            | Mặc định                   | Ý nghĩa                                                                                                                                              |
+| ----------- | ---------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `song`      | id bài                             | —                          | bài mẫu (`seed-quoc-ca-viet-nam`, `seed-takediskrush`, `seed-ji-mo-de-ren`, `seed-sao-minh-chua-nam-tay-nhau`) hoặc bài đã lưu ở trình duyệt mở link |
+| `data`      | chuỗi nén (như phần sau `#/s/`)    | —                          | nhúng cả bài vào link; thắng `song`                                                                                                                  |
+| `fit`       | `source` / `canvas`                | `source`                   | `canvas` = trang phủ cả canvas OBS, ô rơi tự nằm trên bảng phím game; `source` = trang chỉ là khung ô rơi (link cũ)                                  |
+| `layout`    | `full` / `game`                    | `full`                     | `game` = kiểu Khớp bảng phím game                                                                                                                    |
+| `lanes`     | `vertical` / `horizontal`          | `vertical`                 | ô rơi dọc, hoặc chạy ngang từ phải sang trái (kiểu Dải ngang)                                                                                        |
+| `gamebar`   | `0` / `1`                          | `1` (`layout=game`: `0`)   | game bar mô phỏng bảng phím (kiểu Mobile, mọi kiểu lane: không game bar, không bàn nút — chỉ 4 vòng mờ; bỏ qua)                                      |
+| `banner`    | `0` / `1`                          | `1`                        | banner `ĐANG GIỮ …` / chế độ mobile                                                                                                                  |
+| `bg`        | `transparent` / `theme` / `chroma` | `transparent`              | nền trong suốt hoặc theo giao diện app; `chroma` (`#00FF00`) chỉ còn cho link cũ — hộp thoại không tạo nữa                                           |
+| `preview`   | `0` / `1`                          | `0`                        | `1` = cửa sổ **Xem trước**: nền tối, bảng phím game minh họa, nhãn "không dùng để quay"                                                              |
+| `opacity`   | 0.3–1                              | `1` (`layout=game`: 0.85)  | độ đậm thân ô (bỏ qua khi `bg=chroma`: luôn 1)                                                                                                       |
+| `scale`     | 0.5–3                              | `1`                        | `fit=canvas`: tinh chỉnh cỡ giao diện game (hộp thoại: 0.7–1.3); `fit=source`: phóng to ô và chữ                                                     |
+| `scheme`    | `pc` / `mobile`                    | `pc`                       | kiểu điều khiển \*                                                                                                                                   |
+| `semitone`  | `toggle` / `oneshot`               | `toggle`                   | chỉ với `scheme=mobile`: nút Nửa Cung bật / tắt giữ trạng thái, hay chỉ áp cho 1 nốt \*                                                              |
+| `nl` `nr`   | chữ (URI-encoded, ≤ 24 ký tự)      | tên mặc định theo ngôn ngữ | tên gọi Cúi Xuống (`nl`) / Ngẩng Lên (`nr`) trên game bar và banner \*                                                                               |
+| `nn` `ns`   | chữ (URI-encoded, ≤ 24 ký tự)      | tên mặc định theo ngôn ngữ | tên gọi Ngẩng Tự Nhiên (`nn`) / Nửa Cung (`ns`) \*                                                                                                   |
+| `lookahead` | 4–12                               | `6`                        | số beat thấy trước trên màn \*                                                                                                                       |
+| `tilescale` | 0.5–3                              | `1`                        | **Cỡ tile và nhãn** của màn chơi \*                                                                                                                  |
+| `sublabel`  | `solfege` / `number` / `none`      | theo trình duyệt mở link   | nhãn phụ trên ô \*                                                                                                                                   |
+| `lang`      | `vi` / `en`                        | theo trình duyệt mở link   | ngôn ngữ chữ trên overlay \*                                                                                                                         |
+| `theme`     | `dark` / `light`                   | theo trình duyệt mở link   | giao diện \*                                                                                                                                         |
+| `countin`   | `0` / `1`                          | `0`                        | khi tự chạy: ô chạy dẫn vào như đếm vào của màn chơi (không có số đếm)                                                                               |
+| `delay`     | 0–10 (giây)                        | `0`                        | khi tự chạy: đếm ngược trước mỗi lần chạy                                                                                                            |
+| `bpm`       | 20–400                             | tempo của bài              | khi tự chạy: đổi tempo                                                                                                                               |
 
 \* Khi overlay đang chạy theo màn chơi, các giá trị này lấy từ màn chơi; giá trị trong link (ảnh chụp cài đặt của bạn
 lúc tạo link) chỉ dùng khi overlay tự chạy một mình. Tham số `autoplay`, `loop`, `lyrics` của link cũ bị bỏ qua:
@@ -810,7 +810,7 @@ phụ trên tile** thành Ẩn (v4); lookahead đang là 8 (mặc định cũ) t
 Mã nguồn của app theo giấy phép MIT (file `LICENSE`) — giấy phép chỉ áp dụng cho **mã nguồn**. Các bài mẫu
 (`src/library/seeds/*.harm`) là bản ký âm giai điệu để minh họa, **không** thuộc giấy phép MIT; bản quyền bài hát thuộc
 về tác giả / chủ sở hữu quyền (file `NOTICE`): _"Quốc ca Việt Nam"_ — Văn Cao (gia đình nhạc sĩ đã hiến tặng bản quyền
-cho Nhà nước), _"TAKEDISKRUSH!"_ — N2UtheHartlocker, _"寂寞的人伤心的歌"_ (Bài Ca Đau Khổ Của Kẻ Cô Đơn) — 龙梅子、杨海彪.
+cho Nhà nước), _"TAKEDISKRUSH!"_ — N2UtheHartlocker, _"寂寞的人伤心的歌"_ (Bài Ca Đau Khổ Của Kẻ Cô Đơn) — 龙梅子、杨海彪, _"Sao Mình Chưa Nắm Tay Nhau"_ — Yan Nguyễn.
 Thẻ bài mẫu ở Thư viện và header màn chơi có dòng nhỏ **Bản quyền bài hát thuộc về tác giả: …** (bài của người dùng,
 kể cả bản sao của bài mẫu, thì không). Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua
 [GitHub Issues](https://github.com/nienlequang/df-harmonica-tiles/issues) — link này cũng có ở cuối trang Hướng dẫn và

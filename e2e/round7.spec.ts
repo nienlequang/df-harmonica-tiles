@@ -533,18 +533,19 @@ async function modeCircle(
 // P1: chỉ các bài mẫu hiện hành (2 bài; v1.0.2 thêm bài thứ 3)
 // ---------------------------------------------------------------------------
 
-test('Thư viện: đúng 3 bài mẫu (Quốc ca Việt Nam, TAKEDISKRUSH!, 寂寞的人伤心的歌)', async ({
+test('Thư viện: đúng 4 bài mẫu (Quốc ca Việt Nam, TAKEDISKRUSH!, 寂寞的人伤心的歌, Sao Mình Chưa Nắm Tay Nhau)', async ({
   page,
 }) => {
   const errors = collectErrors(page);
   await page.goto('/#/library');
   const cards = page.getByRole('list', { name: 'Danh sách bài hát' }).locator(':scope > li');
-  await expect(cards).toHaveCount(3);
-  await expect(page.locator('.library-badge-seed')).toHaveCount(3);
+  await expect(cards).toHaveCount(4);
+  await expect(page.locator('.library-badge-seed')).toHaveCount(4);
   expect(await cards.getByRole('heading', { level: 2 }).allTextContents()).toEqual([
     QUOC_CA.title,
     TAKE.title,
     JIMO.title,
+    'Sao Mình Chưa Nắm Tay Nhau',
   ]);
   // Link cũ tới một bài mẫu không còn (id seed lạ) → "Không tìm thấy bài hát" (không lỗi).
   await page.goto('/#/play/seed-bai-mau-cu');

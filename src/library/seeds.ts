@@ -1,6 +1,7 @@
 import quocCaVietNam from './seeds/quoc-ca-viet-nam.harm?raw';
 import jiMoDeRen from './seeds/ji-mo-de-ren.harm?raw';
 import takediskrush from './seeds/takediskrush.harm?raw';
+import saoMinhChuaNamTayNhau from './seeds/sao-minh-chua-nam-tay-nhau.harm?raw';
 
 /**
  * Bài mẫu bundle trong code (spec mục 10). Thêm bài: tạo `seeds/<slug>.harm`,
@@ -11,9 +12,14 @@ import takediskrush from './seeds/takediskrush.harm?raw';
  * nhiều đoạn dùng hai bài tự soạn ở `src/test/fixtures/` (app không import).
  *
  * v1.0.2: thêm "寂寞的人伤心的歌" (龙梅子、杨海彪) — chuyển từ cảm âm bằng `convertPasted` của app, đứng SAU hai bài trên.
+ * v1.0.3: thêm "Sao Mình Chưa Nắm Tay Nhau" (Yan Nguyễn) — chủ dự án gửi sẵn dạng .harm, đứng cuối.
  * Bài mẫu là bản ký âm giai điệu để minh họa; bản quyền tác phẩm thuộc tác giả (LICENSE → NOTICE).
  */
-export type SeedId = 'seed-quoc-ca-viet-nam' | 'seed-takediskrush' | 'seed-ji-mo-de-ren';
+export type SeedId =
+  | 'seed-quoc-ca-viet-nam'
+  | 'seed-takediskrush'
+  | 'seed-ji-mo-de-ren'
+  | 'seed-sao-minh-chua-nam-tay-nhau';
 
 export interface SeedSong {
   readonly id: SeedId;
@@ -25,6 +31,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
   { id: 'seed-quoc-ca-viet-nam', source: quocCaVietNam },
   { id: 'seed-takediskrush', source: takediskrush },
   { id: 'seed-ji-mo-de-ren', source: jiMoDeRen },
+  { id: 'seed-sao-minh-chua-nam-tay-nhau', source: saoMinhChuaNamTayNhau },
 ];
 
 const SEED_IDS: ReadonlySet<string> = new Set(SEED_SONGS.map((s) => s.id));

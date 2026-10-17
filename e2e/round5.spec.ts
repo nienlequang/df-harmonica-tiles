@@ -21,7 +21,7 @@ test.beforeEach(async ({ context }) => {
  * Số bài mẫu: 2 bài của người dùng (góp ý 2026-10-16) + "寂寞的人伤心的歌" (v1.0.2); hai bài mẫu cũ đã bỏ trước khi
  * deploy (vòng 7).
  */
-const SEED_COUNT = 3;
+const SEED_COUNT = 4;
 
 function songCards(page: Page) {
   return page.getByRole('list', { name: 'Danh sách bài hát' }).locator(':scope > li');

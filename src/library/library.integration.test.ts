@@ -36,6 +36,7 @@ describe('library + parser thật', () => {
       'Quốc ca Việt Nam',
       'TAKEDISKRUSH!',
       '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)',
+      'Sao Mình Chưa Nắm Tay Nhau',
     ]);
     expect(getSong('seed-quoc-ca-viet-nam')!.parsed.song.artist).toBe('Văn Cao');
     expect(getSong('seed-quoc-ca-viet-nam')!.parsed.song.bpm).toBe(80);

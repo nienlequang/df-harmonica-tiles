@@ -11,6 +11,7 @@ const SEEDS = [
   { id: 'seed-quoc-ca-viet-nam', title: 'Quốc ca Việt Nam' },
   { id: 'seed-takediskrush', title: 'TAKEDISKRUSH!' },
   { id: 'seed-ji-mo-de-ren', title: '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)' },
+  { id: 'seed-sao-minh-chua-nam-tay-nhau', title: 'Sao Mình Chưa Nắm Tay Nhau' },
 ] as const;
 
 test.beforeEach(async ({ context }) => {

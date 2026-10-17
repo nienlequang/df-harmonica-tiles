@@ -5,6 +5,7 @@ import type { Line, Note, ParseResult, Section, Slur } from './types';
 import seedQuocCa from '../library/seeds/quoc-ca-viet-nam.harm?raw';
 import seedTakediskrush from '../library/seeds/takediskrush.harm?raw';
 import seedJiMoDeRen from '../library/seeds/ji-mo-de-ren.harm?raw';
+import seedSaoMinh from '../library/seeds/sao-minh-chua-nam-tay-nhau.harm?raw';
 // Hai bài tự soạn chỉ dùng cho test (src/test/fixtures/, app không import): dài, phủ @repeat, luyến, giữ chuột
 // qua nhiều dòng, Nửa Cung, đoạn rỗng… nên các test chi tiết dưới đây ghim nội dung của chúng.
 import seed1 from '../test/fixtures/bai-thu-nhip-dieu.harm?raw';
@@ -298,6 +299,7 @@ describe('seeds: no lyrics left', () => {
     ['quoc-ca-viet-nam', seedQuocCa],
     ['takediskrush', seedTakediskrush],
     ['ji-mo-de-ren', seedJiMoDeRen],
+    ['sao-minh-chua-nam-tay-nhau', seedSaoMinh],
     ['fixture bai-thu-nhip-dieu', seed1],
     ['fixture bai-thu-lap-doan', seed2],
   ])('%s: parses with 0 diagnostics and no note line has a legacy "lời: " prefix', (_id, src) => {
