@@ -344,6 +344,8 @@ const vi = {
   'player.countdownAria': 'Bắt đầu sau {n} giây',
   'player.countdownAria_one': 'Bắt đầu sau {n} giây',
   'player.countdownCancel': 'Space / Esc để hủy',
+  'player.topCollapse': 'Thu gọn thanh trên',
+  'player.topExpand': 'Hiện thanh trên',
   'player.melodyBadge': '🔊 Đang phát giai điệu',
   'player.melodyBadgeHint':
     'Giai điệu mẫu đang bật và sẽ phát khi chạy bài — tắt bằng nút loa trên thanh điều khiển màn chơi hoặc trong Cài đặt → Âm thanh.',
@@ -1853,6 +1855,8 @@ const en: Record<StringKey, string> = {
   'player.countdownAria': 'Starting in {n} seconds',
   'player.countdownAria_one': 'Starting in {n} second',
   'player.countdownCancel': 'Space / Esc to cancel',
+  'player.topCollapse': 'Collapse top bar',
+  'player.topExpand': 'Show top bar',
   'player.melodyBadge': '🔊 Melody playing',
   'player.melodyBadgeHint':
     'The sample melody is on and plays while the song runs — turn it off with the speaker button on the player controls or in Settings → Sound.',

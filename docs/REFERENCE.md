@@ -176,6 +176,10 @@ hơn = ô to hơn, rơi nhanh hơn; chỉ chỉnh ở đây, Cài đặt không 
 nằm trong Thư viện** có chip **Bản nháp — chưa lưu** (kèm **Mở trình soạn để lưu**) hoặc **Bài tạm từ link — chưa
 lưu** (kèm **Lưu vào thư viện**). Chip cảnh báo / lỗi bấm vào là mở trình soạn của bài.
 
+**Thu gọn thanh trên:** nút ở góc trên phải header ẩn header + thanh điều khiển → khu tiles cao tối đa (dải điểm luyện
+tập vẫn hiện, phím tắt vẫn chạy). Góc trên phải khu tiles khi đó có **Phát** / **Tạm dừng** nhỏ và **Hiện thanh trên**.
+App nhớ lựa chọn này theo máy (localStorage `dfht-player-top-collapsed`).
+
 **Đếm ngược và đếm vào** (D-354):
 
 - **Đếm ngược** (Cài đặt → **Phát bài** → **Đếm ngược trước khi phát**, 0–10 giây, mặc định **3 giây**): bấm Phát rồi

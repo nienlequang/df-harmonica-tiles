@@ -38,8 +38,9 @@ _Fan-made · không liên kết với nhà phát hành Delta Force_ — không d
 
 Trên màn chơi: thanh điều khiển (**Phát**, **Từ đầu**, **Loop**, **Luyện tập**, nút loa, **Tempo**, **Lookahead** =
 số beat thấy trên màn…); cột trái là phím tắt và cách bấm (màn hẹp: nút **?**); thanh dọc phải có **Kiểu điều khiển**
-(**PC** | **Mobile**), **Cửa sổ nổi**, **OBS**, **Chia sẻ**, **Cài đặt**; đáy là thanh vị trí (kéo để tua). Ở các
-trang khác, nút **◂ Về màn chơi** đưa bạn về bài vừa chơi.
+(**PC** | **Mobile**), **Cửa sổ nổi**, **OBS**, **Chia sẻ**, **Cài đặt**; đáy là thanh vị trí (kéo để tua). Nút
+**Thu gọn thanh trên** (góc trên phải) ẩn tên bài + thanh điều khiển để khu tiles cao tối đa; góc trên phải khu tiles
+còn nút Phát nhỏ và nút **Hiện thanh trên**. Ở các trang khác, nút **◂ Về màn chơi** đưa bạn về bài vừa chơi.
 
 ## Những chỗ hay nhầm
 

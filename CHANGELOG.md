@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-10-17
+
+### Thêm
+
+- Màn chơi: nút **Thu gọn thanh trên** (góc trên phải) ẩn tên bài + thanh điều khiển để khu tiles cao tối đa; góc trên
+  phải khu tiles có nút Phát / Tạm dừng nhỏ và **Hiện thanh trên**. Nhớ theo máy.
+
 ## [1.0.4] - 2026-10-17
 
 ### Thay đổi

@@ -264,6 +264,40 @@ span.player-chip-error {
   margin-left: auto;
 }
 
+/*
+ * ── Thu gọn thanh trên (góp ý 2026-10-17) ──────────────────────────────
+ * Nút ở góc phải header ẩn header + thanh điều khiển → khu tiles cao tối đa; nút nhỏ ở góc trên phải khu
+ * tiles mở lại. Phím tắt vẫn chạy; dải điểm luyện tập vẫn hiện. Nhớ theo máy (topBarPref.ts).
+ */
+.player-top-toggle {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.player.is-top-collapsed .player-header,
+.player.is-top-collapsed .transport {
+  display: none;
+}
+
+.player-top-mini {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 6;
+  display: flex;
+  gap: 4px;
+}
+
+.player-top-mini .btn {
+  background: var(--glass);
+  color: var(--text-muted);
+}
+
+/* Nút Phát nhỏ trong khu tiles (điện thoại, kiểu Mobile) trùng với cụm góc phải → ẩn khi thu gọn. */
+.player.is-top-collapsed .player-stage.is-mpad .player-stage-toggle {
+  display: none;
+}
+
 /* ── Seek bar: thanh chia vạch + khấc đầu section ──────────────────────── */
 
 .seekbar {
@@ -878,6 +912,7 @@ span.player-chip-error {
 }
 
 .player-main {
+  position: relative;
   grid-area: main;
   min-width: 0;
   min-height: 0;

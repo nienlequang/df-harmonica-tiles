@@ -38,6 +38,7 @@ import { MobilePad, MobilePadCombo, MobilePadRotateHint } from './MobilePad';
 import type { MobilePadPractice } from './MobilePad';
 import { PlayerSideBar } from './PlayerSideBar';
 import { PracticeGradeFlash, PracticeHud, PracticeResults } from './PracticePanel';
+import { setTopCollapsed, useTopCollapsed } from './topBarPref';
 import { Icon, SeekBar, TransportBar } from './TransportBar';
 import type { SectionOption } from './TransportBar';
 import type { PracticeInputEvent } from './practice.types';
@@ -169,6 +170,19 @@ function PlayerScreen({ entry, home }: { entry: LibraryEntry; home: boolean }) {
   const padLayout = scheme === 'mobile';
   const shortcutsTitleId = useId();
   useScrollStageOnPlay(stageRef, padLayout && playing);
+  const topCollapsed = useTopCollapsed();
+  const topToggleRef = useRef<HTMLButtonElement>(null);
+  const focusTopToggle = useRef(false);
+  // Bấm thu gọn / mở rộng bằng nút: focus sang nút kia (nút vừa bấm biến mất).
+  useEffect(() => {
+    if (!focusTopToggle.current) return;
+    focusTopToggle.current = false;
+    topToggleRef.current?.focus();
+  }, [topCollapsed]);
+  const toggleTop = () => {
+    focusTopToggle.current = true;
+    setTopCollapsed(!topCollapsed);
+  };
 
   const title = entryTitle(entry) || t('common.untitled');
   const artist = entryArtist(entry);
@@ -285,10 +299,16 @@ function PlayerScreen({ entry, home }: { entry: LibraryEntry; home: boolean }) {
 
   return (
     <div
-      className={['player', practice && 'is-practice', padLayout && 'is-mpad']
+      className={[
+        'player',
+        practice && 'is-practice',
+        padLayout && 'is-mpad',
+        topCollapsed && 'is-top-collapsed',
+      ]
         .filter(Boolean)
         .join(' ')}
     >
+      {topCollapsed ? <h1 className="sr-only">{title}</h1> : null}
       <header className="player-header">
         <div className="player-header-row">
           <a
@@ -366,6 +386,19 @@ function PlayerScreen({ entry, home }: { entry: LibraryEntry; home: boolean }) {
           <span className="spacer" />
           {/* Ngôn ngữ + giao diện ở góc trên phải như thanh điều hướng các trang khác. */}
           <PrefButtons className="player-prefs" />
+          {topCollapsed ? null : (
+            <button
+              ref={topToggleRef}
+              type="button"
+              className="btn btn-ghost btn-sm btn-icon player-top-toggle"
+              aria-label={t('player.topCollapse')}
+              title={t('player.topCollapse')}
+              aria-expanded="true"
+              onClick={toggleTop}
+            >
+              <Icon name="collapseUp" />
+            </button>
+          )}
         </div>
       </header>
 
@@ -411,6 +444,33 @@ function PlayerScreen({ entry, home }: { entry: LibraryEntry; home: boolean }) {
           <ShortcutsHelp scheme={scheme} hideFocusHint />
         </aside>
         <main className="player-main" aria-label={t('player.region')}>
+          {topCollapsed ? (
+            // Thanh trên đã thu gọn: Phát / Tạm dừng + mở lại thanh trên ở góc trên phải khu tiles.
+            <div className="player-top-mini">
+              {hasNotes ? (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-icon"
+                  aria-label={playing ? t('player.pause') : t('player.play')}
+                  title={playing ? t('player.pause') : t('player.play')}
+                  onClick={() => engine.toggle()}
+                >
+                  <Icon name={playing ? 'pause' : 'play'} />
+                </button>
+              ) : null}
+              <button
+                ref={topToggleRef}
+                type="button"
+                className="btn btn-sm btn-icon"
+                aria-label={t('player.topExpand')}
+                title={t('player.topExpand')}
+                aria-expanded="false"
+                onClick={toggleTop}
+              >
+                <Icon name="expandDown" />
+              </button>
+            </div>
+          ) : null}
           <PlayerStage
             engine={engine}
             timeline={timeline}

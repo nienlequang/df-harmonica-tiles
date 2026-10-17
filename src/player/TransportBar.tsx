@@ -33,7 +33,9 @@ type IconName =
   | 'share'
   | 'settings'
   | 'soundOn'
-  | 'soundOff';
+  | 'soundOff'
+  | 'collapseUp'
+  | 'expandDown';
 
 const ICON_PATHS: Readonly<Record<IconName, string>> = {
   play: 'M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z',
@@ -41,6 +43,8 @@ const ICON_PATHS: Readonly<Record<IconName, string>> = {
   restart: 'M12 5V2L7.5 6.5 12 11V7.5a5 5 0 1 1-5 5H4.5a7.5 7.5 0 1 0 7.5-7.5z',
   prev: 'M6 6h2.2v12H6zM9.6 12 18 18V6z',
   next: 'M15.8 6H18v12h-2.2zM6 18l8.4-6L6 6z',
+  collapseUp: 'M4 4h16v2H4zM12 9.2l-7.4 7.4 1.6 1.6 5.8-5.8 5.8 5.8 1.6-1.6z',
+  expandDown: 'M4 4h16v2H4zM12 18.6l-7.4-7.4 1.6-1.6 5.8 5.8 5.8-5.8 1.6 1.6z',
   loop: 'M7 7h9.5V4.5L20.5 8l-4 3.5V9H9v3H7zM17 17H7.5v2.5L3.5 16l4-3.5V15H15v-3h2z',
   // Thanh dọc bên phải của màn chơi (tự vẽ, không lấy icon của game / bộ icon ngoài).
   pc: 'M2 4h20v13H2zM4 6v9h16V6zM8 19h8v2H8z',
