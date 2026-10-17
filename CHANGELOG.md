@@ -8,7 +8,7 @@
 
 ### Thay đổi
 
-- Bài mẫu "Sao Mình Chưa Nắm Tay Nhau": cập nhật theo file MusicXML của chủ dự án (thêm câu kết ô nhịp 17), tempo 64,93 → 95 BPM để phím rơi nhanh hơn.
+- Bài mẫu "Sao Mình Chưa Nắm Tay Nhau": cập nhật theo file MusicXML của chủ dự án (thêm câu kết ô nhịp 17), tempo 64,93 → 75 BPM để phím rơi nhanh hơn.
 
 ## [1.0.3] - 2026-10-17
 
