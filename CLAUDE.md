@@ -353,7 +353,7 @@ e2e/         Playwright: smoke.spec.ts (Phase 1; mọi bài mẫu), library-a11y
              gõ tay chỉ xem trước —, vòng 7: vòng "CHẠM" trong suốt Ø = nút chế độ đáp đúng tâm nút ở màn chơi
              844×390 (trên lớp của bàn nút), overlay kiểu Mobile (Xem trước khớp game + cả cột) không bàn nút — chỉ 4
              vòng mờ, vòng đáp vào đó; không "CHẠM: …"; đếm ngược 3-2-1 lúc ô đứng yên, đếm vào không vẽ số),
-             round7.spec.ts (góp ý vòng 7 + trước deploy: Thư viện đúng 2 bài mẫu; 844×390 kiểu Mobile — vòng
+             round7.spec.ts (góp ý vòng 7 + trước deploy: Thư viện đúng 3 bài mẫu; 844×390 kiểu Mobile — vòng
              "CHẠM" vào lại đầu "Phần 2" đồng tâm đúng Ø nút, vòng đang rơi thẳng cột nút, nhanh ~1,75 × ô, tới tâm
              nút đúng beat rồi mờ; đếm ngược → đếm vào không nhảy lùi / không mất ô ở màn chơi + trang mini; trang
              mini Đếm ngược = Tắt vẫn đếm 3 s; dòng nhắc ở Cài đặt → Phát bài; link "Dev notes" ở chân Hướng dẫn /

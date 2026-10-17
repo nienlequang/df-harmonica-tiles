@@ -1,0 +1,30 @@
+NOTICE — Delta Force Harmonica Tiles
+
+The MIT License in LICENSE covers the SOFTWARE (source code, build scripts and
+documentation of this app) only. It does NOT cover the musical works used as
+sample songs.
+
+Sample songs
+------------
+
+The sample songs in src/library/seeds/*.harm are melody transcriptions included
+for demonstration only. Copyright in the musical works belongs to their authors /
+rights holders; these files are not licensed under the MIT License and no rights
+to the musical works are granted by this repository.
+
+- "Quốc ca Việt Nam" — Văn Cao (copyright donated to the State by the
+  composer's family)
+- "TAKEDISKRUSH!" — N2UtheHartlocker
+- "寂寞的人伤心的歌" (Bài Ca Đau Khổ Của Kẻ Cô Đơn) — 龙梅子、杨海彪
+
+If you are an author or rights holder and want a song removed, please open an
+issue: https://github.com/nienlequang/df-harmonica-tiles/issues
+
+---
+
+Giấy phép MIT trong LICENSE chỉ áp dụng cho MÃ NGUỒN (code, script build, tài liệu
+của app), KHÔNG áp dụng cho các tác phẩm âm nhạc dùng làm bài mẫu. Các bài mẫu
+(src/library/seeds/*.harm) là bản ký âm giai điệu để minh họa; bản quyền tác phẩm
+thuộc về tác giả / chủ sở hữu quyền (danh sách ở trên), không cấp phép theo MIT.
+Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua GitHub Issues:
+https://github.com/nienlequang/df-harmonica-tiles/issues

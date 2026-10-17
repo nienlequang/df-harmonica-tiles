@@ -25,6 +25,7 @@ sử thay đổi (CHANGELOG); nội dung bài Hướng dẫn không link tới �
 - [Cài đặt chi tiết](#cài-đặt-chi-tiết)
 - [Cài như app và dùng offline](#cài-như-app-và-dùng-offline)
 - [Giới hạn đã biết](#giới-hạn-đã-biết)
+- [Giấy phép và bản quyền bài mẫu](#giấy-phép-và-bản-quyền-bài-mẫu)
 
 ## Định dạng .harm đầy đủ
 
@@ -500,7 +501,7 @@ Link có dạng `https://df-harmonica-tiles.vercel.app/#/overlay/<id bài mẫu>
 
 | Tham số     | Giá trị                            | Mặc định                   | Ý nghĩa                                                                                                             |
 | ----------- | ---------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `song`      | id bài                             | —                          | bài mẫu (`seed-quoc-ca-viet-nam`, `seed-takediskrush`) hoặc bài trong bộ nhớ của chính trình duyệt mở link          |
+| `song`      | id bài                             | —                          | bài mẫu (`seed-quoc-ca-viet-nam`, `seed-takediskrush`, `seed-ji-mo-de-ren`) hoặc bài đã lưu ở trình duyệt mở link   |
 | `data`      | chuỗi nén (như phần sau `#/s/`)    | —                          | nhúng cả bài vào link; thắng `song`                                                                                 |
 | `fit`       | `source` / `canvas`                | `source`                   | `canvas` = trang phủ cả canvas OBS, ô rơi tự nằm trên bảng phím game; `source` = trang chỉ là khung ô rơi (link cũ) |
 | `layout`    | `full` / `game`                    | `full`                     | `game` = kiểu Khớp bảng phím game                                                                                   |
@@ -803,3 +804,14 @@ phụ trên tile** thành Ẩn (v4); lookahead đang là 8 (mặc định cũ) t
   mất bài. **Sao lưu bằng nút Xuất .json / Xuất .harm** thường xuyên.
 - Link chia sẻ của bài rất dài có thể bị app chat cắt mất (app cảnh báo khi link trên 8000 ký tự) — gửi file `.harm`
   thay thế. Link bị cắt sẽ mở ra trang "Link chia sẻ không hợp lệ".
+
+## Giấy phép và bản quyền bài mẫu
+
+Mã nguồn của app theo giấy phép MIT (file `LICENSE`) — giấy phép chỉ áp dụng cho **mã nguồn**. Các bài mẫu
+(`src/library/seeds/*.harm`) là bản ký âm giai điệu để minh họa, **không** thuộc giấy phép MIT; bản quyền bài hát thuộc
+về tác giả / chủ sở hữu quyền (file `NOTICE`): _"Quốc ca Việt Nam"_ — Văn Cao (gia đình nhạc sĩ đã hiến tặng bản quyền
+cho Nhà nước), _"TAKEDISKRUSH!"_ — N2UtheHartlocker, _"寂寞的人伤心的歌"_ (Bài Ca Đau Khổ Của Kẻ Cô Đơn) — 龙梅子、杨海彪.
+Thẻ bài mẫu ở Thư viện và header màn chơi có dòng nhỏ **Bản quyền bài hát thuộc về tác giả: …** (bài của người dùng,
+kể cả bản sao của bài mẫu, thì không). Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua
+[GitHub Issues](https://github.com/nienlequang/df-harmonica-tiles/issues) — link này cũng có ở cuối trang Hướng dẫn và
+đầu trang Dev notes.

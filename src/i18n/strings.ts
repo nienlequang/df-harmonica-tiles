@@ -44,6 +44,8 @@ const vi = {
   'common.library': 'Thư viện',
   'common.untitled': 'Chưa đặt tên',
   'common.unknownArtist': 'Không rõ tác giả',
+  /** Dòng ghi công của BÀI MẪU (thẻ Thư viện + header màn chơi) — bài mẫu không thuộc giấy phép MIT (NOTICE). */
+  'common.seedCredit': 'Bản quyền bài hát thuộc về tác giả: {artist}',
   'common.language': 'Ngôn ngữ',
   'common.theme': 'Giao diện',
   'common.notFound': 'Không tìm thấy trang',
@@ -1305,6 +1307,9 @@ const vi = {
   // Link tới kho mã nguồn công khai (src/dev/SourceCodeLink.tsx, D-444): đầu trang Dev notes + chân trang Hướng dẫn.
   'dev.source': 'Mã nguồn (GitHub)',
   'dev.sourceTitle': 'Mã nguồn của app trên GitHub — giấy phép MIT',
+  /** Chân trang Hướng dẫn + đầu trang Dev notes: tác giả bài mẫu muốn gỡ bài (link = `takedownLink`, GitHub Issues). */
+  'dev.takedown': 'Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua',
+  'dev.takedownLink': 'GitHub Issues',
 
   // ── mini ────────────────────────────────────────────────────────────────
   // Trang mini cho cửa sổ nổi Android (route `#/mini/:id`, src/mini, thử nghiệm) + cửa sổ video nổi
@@ -1549,6 +1554,7 @@ const en: Record<StringKey, string> = {
   'common.library': 'Library',
   'common.untitled': 'Untitled',
   'common.unknownArtist': 'Unknown artist',
+  'common.seedCredit': 'Song © its author(s): {artist}',
   'common.language': 'Language',
   'common.theme': 'Theme',
   'common.notFound': 'Page not found',
@@ -2817,6 +2823,8 @@ const en: Record<StringKey, string> = {
   'dev.changelog': 'Change log',
   'dev.source': 'Source code (GitHub)',
   'dev.sourceTitle': "The app's source code on GitHub — MIT license",
+  'dev.takedown': 'If you are an author and want a song removed, contact us via',
+  'dev.takedownLink': 'GitHub Issues',
 
   // ── mini ────────────────────────────────────────────────────────────────
   'mini.launcherFor': 'Song: {title}',

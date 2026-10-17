@@ -185,6 +185,10 @@ function SongCard({ entry, onDelete }: SongCardProps) {
         </div>
       </div>
       <p className="library-card-artist muted">{artist || t('common.unknownArtist')}</p>
+      {/* Bài mẫu là bản ký âm để minh họa, không thuộc giấy phép MIT của mã nguồn (NOTICE). */}
+      {entry.seed && artist ? (
+        <p className="library-card-credit">{t('common.seedCredit', { artist })}</p>
+      ) : null}
       <dl className="library-card-stats">
         <div>
           <dt>{t('library.statBpm')}</dt>

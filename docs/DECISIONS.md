@@ -3027,3 +3027,22 @@ một commit mới từ cây hiện tại (lịch sử riêng không đưa lên)
   Rust / tạo Release nháp); chạy tay không có tag nên `tagName` = `v__VERSION__` (version của package.json) thay
   `github.ref_name`. Lưu ý: `npm run release` tự `git push --follow-tags` khi repo có remote (D-007) — kho lịch sử riêng
   không được thêm remote của kho công khai.
+- **D-446 — v1.0.2: bài mẫu thứ ba + tách giấy phép mã nguồn / bản quyền bài mẫu:** `seed-ji-mo-de-ren`
+  (`src/library/seeds/ji-mo-de-ren.harm`, "寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)", 龙梅子、杨海彪) đứng SAU hai bài
+  mẫu cũ trong `SEED_SONGS`. Nguồn = cảm âm dạng prompt AI (số quãng: do1 = C4); chuyển bằng `convertPasted` của
+  `src/editor/camamConvert.ts` (PC, baseOctave 4 — như ô dán AI): phương án dễ nhất = hạ 7 nửa cung (cost 92: 1 nốt Nửa
+  Cung, 14 lượt giữ chuột, 26 nốt có modifier, không gập quãng), 504 nốt / 360 beat, cao độ + độ dài + luyến khớp nguồn
+  từng nốt (đã kiểm bằng script tạm), tầm C4..F5. Sửa tay duy nhất: hai ghi chú `//` của nguồn mà converter gắn thành
+  `//!` (cảnh báo Editor, ba câu đầu bài nối bằng " · ") được trả về `//` thường, mỗi câu một dòng, ba câu đầu đặt lại
+  trước `# Dạo đầu` như nguồn — bài mẫu phải parse 0 diagnostics (`seeds.parse.test.ts`). Bản quyền: `LICENSE` giữ
+  nguyên văn bản MIT (`sourceRepo.test.ts` ghim; GitHub nhận dạng giấy phép theo văn bản chuẩn) → file `NOTICE` riêng:
+  MIT chỉ cho mã nguồn, bài mẫu là bản ký âm minh họa, bản quyền thuộc tác giả (Văn Cao — gia đình nhạc sĩ đã hiến tặng
+  bản quyền cho Nhà nước; N2UtheHartlocker; 龙梅子、杨海彪), không cấp phép theo MIT; README (phần người dùng + dòng giấy
+  phép cuối) và `docs/REFERENCE.md` (mục "Giấy phép và bản quyền bài mẫu") có dòng tương ứng. Trong app: chỉ BÀI MẪU
+  (`entry.seed`, có `@artist`) có dòng `common.seedCredit` — thẻ Thư viện (`.library-card-credit`, 12 px mờ dưới tên tác
+  giả) và header màn chơi (`.player-artist.player-credit`, 12 px: THAY dòng tác giả — vẫn có tên tác giả — chứ không thêm
+  dòng; bản thử thêm dòng `flex-basis: 100%` làm khối tên bài đòi rộng hơn → ở 844×390 nút "◂ Thư viện" bị đẩy thành một
+  hàng riêng, header cao thêm ~30 px); bản sao của bài mẫu là bài người dùng nên không có. `TakedownLine` (`src/dev/`, link
+  `SOURCE_ISSUES_URL` = `${SOURCE_REPO_URL}/issues`, tab mới, `rel="noopener"`, chữ ẩn "(mở tab mới)") ở cuối trang
+  Hướng dẫn (sau dòng "Dev notes · Mã nguồn") và dưới link "Mã nguồn (GitHub)" của trang Dev notes; chuỗi `dev.takedown` /
+  `dev.takedownLink` (vi + en).

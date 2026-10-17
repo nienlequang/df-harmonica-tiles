@@ -96,10 +96,15 @@ beforeEach(() => {
 });
 
 describe('seeds', () => {
-  it('seed đúng id, đúng thứ tự (2 bài mới của người dùng đứng đầu) và isSeedId', () => {
-    expect(SEED_SONGS.map((s) => s.id)).toEqual(['seed-quoc-ca-viet-nam', 'seed-takediskrush']);
+  it('seed đúng id, đúng thứ tự (2 bài của người dùng đứng đầu, bài v1.0.2 sau) và isSeedId', () => {
+    expect(SEED_SONGS.map((s) => s.id)).toEqual([
+      'seed-quoc-ca-viet-nam',
+      'seed-takediskrush',
+      'seed-ji-mo-de-ren',
+    ]);
     expect(isSeedId('seed-quoc-ca-viet-nam')).toBe(true);
     expect(isSeedId('seed-takediskrush')).toBe(true);
+    expect(isSeedId('seed-ji-mo-de-ren')).toBe(true);
     expect(isSeedId('seed-khac')).toBe(false);
     // Id seed không có (vd. bài mẫu đã bỏ ở bản cũ): không phải seed, không có trong thư viện.
     expect(getSong('seed-khac')).toBeNull();

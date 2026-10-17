@@ -72,9 +72,14 @@ vi.mock('../ui/components', async (importOriginal) => ({
 }));
 
 const toastTexts = () => useToasts.getState().toasts.map((t) => t.text);
+const entryTitleOf = (id: string) => getSong(id)?.parsed.song.title ?? '';
 
-/** Tên các bài mẫu theo thứ tự thư viện (góp ý 2026-10-16: hai bài của người dùng đứng đầu). */
-const SEED_TITLES = ['Quốc ca Việt Nam', 'TAKEDISKRUSH!'];
+/** Tên các bài mẫu theo thứ tự thư viện (góp ý 2026-10-16: hai bài của người dùng đứng đầu; v1.0.2 thêm bài 3). */
+const SEED_TITLES = [
+  'Quốc ca Việt Nam',
+  'TAKEDISKRUSH!',
+  '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)',
+];
 const SEED_1 = 'Quốc ca Việt Nam';
 const SEED_2 = 'TAKEDISKRUSH!';
 
@@ -130,6 +135,25 @@ describe('LibraryView', () => {
     expect(play.getAttribute('href')).toBe('#/play/seed-quoc-ca-viet-nam');
 
     expect(screen.queryByRole('button', { name: /^Xóa "/ })).toBeNull();
+  });
+
+  it('bài mẫu có dòng ghi công "Bản quyền bài hát thuộc về tác giả: …"; bài của người dùng (kể cả bản sao) thì không', () => {
+    const copyId = useLibrary.getState().duplicateSong('seed-ji-mo-de-ren');
+    render(<LibraryView />);
+    const credits = Array.from(document.querySelectorAll('.library-card-credit')).map(
+      (p) => p.textContent,
+    );
+    expect(credits).toEqual([
+      'Bản quyền bài hát thuộc về tác giả: Văn Cao',
+      'Bản quyền bài hát thuộc về tác giả: N2UtheHartlocker',
+      'Bản quyền bài hát thuộc về tác giả: 龙梅子、杨海彪',
+    ]);
+    const copy = screen.getByRole('listitem', { name: entryTitleOf(copyId) });
+    expect(copy.querySelector('.library-card-credit')).toBeNull();
+    act(() => useSettings.getState().set({ language: 'en' }));
+    expect(document.querySelector('.library-card-credit')?.textContent).toBe(
+      'Song © its author(s): Văn Cao',
+    );
   });
 
   it('Phase 1 (chưa có Editor / MIDI / share): ẩn "Tạo bài với AI", "Sửa", "Tạo bài từ file", "Chia sẻ"', () => {

@@ -4,6 +4,7 @@ import { buildTimeline } from './timeline';
 import type { Line, Note, ParseResult, Section, Slur } from './types';
 import seedQuocCa from '../library/seeds/quoc-ca-viet-nam.harm?raw';
 import seedTakediskrush from '../library/seeds/takediskrush.harm?raw';
+import seedJiMoDeRen from '../library/seeds/ji-mo-de-ren.harm?raw';
 // Hai bài tự soạn chỉ dùng cho test (src/test/fixtures/, app không import): dài, phủ @repeat, luyến, giữ chuột
 // qua nhiều dòng, Nửa Cung, đoạn rỗng… nên các test chi tiết dưới đây ghim nội dung của chúng.
 import seed1 from '../test/fixtures/bai-thu-nhip-dieu.harm?raw';
@@ -249,10 +250,54 @@ describe('bài mẫu Quốc ca Việt Nam (v1.0.1: chỉ còn "Phần 1" + "Ph�
   });
 });
 
+describe('bài mẫu 寂寞的人伤心的歌 (v1.0.2: chuyển từ cảm âm bằng convertPasted, hạ 7 nửa cung)', () => {
+  const r = parseHarm(seedJiMoDeRen, { id: 'seed-ji-mo-de-ren' });
+
+  it('10 đoạn / 46 dòng, 504 nốt, 360 beat (2:52 ở 125 BPM), trong tầm C4..F5, một nốt Nửa Cung', () => {
+    expect(r.diagnostics).toEqual([]);
+    expect(r.song.title).toBe('寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)');
+    expect(r.song.artist).toBe('龙梅子、杨海彪');
+    expect(r.song.bpm).toBe(125);
+    expect(r.song.timeSig).toEqual({ num: 4, den: 4 });
+    expect(r.song.scrollDir).toBe(1);
+    expect(r.song.sections.map((s) => [s.name, s.lines.length])).toEqual([
+      ['Dạo đầu', 1],
+      ['Mở đầu', 4],
+      ['Đoạn 1', 4],
+      ['Đoạn 2 - lượt 1', 4],
+      ['Điệp khúc - lượt 1', 8],
+      ['Chuyển đoạn', 4],
+      ['Đoạn 2 - lượt 2', 4],
+      ['Điệp khúc - lượt 2', 8],
+      ['Điệp khúc - lượt 3', 8],
+      ['Kết', 1],
+    ]);
+    const tl = buildTimeline(r.song);
+    expect(tl.notes).toHaveLength(504);
+    expect(tl.totalBeats).toBeCloseTo(360, 9);
+    expect(Math.floor((tl.totalBeats * 60) / r.song.bpm)).toBe(172);
+    const midis = tl.notes.map((n) => n.midi);
+    expect(Math.min(...midis)).toBe(60);
+    expect(Math.max(...midis)).toBe(77);
+    expect(tl.notes.filter((n) => n.sharp)).toHaveLength(1);
+    // Giữ chuột phải đã thả ở cuối bài.
+    expect(tl.holdRuns.at(-1)?.endBeat).toBeLessThanOrEqual(tl.totalBeats);
+  });
+
+  it('ghi chú // của nguồn giữ nguyên (comment thường, không phải cảnh báo //!); một dấu xuống dòng ở cuối', () => {
+    expect(seedJiMoDeRen).toMatch(/^\/\/ Đọc giản phổ theo 1=do/m);
+    expect(seedJiMoDeRen).toMatch(/^\/\/ Ô cuối: lấy nốt nữ ở phách đầu/m);
+    expect(seedJiMoDeRen).not.toMatch(/^\/\/!/m);
+    expect(seedJiMoDeRen.endsWith(']\n')).toBe(true);
+    expect(seedJiMoDeRen.endsWith('\n\n')).toBe(false);
+  });
+});
+
 describe('seeds: no lyrics left', () => {
   it.each([
     ['quoc-ca-viet-nam', seedQuocCa],
     ['takediskrush', seedTakediskrush],
+    ['ji-mo-de-ren', seedJiMoDeRen],
     ['fixture bai-thu-nhip-dieu', seed1],
     ['fixture bai-thu-lap-doan', seed2],
   ])('%s: parses with 0 diagnostics and no note line has a legacy "lời: " prefix', (_id, src) => {

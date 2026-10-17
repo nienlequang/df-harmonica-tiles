@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { DevNotesLink } from '../dev/DevNotesLink';
+import { TakedownLine } from '../dev/TakedownLine';
 import { useT } from '../i18n/useT';
 import { href, paths } from '../ui/router';
 import type { GuideDoc } from '../ui/router';
@@ -72,6 +73,7 @@ export function GuideView({ doc, section }: GuideViewProps) {
       </div>
       {/* Tài liệu cho người phát triển + mã nguồn: cố ý chỉ là link nhỏ, mờ ở chân trang (R7-8, D-444). */}
       <DevNotesLink withSource />
+      <TakedownLine />
     </article>
   );
 }

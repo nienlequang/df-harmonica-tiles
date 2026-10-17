@@ -139,8 +139,9 @@ Sao lưu bằng nút **.json** / **.harm** trên thẻ bài — xóa dữ liệu
 
 ![Thư viện: mục Thêm bài với 4 cách, bên dưới là danh sách bài](docs/images/library.png)
 
-**Thư viện** có hai **bài mẫu** (huy hiệu **Mẫu**: _"Quốc ca Việt Nam"_ và _"TAKEDISKRUSH!"_) và **bài của
-bạn**. Mỗi thẻ bài: **Phát**, **Sửa**, **Chia sẻ**, **Nhân bản**, xuất **.harm** / **.json**, **Xóa**. Mục **Thêm
+**Thư viện** có ba **bài mẫu** (huy hiệu **Mẫu**: _"Quốc ca Việt Nam"_, _"TAKEDISKRUSH!"_ và _"寂寞的人伤心的歌"_)
+và **bài của bạn**. Bài mẫu là bản ký âm giai điệu để minh họa — bản quyền bài hát thuộc về tác giả (ghi trên thẻ bài
+và màn chơi). Mỗi thẻ bài: **Phát**, **Sửa**, **Chia sẻ**, **Nhân bản**, xuất **.harm** / **.json**, **Xóa**. Mục **Thêm
 bài** ở đầu trang có 4 cách:
 
 1. **Tạo bài với AI** — từ ảnh sheet nhạc / cảm âm. Dễ nhất.
@@ -343,6 +344,11 @@ thì hiện **Có bản mới** → **Tải lại**.
 Mã nguồn mở, giấy phép MIT: [github.com/nienlequang/df-harmonica-tiles](https://github.com/nienlequang/df-harmonica-tiles)
 — trong app là link **Mã nguồn (GitHub)** ở cuối trang Hướng dẫn.
 
+Giấy phép MIT chỉ áp dụng cho **mã nguồn**. Các bài mẫu là bản ký âm giai điệu để minh họa, **không** thuộc giấy phép
+MIT — bản quyền bài hát thuộc về tác giả / chủ sở hữu quyền: _"Quốc ca Việt Nam"_ — Văn Cao (gia đình nhạc sĩ đã hiến
+tặng bản quyền cho Nhà nước), _"TAKEDISKRUSH!"_ — N2UtheHartlocker, _"寂寞的人伤心的歌"_ — 龙梅子、杨海彪. Nếu bạn là tác
+giả và muốn gỡ bài, hãy liên hệ qua [GitHub Issues](https://github.com/nienlequang/df-harmonica-tiles/issues).
+
 ## Cho người phát triển
 
 **Chạy trên máy:** cần Node.js ≥ 20.19 (khuyên dùng bản trong `.nvmrc` — Node 24) và npm.
@@ -406,4 +412,5 @@ npm run check   # lint + typecheck + test + build — phải xanh trước khi g
 - **Bản desktop overlay (Tauri, tùy chọn, chưa build thử, chưa có bản cài cho người dùng):** ô rơi trong suốt nổi
   trên game, không cần OBS / PowerToys — cần Rust + MSVC Build Tools để tự build, xem [docs/TAURI.md](docs/TAURI.md).
 
-Giấy phép: [MIT](LICENSE) — Copyright (c) 2026 nienlequang.
+Giấy phép: [MIT](LICENSE) — Copyright (c) 2026 nienlequang. MIT chỉ áp dụng cho mã nguồn; bài mẫu
+(`src/library/seeds/*.harm`) là bản ký âm để minh họa, bản quyền thuộc tác giả, không theo MIT — xem [NOTICE](NOTICE).

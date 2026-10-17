@@ -215,6 +215,15 @@
   overflow-wrap: anywhere;
 }
 
+/* Ghi công bài mẫu: một dòng nhỏ, mờ dưới tên tác giả (NOTICE). */
+.library-card-credit {
+  margin: -4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 /* Thông số dạng đồng hồ HUD: nhãn nhỏ in hoa, số tabular. */
 .library-card-stats {
   display: flex;

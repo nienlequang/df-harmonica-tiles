@@ -392,6 +392,19 @@ describe('PlayerView', () => {
     expect(position()).toBe(0);
   });
 
+  it('bài mẫu: dòng ghi công nhỏ thay dòng tác giả; bài của người dùng (bản sao của bài mẫu) thì không', () => {
+    const { unmount } = render(<PlayerView songId="seed-ji-mo-de-ren" />);
+    const credit = document.querySelector('.player-titles .player-credit');
+    expect(credit?.textContent).toBe('Bản quyền bài hát thuộc về tác giả: 龙梅子、杨海彪');
+    expect(document.querySelectorAll('.player-artist')).toHaveLength(1);
+    expect(document.querySelector('.player-artist')).toBe(credit);
+    unmount();
+    const copy = useLibrary.getState().duplicateSong('seed-ji-mo-de-ren');
+    render(<PlayerView songId={copy} />);
+    expect(document.querySelector('.player-artist')?.textContent).toBe('龙梅子、杨海彪');
+    expect(document.querySelector('.player-credit')).toBeNull();
+  });
+
   it('unknown id shows a friendly not-found message with a link home', () => {
     render(<PlayerView songId="khong-co-bai-nay" />);
     expect(screen.getByRole('heading', { name: 'Không tìm thấy bài hát' })).toBeTruthy();

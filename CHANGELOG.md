@@ -4,6 +4,28 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-17
+
+### v1.0.2 — bài mẫu mới + ghi công bản quyền (2026-10-17)
+
+DECISIONS D-446.
+
+#### Added
+
+- **Bài mẫu thứ ba:** _"寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)"_ — 龙梅子、杨海彪 (125 BPM, 2:52, 504 nốt, 10
+  đoạn), đứng sau _"Quốc ca Việt Nam"_ và _"TAKEDISKRUSH!"_ trong Thư viện. Chuyển từ cảm âm bằng chính bộ chuyển của
+  app (ô **Dán kết quả của AI vào đây**), tông dễ chơi nhất.
+- **Ghi công bài mẫu:** thẻ bài mẫu ở Thư viện và header màn chơi có dòng nhỏ **Bản quyền bài hát thuộc về tác giả:
+  …** (tiếng Anh: _Song © its author(s): …_); bài của bạn (kể cả bản sao của bài mẫu) thì không.
+- Cuối trang **Hướng dẫn** và đầu trang **Dev notes**: **Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua GitHub
+  Issues** (mở tab mới).
+
+#### Changed
+
+- Giấy phép: MIT chỉ áp dụng cho mã nguồn. File `NOTICE` mới (README, `docs/REFERENCE.md` có dòng tương ứng): các bài
+  mẫu là bản ký âm giai điệu để minh họa, bản quyền tác phẩm thuộc tác giả / chủ sở hữu quyền, không cấp phép theo MIT.
+  `LICENSE` giữ nguyên văn bản MIT.
+
 ## [1.0.1] - 2026-10-17
 
 ### Mã nguồn mở (2026-10-17)

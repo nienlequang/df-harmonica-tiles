@@ -16,8 +16,12 @@ import { canvasColorCount, canvasSignature, collectErrors, stubClipboard } from 
  */
 
 const SEED1 = { id: 'seed-quoc-ca-viet-nam', title: 'Quốc ca Việt Nam' } as const;
-// Hai bài mẫu đầu thư viện (góp ý 2026-10-16).
-const SEEDS = ['Quốc ca Việt Nam', 'TAKEDISKRUSH!'] as const;
+// Các bài mẫu đầu thư viện (góp ý 2026-10-16; v1.0.2 thêm bài thứ 3).
+const SEEDS = [
+  'Quốc ca Việt Nam',
+  'TAKEDISKRUSH!',
+  '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)',
+] as const;
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SINGLE_HTML = fileURLToPath(new URL('../dist-single/index.html', import.meta.url));
 const VITE_BIN = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
@@ -42,7 +46,7 @@ async function playStartsTiles(page: Page): Promise<void> {
     .not.toBe(before);
 }
 
-/** "◂ Thư viện" của màn chơi → `#/library` liệt kê 2 bài mẫu. */
+/** "◂ Thư viện" của màn chơi → `#/library` liệt kê 3 bài mẫu. */
 async function openLibraryFromMenu(page: Page): Promise<void> {
   await page.getByRole('link', { name: 'Về thư viện' }).click();
   await expect(page).toHaveURL(/#\/library$/);

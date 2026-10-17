@@ -42,7 +42,8 @@ Trước khi test:
 - Link Vercel là **một trang web khác** với bản test cũ (`http://localhost:4173`, `http://<địa chỉ IP máy tính>:4173`): Thư
   viện, Cài đặt, kết nối OBS đã nhớ ở bản cũ **không** có ở đây. Bài của bạn: ở bản cũ bấm **Chia sẻ** (hoặc **.harm**
   trên thẻ bài) rồi mở / nhập ở link mới → **Lưu vào thư viện**.
-- Thư viện chỉ còn hai **bài mẫu**: _"Quốc ca Việt Nam"_ và _"TAKEDISKRUSH!"_ (hai bài mẫu cũ đã bỏ).
+- Thư viện có ba **bài mẫu**: _"Quốc ca Việt Nam"_, _"TAKEDISKRUSH!"_ và _"寂寞的人伤心的歌"_ (v1.0.2; hai bài mẫu cũ đã
+  bỏ) — mỗi thẻ bài mẫu và header màn chơi của bài mẫu có dòng nhỏ **Bản quyền bài hát thuộc về tác giả: …**.
 
 ## Phần 1 — PC (Chrome / Edge)
 

@@ -9,6 +9,7 @@ import { BUILD_INFO, formatBuildDate } from './buildInfo';
 import type { BuildInfo } from './buildInfo';
 import { devContent, resolveDevLink } from './devContent';
 import { SourceCodeLink } from './SourceCodeLink';
+import { TakedownLine } from './TakedownLine';
 import '../guide/guide.css';
 import './dev.css';
 
@@ -78,6 +79,7 @@ export function DevNotesView({ section, build = BUILD_INFO }: DevNotesViewProps)
         <p className="dev-source">
           <SourceCodeLink />
         </p>
+        <TakedownLine className="dev-takedown" />
         <section className="dev-build" aria-labelledby={buildId}>
           <h2 id={buildId} className="sr-only">
             {t('dev.build')}

@@ -49,6 +49,19 @@ describe('DevNotesView (#/dev, R7-8)', () => {
     expect(link.getAttribute('rel')).toBe('noopener');
     expect(link.getAttribute('title')).toBe('Mã nguồn của app trên GitHub — giấy phép MIT');
     expect(link.closest('header')?.className).toBe('dev-header');
+    // Ngay dưới: "Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua GitHub Issues" (tab mới). REFERENCE (mục
+    // "Giấy phép và bản quyền bài mẫu") cũng có một link GitHub Issues → tìm trong header.
+    const issues = within(link.closest('header') as HTMLElement).getByRole('link', {
+      name: /^GitHub Issues/,
+    });
+    expect(issues.getAttribute('href')).toBe(`${SOURCE_REPO_URL}/issues`);
+    expect(issues.getAttribute('target')).toBe('_blank');
+    expect(issues.getAttribute('rel')).toBe('noopener');
+    expect(issues.closest('p')?.className).toBe('dev-takedown');
+    expect(issues.closest('p')?.textContent).toBe(
+      'Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua GitHub Issues (mở tab mới)',
+    );
+    expect(issues.closest('header')?.className).toBe('dev-header');
     // trước vùng "Bản đang chạy" và mục lục
     expect(
       link.compareDocumentPosition(buildRegion()) & Node.DOCUMENT_POSITION_FOLLOWING,

@@ -303,7 +303,13 @@ function PlayerScreen({ entry, home }: { entry: LibraryEntry; home: boolean }) {
           </a>
           <div className="player-titles">
             <h1 className="player-title">{title}</h1>
-            {artist ? <p className="player-artist">{artist}</p> : null}
+            {/* Bài mẫu: dòng ghi công nhỏ thay cho dòng tác giả (vẫn có tên tác giả; không thuộc giấy phép MIT —
+                NOTICE). Thay chứ không thêm dòng: header điện thoại không cao thêm / không xuống thêm hàng. */}
+            {artist && entry.seed ? (
+              <p className="player-artist player-credit">{t('common.seedCredit', { artist })}</p>
+            ) : artist ? (
+              <p className="player-artist">{artist}</p>
+            ) : null}
           </div>
           <div className="player-chips">
             <span className={bpmOverride !== null ? 'player-chip is-override' : 'player-chip'}>

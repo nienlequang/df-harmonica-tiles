@@ -32,11 +32,17 @@ describe('library + parser thật', () => {
       expect(entry!.parsed.song.id).toBe(seed.id);
       expect(quickSongStats(entry!.parsed.song).noteCount).toBeGreaterThan(0);
     }
-    expect(listSongs().map(entryTitle)).toEqual(['Quốc ca Việt Nam', 'TAKEDISKRUSH!']);
+    expect(listSongs().map(entryTitle)).toEqual([
+      'Quốc ca Việt Nam',
+      'TAKEDISKRUSH!',
+      '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)',
+    ]);
     expect(getSong('seed-quoc-ca-viet-nam')!.parsed.song.artist).toBe('Văn Cao');
     expect(getSong('seed-quoc-ca-viet-nam')!.parsed.song.bpm).toBe(80);
     expect(getSong('seed-takediskrush')!.parsed.song.artist).toBe('N2UtheHartlocker');
     expect(getSong('seed-takediskrush')!.parsed.song.bpm).toBe(122);
+    expect(getSong('seed-ji-mo-de-ren')!.parsed.song.artist).toBe('龙梅子、杨海彪');
+    expect(getSong('seed-ji-mo-de-ren')!.parsed.song.bpm).toBe(125);
   });
 
   it('nhân bản giữ nội dung, chỉ đổi title', () => {

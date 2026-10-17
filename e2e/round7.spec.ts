@@ -5,7 +5,8 @@ import { collectErrors, stubClipboard } from './helpers';
 
 /**
  * Góp ý vòng 7 (2026-10-16) + chuẩn bị deploy, chạy trên bản build, tiếng Việt:
- * - Thư viện chỉ còn 2 bài mẫu (Quốc ca Việt Nam, TAKEDISKRUSH!) — hai bài mẫu cũ đã bỏ (P1).
+ * - Thư viện chỉ có các bài mẫu hiện hành (Quốc ca Việt Nam, TAKEDISKRUSH!, + 寂寞的人伤心的歌 từ v1.0.2) — hai bài mẫu cũ
+ *   đã bỏ (P1).
  * - Kiểu Mobile: vòng "CHẠM" trong suốt Ø đúng nút chế độ, rơi nhanh gấp ~1.75 lần ô, đồng tâm với nút
  *   đúng lúc phải chạm; không còn thanh "CHẠM" ngắn của vòng 6 (R7-1).
  * - Đếm ngược → đếm vào: suốt lúc đếm ngược ô đứng yên ở frame đầu của đếm vào, hết đếm ô chỉ việc rơi xuống
@@ -16,6 +17,10 @@ import { collectErrors, stubClipboard } from './helpers';
 
 const QUOC_CA = { id: 'seed-quoc-ca-viet-nam', title: 'Quốc ca Việt Nam' } as const;
 const TAKE = { id: 'seed-takediskrush', title: 'TAKEDISKRUSH!' } as const;
+const JIMO = {
+  id: 'seed-ji-mo-de-ren',
+  title: '寂寞的人伤心的歌 (Bài Ca Đau Khổ Của Kẻ Cô Đơn)',
+} as const;
 /**
  * Ms từ lúc hết đếm ngược tới lúc nốt đầu chạm vạch — đếm vào v1.0.1: nốt đầu đi 0,65 × (1 ô nhịp + khoảng lặng trước
  * nó), src/player/leadIn.ts. TAKEDISKRUSH (122 BPM, nốt đầu ở beat 0): 2,6 beat ≈ 1279 ms; Quốc ca (80 BPM, beat 2,75):
@@ -525,18 +530,21 @@ async function modeCircle(
 }
 
 // ---------------------------------------------------------------------------
-// P1: chỉ còn 2 bài mẫu
+// P1: chỉ các bài mẫu hiện hành (2 bài; v1.0.2 thêm bài thứ 3)
 // ---------------------------------------------------------------------------
 
-test('Thư viện: đúng 2 bài mẫu (Quốc ca Việt Nam, TAKEDISKRUSH!)', async ({ page }) => {
+test('Thư viện: đúng 3 bài mẫu (Quốc ca Việt Nam, TAKEDISKRUSH!, 寂寞的人伤心的歌)', async ({
+  page,
+}) => {
   const errors = collectErrors(page);
   await page.goto('/#/library');
   const cards = page.getByRole('list', { name: 'Danh sách bài hát' }).locator(':scope > li');
-  await expect(cards).toHaveCount(2);
-  await expect(page.locator('.library-badge-seed')).toHaveCount(2);
+  await expect(cards).toHaveCount(3);
+  await expect(page.locator('.library-badge-seed')).toHaveCount(3);
   expect(await cards.getByRole('heading', { level: 2 }).allTextContents()).toEqual([
     QUOC_CA.title,
     TAKE.title,
+    JIMO.title,
   ]);
   // Link cũ tới một bài mẫu không còn (id seed lạ) → "Không tìm thấy bài hát" (không lỗi).
   await page.goto('/#/play/seed-bai-mau-cu');

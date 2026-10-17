@@ -104,6 +104,12 @@
   font-stretch: semi-condensed;
 }
 
+/* Ghi công bài mẫu (thay dòng tác giả): nhỏ hơn tên tác giả thường; màn hẹp thì xuống dòng dưới tên bài như tác giả. */
+.player-credit {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .player-chips {
   display: flex;
   flex-wrap: wrap;

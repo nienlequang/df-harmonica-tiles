@@ -1,4 +1,5 @@
 import quocCaVietNam from './seeds/quoc-ca-viet-nam.harm?raw';
+import jiMoDeRen from './seeds/ji-mo-de-ren.harm?raw';
 import takediskrush from './seeds/takediskrush.harm?raw';
 
 /**
@@ -8,8 +9,11 @@ import takediskrush from './seeds/takediskrush.harm?raw';
  * Góp ý 2026-10-16 (round 6): hai bài người dùng tự tạo trong app ("Quốc ca Việt Nam", "TAKEDISKRUSH!",
  * chép nguyên byte từ trình duyệt của người dùng) là hai bài mẫu duy nhất, đứng ĐẦU thư viện. Test cần bài dài
  * nhiều đoạn dùng hai bài tự soạn ở `src/test/fixtures/` (app không import).
+ *
+ * v1.0.2: thêm "寂寞的人伤心的歌" (龙梅子、杨海彪) — chuyển từ cảm âm bằng `convertPasted` của app, đứng SAU hai bài trên.
+ * Bài mẫu là bản ký âm giai điệu để minh họa; bản quyền tác phẩm thuộc tác giả (LICENSE → NOTICE).
  */
-export type SeedId = 'seed-quoc-ca-viet-nam' | 'seed-takediskrush';
+export type SeedId = 'seed-quoc-ca-viet-nam' | 'seed-takediskrush' | 'seed-ji-mo-de-ren';
 
 export interface SeedSong {
   readonly id: SeedId;
@@ -20,6 +24,7 @@ export interface SeedSong {
 export const SEED_SONGS: readonly SeedSong[] = [
   { id: 'seed-quoc-ca-viet-nam', source: quocCaVietNam },
   { id: 'seed-takediskrush', source: takediskrush },
+  { id: 'seed-ji-mo-de-ren', source: jiMoDeRen },
 ];
 
 const SEED_IDS: ReadonlySet<string> = new Set(SEED_SONGS.map((s) => s.id));

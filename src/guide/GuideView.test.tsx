@@ -91,8 +91,17 @@ describe('GuideView (#/guide, D-260)', () => {
       expect(link.getAttribute('href')).toBe(href(paths.dev()));
       expect(link.getAttribute('lang')).toBe('en');
       expect(link.parentElement?.className).toBe('dev-notes-link');
-      // Là phần tử cuối của trang Hướng dẫn: sau toàn bộ tài liệu.
-      expect(container.querySelector('article.guide')?.lastElementChild).toBe(link.parentElement);
+      // Chân trang Hướng dẫn: dòng link rồi dòng "muốn gỡ bài" (phần tử cuối) — sau toàn bộ tài liệu.
+      const last = container.querySelector('article.guide')?.lastElementChild;
+      expect(last?.previousElementSibling).toBe(link.parentElement);
+      expect(last?.className).toBe('takedown-line');
+      expect(last?.textContent).toBe(
+        'Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua GitHub Issues (mở tab mới)',
+      );
+      const issues = within(last as HTMLElement).getByRole('link', { name: /^GitHub Issues/ });
+      expect(issues.getAttribute('href')).toBe(`${SOURCE_REPO_URL}/issues`);
+      expect(issues.getAttribute('target')).toBe('_blank');
+      expect(issues.getAttribute('rel')).toBe('noopener');
       link.focus();
       expect(document.activeElement).toBe(link);
       // Cùng dòng, ngay sau: kho mã nguồn công khai, mở tab mới (D-444).

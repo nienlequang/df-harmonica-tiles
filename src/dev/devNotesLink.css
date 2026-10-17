@@ -26,3 +26,34 @@
 .dev-notes-sep {
   color: var(--text-muted);
 }
+
+/* "Nếu bạn là tác giả và muốn gỡ bài…" (TakedownLine) ngay dưới dòng link ở chân trang Hướng dẫn. */
+.takedown-line {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.takedown-line a,
+.dev-takedown a {
+  display: inline-block;
+  min-height: 24px;
+  padding: 4px 0;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.takedown-line a:hover,
+.dev-takedown a:hover {
+  color: var(--text);
+}
+
+/* Đầu trang Dev notes: cùng cỡ chữ với link "Mã nguồn (GitHub)". */
+.dev-takedown {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
