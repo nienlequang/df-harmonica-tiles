@@ -1,0 +1,623 @@
+/*
+ * "Tự chơi để tạo bài" (route #/record) — theo docs/DESIGN.md "Tactical HUD".
+ * Dùng token của app.css. Accent (xanh neon) CHỈ cho khung UI (nút chính, số thứ tự, đèn nhịp,
+ * glow vạch vị trí); ô nốt / nút số / nút chế độ luôn dùng màu modifier --mod-* (palette.ts).
+ * Không animation liên tục: đèn nhịp + đếm vào đổi theo state (tick 50 ms), không keyframes lặp.
+ */
+
+/* ── Màu canvas cuộn nốt (RecordRoll đọc qua getComputedStyle) ── */
+
+.rec-view {
+  --rec-roll-bg: #0c1013;
+  --rec-roll-lane-alt: rgb(255 255 255 / 0.025);
+  --rec-roll-beat: rgb(255 255 255 / 0.07);
+  --rec-roll-bar: rgb(255 255 255 / 0.24);
+  --rec-roll-gutter-text: var(--text-muted);
+  --rec-roll-note-edge: rgb(0 0 0 / 0.55);
+  --rec-roll-playhead: #effff7;
+  --rec-roll-playhead-glow: rgb(15 247 150 / 0.4);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+:root[data-theme='light'] .rec-view {
+  --rec-roll-bg: #ddd7c5;
+  --rec-roll-lane-alt: rgb(27 30 24 / 0.035);
+  --rec-roll-beat: rgb(27 30 24 / 0.12);
+  --rec-roll-bar: rgb(27 30 24 / 0.38);
+  /* Viền ngoài ô ≥ 3:1 trên nền canvas sáng (ô "thường" xám trắng gần trùng nền). */
+  --rec-roll-note-edge: rgb(27 30 24 / 0.78);
+  --rec-roll-playhead: #ffffff;
+  --rec-roll-playhead-glow: rgb(0 107 68 / 0.6);
+}
+
+/* ── Header ── */
+
+.rec-header h1 {
+  margin: 0 0 4px;
+  font-size: clamp(22px, 3vw, 30px);
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.rec-header p {
+  margin: 0;
+}
+
+/* ── Bố cục: thiết lập | khung thu (+ bản thu) ── */
+
+.rec-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--gap);
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .rec-layout {
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  }
+}
+
+.rec-main {
+  min-width: 0;
+}
+
+.rec-setup .hud-section-title,
+.rec-stage .hud-section-title,
+.rec-result .hud-section-title {
+  margin: 0;
+}
+
+.rec-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.rec-fields input,
+.rec-fields select,
+.rec-setup input[type='text'],
+.rec-setup select {
+  width: 100%;
+  min-width: 0;
+}
+
+.rec-bpm input {
+  font-variant-numeric: tabular-nums;
+}
+
+.rec-bpm input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+/* Nhãn của dòng "Kiểu điều khiển" (không phải <label>: không có control đi kèm). */
+.rec-label {
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.rec-scheme-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+}
+
+.rec-scheme-value .tag {
+  color: var(--text);
+}
+
+/* ── Khung thu ── */
+
+/* Đếm vào / đang thu: dải sọc cảnh báo hổ phách ở mép trên khung (trạng thái chú ý). */
+.rec-stage[data-phase='countin']::before,
+.rec-stage[data-phase='recording']::before,
+.rec-stage[data-phase='arming']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: var(--hazard), var(--warn);
+  pointer-events: none;
+}
+
+.rec-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 32px;
+}
+
+.rec-hud-tags {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.rec-hud-tags .tag,
+.rec-summary .tag {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Đèn nhịp: ô vuông nhỏ, beat đầu ô nhịp rộng hơn; beat hiện tại sáng accent, đầu beat có glow. */
+.rec-lamps {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rec-lamp {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 1px;
+  background: var(--surface-3);
+  transition:
+    background-color 0.06s,
+    box-shadow 0.06s;
+}
+
+.rec-lamp.is-downbeat {
+  width: 22px;
+}
+
+.rec-lamp.is-on {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.rec-lamp.is-on.is-flash {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.rec-readout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rec-stage[data-phase='countin'] .rec-readout,
+.rec-stage[data-phase='arming'] .rec-readout {
+  color: var(--warn);
+}
+
+.rec-readout.is-recording {
+  color: var(--text);
+}
+
+/* Chấm REC tĩnh (không nhấp nháy). */
+.rec-rec-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 8px var(--danger);
+}
+
+/* Khu nhận chuột (giữ modifier) + cuộn nốt + game bar / nút cảm ứng. */
+.rec-surface {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.rec-roll-wrap {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--rec-roll-bg);
+  overflow: hidden;
+}
+
+.rec-roll {
+  display: block;
+  width: 100%;
+}
+
+/* Gợi ý khi chưa thu: chữ giữa cuộn nốt trống. */
+.rec-roll-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 12px 16px 12px 32px;
+  color: var(--text-muted);
+  font-size: 15px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Đếm vào: số lớn giữa khung, chip kính vát góc. */
+.rec-countin {
+  --cut: 10px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 96px;
+  padding: 8px 18px 6px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--warn);
+  background: var(--glass);
+  color: var(--text);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+  pointer-events: none;
+}
+
+.rec-countin-label {
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.rec-countin-num {
+  font-size: 52px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Game bar PC dùng chung với Player: không có lane để căn, đệm đều hai bên. */
+.rec-gamebar {
+  --lane-left: 12px;
+  --lane-right: 12px;
+}
+
+.rec-controls {
+  align-items: center;
+}
+
+.rec-main-btn {
+  min-width: 132px;
+}
+
+.rec-glyph {
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+/* ● đỏ trên nút Thu (nút phụ); trên nút chính nền accent giữ màu chữ của nút. */
+.btn:not(.btn-primary) .rec-glyph-rec {
+  color: var(--danger);
+}
+
+.rec-controls-hint {
+  flex: 1 1 260px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.rec-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rec-message {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--warn);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* ── Nút cảm ứng kiểu Mobile (8 nút số + 4 nút chế độ) ── */
+
+.rec-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(var(--surface-2), var(--surface));
+  touch-action: none;
+}
+
+.rec-pad-modes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.rec-pad-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: 0.03em;
+  /* ≥ 1.4: dấu tiếng Việt trên chữ IN HOA (Ẩ, Ố…) không bị cắt bởi overflow của line-clamp. */
+  line-height: 1.4;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.rec-pad-mode-dot {
+  display: block;
+  width: clamp(30px, 8vw, 40px);
+  aspect-ratio: 1;
+  border: 2px solid var(--control-border);
+  border-radius: 50%;
+  background: var(--surface-3);
+  transition:
+    background-color 0.08s,
+    border-color 0.08s;
+}
+
+.rec-pad-mode-name {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.rec-pad-mode:hover .rec-pad-mode-dot {
+  border-color: var(--text-muted);
+}
+
+.rec-pad-mode.is-on {
+  color: var(--text);
+}
+
+.rec-pad-mode-left.is-on .rec-pad-mode-dot {
+  border-color: var(--mod-left);
+  background: var(--mod-left);
+  box-shadow: 0 0 12px rgb(37 99 235 / 0.6);
+}
+
+.rec-pad-mode-right.is-on .rec-pad-mode-dot {
+  border-color: var(--mod-right);
+  background: var(--mod-right);
+  box-shadow: 0 0 12px rgb(249 115 22 / 0.6);
+}
+
+.rec-pad-mode-natural.is-on .rec-pad-mode-dot {
+  border-color: var(--mod-normal);
+  background: var(--mod-normal);
+  box-shadow: 0 0 12px rgb(230 233 239 / 0.45);
+}
+
+.rec-pad-mode-scroll.is-on .rec-pad-mode-dot {
+  border-color: var(--mod-scroll);
+  background: var(--mod-scroll);
+  box-shadow: 0 0 12px rgb(34 197 94 / 0.6);
+}
+
+/* Theme sáng: "thường" xám trắng gần trùng nền → nút đang chọn tô đậm. */
+:root[data-theme='light'] .rec-pad-mode-natural.is-on .rec-pad-mode-dot {
+  border-color: #15181d;
+  background: #15181d;
+  box-shadow: none;
+}
+
+/* Dấu chọn không chỉ dựa vào màu: chấm giữa nút đang bật. */
+.rec-pad-mode.is-on .rec-pad-mode-dot {
+  background-image: radial-gradient(circle, rgb(0 0 0 / 0.55) 0 3px, transparent 3.5px);
+}
+
+.rec-pad-mode-left.is-on .rec-pad-mode-dot,
+:root[data-theme='light'] .rec-pad-mode-natural.is-on .rec-pad-mode-dot {
+  background-image: radial-gradient(circle, rgb(255 255 255 / 0.9) 0 3px, transparent 3.5px);
+}
+
+.rec-pad-digits {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(3px, 1vw, 10px);
+}
+
+.rec-pad-digit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  width: min(100%, 60px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid var(--control-border);
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: clamp(17px, 2.4vw, 24px);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.05s,
+    background-color 0.05s;
+}
+
+.rec-pad-digit:hover {
+  border-color: var(--text-muted);
+}
+
+/* Đang giữ: lún xuống + viền chữ (không dùng accent trên nút phím). */
+.rec-pad-digit.is-pressed {
+  transform: scale(0.93);
+  border-color: var(--text);
+}
+
+.rec-pad-digit.is-lit.rec-tone-normal {
+  border-color: var(--mod-normal);
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+}
+
+.rec-pad-digit.is-lit.rec-tone-left {
+  border-color: var(--mod-left);
+  background: var(--mod-left);
+  color: var(--mod-left-text);
+}
+
+.rec-pad-digit.is-lit.rec-tone-right {
+  border-color: var(--mod-right);
+  background: var(--mod-right);
+  color: var(--mod-right-text);
+}
+
+.rec-pad-digit.is-lit.rec-tone-scroll {
+  border-color: var(--mod-scroll);
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+}
+
+:root[data-theme='light'] .rec-pad-digit.is-lit.rec-tone-normal {
+  border-color: #15181d;
+  background: #15181d;
+  color: #ffffff;
+}
+
+.rec-pad-digit.is-lit.is-pressed {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--text);
+}
+
+/* ── Bản thu ── */
+
+.rec-result:focus {
+  outline: none;
+}
+
+.rec-result:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.rec-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.rec-preview-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--rec-roll-bg);
+}
+
+.rec-actions {
+  align-items: center;
+}
+
+@media (max-width: 520px) {
+  .rec-readout {
+    margin-left: 0;
+    width: 100%;
+  }
+  .rec-actions .spacer {
+    display: none;
+  }
+  .rec-actions > .btn,
+  .rec-controls > .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-lamp,
+  .rec-pad-mode-dot,
+  .rec-pad-digit {
+    transition: none;
+  }
+  .rec-pad-digit.is-pressed {
+    transform: none;
+  }
+}
+
+/*
+ * Tương phản cao Windows (forced colors): nền màu modifier bị ép về Canvas → nút chế độ đang chọn và nút
+ * số đang sáng không còn khác nút thường. Vẽ lại bằng màu hệ thống; nút có chữ trên nền Highlight cần
+ * forced-color-adjust: none (Chromium vẽ tấm nền Canvas sau chữ — xem .btn[aria-pressed] ở app.css).
+ */
+@media (forced-colors: active) {
+  /* !important: thắng các luật màu theo tone / theme sáng có độ ưu tiên cao hơn (`.rec-pad-digit.is-lit.rec-tone-…`,
+     `:root[data-theme='light'] …`) — với forced-color-adjust: none chúng sẽ giữ màu tác giả. */
+  .rec-pad-mode.is-on .rec-pad-mode-dot {
+    forced-color-adjust: none;
+    border-color: Highlight !important;
+    background: Highlight !important;
+  }
+
+  .rec-pad-digit.is-lit {
+    forced-color-adjust: none;
+    border-color: Highlight !important;
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+
+  .rec-pad-digit.is-lit * {
+    color: inherit;
+  }
+
+  .rec-pad-digit.is-lit .jp-dot {
+    background: HighlightText;
+  }
+}

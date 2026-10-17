@@ -1,0 +1,98 @@
+/* Nút "Cửa sổ nổi" của màn chơi trên điện thoại (R7-6): hỏi Apple / Android, dòng "Đổi loại điện thoại",
+   hộp thoại video nổi của máy Apple. Bố cục chung của hộp thoại (.mini-launch, .mini-video…) ở mini.css. */
+
+.mini-phone-question {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Hai nút lớn chồng nhau (dễ chạm trên điện thoại), chữ trái. */
+.mini-phone-opts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mini-phone-opt.btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-height: 64px;
+  text-align: left;
+  white-space: normal;
+}
+
+.mini-phone-opt-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: var(--tracking);
+}
+
+.mini-phone-opt-hint {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Chữ phụ của nút phụ: màu chữ phụ; nút chính giữ màu chữ của nút (tương phản trên nền accent). */
+.mini-phone-opt.btn-secondary .mini-phone-opt-hint {
+  color: var(--text-muted);
+}
+
+/* "Điện thoại: Android · Đổi loại điện thoại" — nhỏ, ở chân hộp thoại. */
+.mini-phone-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.mini-phone-change {
+  min-height: 24px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.mini-phone-change:hover {
+  color: var(--accent-strong);
+}
+
+:root[data-theme='light'] .mini-phone-change:hover {
+  color: var(--text);
+}
+
+/* Video nổi (Apple): tiến độ + nhắc giữ trang mở, rồi nút lớn "Mở video nổi" trải hết bề ngang. */
+.mini-apple-progress,
+.mini-apple-failed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.mini-apple-open.btn {
+  width: 100%;
+  min-height: 52px;
+}
+
+/* Lúc còn dựng: nút khóa trông như nút phụ viền nét đứt (không giống nút chính đang bấm được). */
+.mini-apple-open.btn:disabled {
+  border: 1px dashed var(--control-border);
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 1;
+}

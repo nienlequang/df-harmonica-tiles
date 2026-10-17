@@ -1,0 +1,56 @@
+# Bản desktop overlay Tauri (docs/TAURI.md) — CHỈ chạy tay (Actions → "Tauri desktop" → Run workflow; DECISIONS D-445):
+# build .msi + .exe (NSIS) trên Windows → GitHub Release dạng NHÁP tên `v<version của package.json>` (xem lại rồi mới
+# publish). Đẩy tag v* KHÔNG tự build. Bản web deploy từ máy bằng `npm run deploy:prod` (Vercel) và người dùng web
+# không phải tải gì; file desktop chỉ là tùy chọn cho streamer muốn overlay nổi trên game. Workflow chưa từng chạy thử.
+name: Tauri desktop
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tauri-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - run: npm ci
+
+      # tauri-build cần src-tauri/icons/icon.ico. Chưa có trong repo thì sinh từ icon PWA (public/icons).
+      - name: Icon cho bản desktop
+        shell: bash
+        run: |
+          npm run icons --if-present
+          if [ ! -f src-tauri/icons/icon.ico ]; then
+            npx --yes @tauri-apps/cli@2 icon public/icons/icon-512.png
+          fi
+
+      # beforeBuildCommand (tauri.conf.json) chạy `npm run build` → dist/, rồi đóng gói .msi + .exe.
+      # Chạy tay nên không có tag sẵn: tauri-action tạo tag `v<version>` (__VERSION__ = version của package.json).
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tauriScript: npx --yes @tauri-apps/cli@2
+          tagName: v__VERSION__
+          releaseName: 'Harmonica Tiles Overlay v__VERSION__'
+          releaseBody: 'Overlay desktop (tùy chọn) cho Delta Force Harmonica Tiles — hướng dẫn trong docs/TAURI.md. Bản web dùng ngay trên trình duyệt, không cần tải file này.'
+          releaseDraft: true
+          prerelease: false

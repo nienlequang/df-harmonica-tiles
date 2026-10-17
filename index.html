@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Guide thổi harmonica trong Delta Force kiểu Piano Tiles — chạy offline."
+    />
+    <meta name="theme-color" content="#0a0c0e" />
+    <!-- Ô xem trước khi dán link vào Facebook / Zalo / Discord (Open Graph): chỉ là chữ cho máy đọc link —
+         app không tải gì từ đây. Ảnh = icon PWA 512 px của bản production (URL tuyệt đối, D-390). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Delta Force Harmonica Tiles" />
+    <meta property="og:title" content="Delta Force Harmonica Tiles" />
+    <meta
+      property="og:description"
+      content="Guide thổi harmonica trong Delta Force kiểu Piano Tiles — mở link là chơi, có overlay OBS, chạy offline."
+    />
+    <meta property="og:url" content="https://df-harmonica-tiles.vercel.app/" />
+    <meta property="og:image" content="https://df-harmonica-tiles.vercel.app/icons/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Biểu tượng Delta Force Harmonica Tiles" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta name="twitter:card" content="summary" />
+    <!-- Icon trong public/icons (scripts/gen-icons.mjs). Có link icon nên trình duyệt không hỏi
+         /favicon.ico (không 404). Vite tự thêm base; bản 1 file thay bằng data URI (vite.config.ts).
+         Link manifest do vite-plugin-pwa chèn khi build. -->
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180.png" />
+    <title>Delta Force Harmonica Tiles</title>
+    <!-- Nền --bg (app.css) ngay từ khung hình đầu, trước khi CSS của bundle tải (không nháy trắng).
+         Overlay OBS giữ trong suốt: class overlay-mode do script bên dưới đặt trước khi vẽ. -->
+    <style>
+      html:not(.overlay-mode) {
+        background-color: #0a0c0e;
+        color-scheme: dark;
+      }
+      html[data-theme='light']:not(.overlay-mode) {
+        background-color: #e8e3d3;
+        color-scheme: light;
+      }
+    </style>
+    <script>
+      // Áp theme / ngôn ngữ đã lưu TRƯỚC khung hình đầu (không nháy tối → sáng, D-069).
+      // Khớp key + shape persist của src/ui/settings.ts ({ state: { theme, language } });
+      // React (useDocumentTheme) vẫn là nguồn chính sau khi mount.
+      (function () {
+        try {
+          var root = document.documentElement;
+          var saved = JSON.parse(localStorage.getItem('dfht-settings') || 'null');
+          var s = saved && saved.state;
+          if (s && (s.theme === 'light' || s.theme === 'dark')) {
+            root.setAttribute('data-theme', s.theme);
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', s.theme === 'light' ? '#e8e3d3' : '#0a0c0e');
+          }
+          if (s && (s.language === 'vi' || s.language === 'en')) root.lang = s.language;
+        } catch (e) {
+          // localStorage bị chặn / JSON hỏng: giữ mặc định (tối, tiếng Việt).
+        }
+      })();
+      // Overlay OBS: nền trong suốt / chroma ngay từ khung hình đầu (không nháy nền app mỗi lần OBS
+      // refresh source, chunk overlay tải lười). Cùng cách nhận route của src/ui/router.ts (parseLocation)
+      // và `bg` / `preview` của src/overlay/overlayParams.ts; React (App + OverlayView) giữ các class này
+      // sau khi mount.
+      (function () {
+        try {
+          var raw = location.hash.replace(/^#/, '');
+          var qi = raw.indexOf('?');
+          var path = qi >= 0 ? raw.slice(0, qi) : raw;
+          var q = new URLSearchParams(location.search);
+          if (qi >= 0) {
+            new URLSearchParams(raw.slice(qi + 1)).forEach(function (v, k) {
+              q.set(k, v);
+            });
+          }
+          var overlay =
+            (q.get('overlay') === '1' && (path === '' || path === '/')) ||
+            /^\/*overlay(\/|$)/.test(path);
+          if (!overlay) return;
+          var bg = (q.get('bg') || '').trim().toLowerCase();
+          if (bg !== 'chroma' && bg !== 'theme') bg = 'transparent';
+          document.documentElement.classList.add('overlay-mode', 'overlay-bg-' + bg);
+          // Cửa sổ "Xem trước" của hộp thoại OBS (`preview=1`): nền tối thường ngay từ khung hình đầu.
+          var pv = (q.get('preview') || '').trim().toLowerCase();
+          if (pv === '1' || pv === 'true' || pv === 'yes' || pv === 'on') {
+            document.documentElement.classList.add('overlay-preview');
+          }
+        } catch (e) {
+          // URL lạ: React tự đặt class khi mount.
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

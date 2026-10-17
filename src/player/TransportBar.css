@@ -1,0 +1,22 @@
+/*
+ * Nút loa của thanh điều khiển (giai điệu mẫu, cạnh Tempo — trước deploy, chủ dự án duyệt). Nạp sau
+ * player.css (TransportBar.tsx). Đang bật = đỏ như huy hiệu "Đang phát giai điệu" (nguy cơ bản quyền trên
+ * stream), không phải nền accent của nút bật / tắt thường. Tương phản cao: giữ kiểu Highlight chung của
+ * `.btn[aria-pressed='true']` (app.css) — vì vậy luật màu chỉ áp khi không có forced colors.
+ */
+@media (forced-colors: none) {
+  .transport .transport-sound-toggle[aria-pressed='true'],
+  .transport .transport-sound-toggle[aria-pressed='true']:hover:not(:disabled) {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+}
+
+/* Màn ~1024 px (iPad ngang, laptop nhỏ): nút loa chiếm thêm ~46 px → hai thanh trượt ngắn lại một chút để thanh
+   điều khiển vẫn một hàng như trước khi có nút (player.css đặt 92 px cho 721–1440 px). */
+@media (min-width: 721px) and (max-width: 1080px) {
+  .transport .transport-slider input[type='range'] {
+    width: 76px;
+  }
+}

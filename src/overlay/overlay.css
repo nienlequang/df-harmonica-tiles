@@ -1,0 +1,382 @@
+/*
+ * Overlay OBS (src/overlay/OverlayView.tsx). Nền trang theo `?bg=` nằm ở app.css (chunk chính — áp ngay
+ * từ khung hình đầu, trước khi chunk overlay tải xong): trong suốt (mặc định), chroma #00FF00 (chỉ còn cho
+ * link cũ — cách Window Capture + Chroma Key đã bỏ ở vòng R6) hoặc nền theme. Cửa sổ "Xem trước"
+ * (`preview=1`): nền tối thường + bảng phím game minh họa (cuối file).
+ * --lane-left / --lane-right do OverlayEngine đặt theo layout canvas (hướng dọc).
+ * Kiểu HUD (docs/DESIGN.md "Overlay"): giữ tối giản, nền trong suốt; chỉ tile / hit line (canvas) và
+ * banner / game bar theo kiểu mới. Nền chroma: mọi thứ ĐẶC (không bóng / glow / panel bán trong
+ * suốt — phần trộn với #00FF00 bị Chroma Key ăn mất hoặc viền xanh), không chữ màu accent xanh.
+ */
+
+html.overlay-mode,
+html.overlay-mode body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.overlay {
+  --lane-left: 0px;
+  --lane-right: 56px;
+  /* Game bar: panel bán trong suốt nổi trên hình game. */
+  --gb-panel: rgb(9 11 13 / 0.78);
+  --gb-cap: #161c22;
+  --gb-cap-border: #3d4752;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+ * Game bar của overlay LUÔN là panel tối (nổi trên hình game) ở mọi theme → chữ / viền / hổ phách của
+ * nó cũng dùng bộ màu tối. Theme sáng (Player của streamer để theme sáng — overlay theo theme đó) mà để theo
+ * token sáng thì chữ tối nằm trên keycap tối ≈ 1:1 — Z X C…, độ, tên nút biến mất.
+ */
+.overlay .game-bar {
+  --text: #e9edf1;
+  --text-muted: #9aa5b1;
+  --border-strong: #3d4752;
+  --warn: #f2c230;
+  --warn-text: #14110a;
+}
+
+/* Bỏ các ghi đè chỉ dành cho game bar sáng của Player (keycap / nút nốt thường đổi nền đậm). */
+:root[data-theme='light'] .overlay .gb-tone-normal kbd.gb-cap {
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+}
+
+:root[data-theme='light'] .overlay .gb-tone-normal .gbm-btn {
+  border-color: var(--mod-normal);
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+  box-shadow: none;
+}
+
+:root[data-theme='light'] .overlay .gbm-mode-natural.is-selected .gbm-mode-btn {
+  border-color: var(--mod-normal);
+  background: var(--mod-normal);
+}
+
+.overlay-lanes-horizontal {
+  --lane-left: 8px;
+  --lane-right: 8px;
+}
+
+.overlay-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.overlay-canvas-box {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.overlay-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Banner trong luồng (đầy đủ: giữa canvas và game bar; dải ngang: phía trên lane). */
+.overlay-banner {
+  flex: none;
+  padding: 0 var(--lane-right) 0 var(--lane-left);
+}
+
+.overlay-banner .hold-banner-slot {
+  height: 48px;
+  padding: 4px 0;
+}
+
+/* Preset khớp game: banner nhỏ nổi ngay trên hit line, không che lane khi không giữ gì. */
+.overlay-banner-float {
+  position: absolute;
+  left: var(--lane-left);
+  right: var(--lane-right);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Kiểu Mobile (bàn nút ở đáy khu làn): banner ở đầu khu làn. */
+.overlay-banner-top {
+  top: 6px;
+}
+
+.overlay-banner-float .overlay-banner {
+  padding: 0;
+  max-width: 100%;
+}
+
+.overlay-banner-float .hold-banner-slot {
+  height: auto;
+  padding: 0;
+}
+
+.overlay-banner-float .hold-banner {
+  --cut: 6px;
+  flex: 0 1 auto;
+  gap: 8px;
+  padding: 3px 12px;
+  font-size: 14px;
+  letter-spacing: var(--tracking);
+}
+
+.overlay-banner-float .hold-banner-mobile {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.overlay-banner-float .hold-banner-next {
+  font-size: 12px;
+}
+
+.overlay-game-bar {
+  margin-top: 4px;
+}
+
+.overlay-lanes-horizontal .overlay-game-bar {
+  align-self: center;
+  width: min(100%, 640px);
+}
+
+/* Đếm ngược `?delay=`: số lớn giữa vùng lane, có viền để đọc được trên mọi nền game. */
+.overlay-countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.overlay-countdown-num {
+  color: #ffffff;
+  font-size: clamp(56px, 28vmin, 220px);
+  font-weight: 700;
+  font-stretch: condensed;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.6);
+  animation: overlay-countdown-pop 0.3s ease-out;
+}
+
+@keyframes overlay-countdown-pop {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-countdown-num {
+    animation: none;
+  }
+}
+
+/*
+ * Bố cục cả canvas (`fit=canvas`): trang = cả canvas OBS, khung overlay đặt đúng chỗ bằng left / top /
+ * width / height (px) do OverlayView tính (canvasPlacement) — đè `inset: 0` của .overlay.
+ */
+.overlay.overlay-fit-canvas {
+  inset: auto;
+}
+
+/*
+ * Khung cửa sổ (chỉ ở trình duyệt thường — OverlayView không vẽ trong OBS): trạng thái "Đang chờ màn
+ * chơi…" góc trên trái; cửa sổ "Xem trước" có thêm nhãn "Xem trước · không dùng để quay" góc trên phải.
+ * Panel tối ĐẶC (đọc được trên nền trong suốt / tối / hình game); accent chỉ ở vạch trái (khung UI).
+ */
+.overlay-preview-badge,
+.overlay-status-text {
+  position: fixed;
+  top: 8px;
+  z-index: 2;
+  margin: 0;
+  padding: 5px 12px;
+  border: 1px solid #3d4752;
+  border-left: 3px solid #0ff796;
+  border-radius: 0;
+  background: #090b0d;
+  color: #f2f4f8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.overlay-preview-badge {
+  right: 8px;
+  max-width: calc(50vw - 16px);
+  pointer-events: none;
+}
+
+.overlay-status {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.overlay-status:empty {
+  display: none;
+}
+
+.overlay-status-text {
+  left: 8px;
+  max-width: calc(100vw - 16px);
+}
+
+/* Thẻ lỗi: nhỏ, đọc được trên nền trong suốt / chroma / hình game. */
+.overlay-error-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.overlay-error {
+  max-width: 440px;
+  padding: 14px 16px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-left: 3px solid #ff5a4f;
+  border-radius: 2px;
+  background: rgb(9 11 13 / 0.94);
+  color: #f2f4f8;
+  font-size: 15px;
+  line-height: 1.45;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.5);
+}
+
+.overlay-error p {
+  margin: 6px 0 0;
+}
+
+.overlay-error-title {
+  margin: 0;
+  font-size: 17px;
+  font-stretch: semi-condensed;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.overlay-error-hint {
+  color: #c3c9d4;
+  font-size: 13px;
+}
+
+/* ── Nền chroma (link cũ `bg=chroma`): mọi thứ đặc ─────────────────────── */
+
+html.overlay-bg-chroma .overlay {
+  --gb-panel: #0c1013;
+}
+
+/* Bóng / glow bán trong suốt trộn với #00FF00 → viền xanh lem sau khi key. */
+html.overlay-bg-chroma .overlay .hold-banner,
+html.overlay-bg-chroma .overlay .gbm-btn,
+html.overlay-bg-chroma .overlay .gbm-mode-btn {
+  box-shadow: none;
+}
+
+html.overlay-bg-chroma .overlay .gb-key {
+  filter: none;
+}
+
+/* Nút chế độ sắp chạm: vòng hổ phách ĐẶC (box-shadow none ở trên chỉ bỏ glow bán trong suốt). */
+html.overlay-bg-chroma .overlay .gbm-mode.is-cue .gbm-mode-btn {
+  box-shadow: 0 0 0 3px var(--warn);
+}
+
+html.overlay-bg-chroma .overlay .hold-banner-combo {
+  box-shadow: inset 0 -5px 0 var(--mod-scroll);
+}
+
+/* Vạch accent xanh neon gần màu chroma → Chroma Key ăn mất: đổi sang trắng xám. */
+html.overlay-bg-chroma .overlay-status-text {
+  border-left-color: #e9edf1;
+}
+
+html.overlay-bg-chroma .overlay-countdown-num {
+  text-shadow: none;
+  -webkit-text-stroke-color: #000000;
+}
+
+/* ── Cửa sổ "Xem trước" (`preview=1`) ──────────────────────────────────────
+ * Chỉ để xem người xem stream thấy gì, KHÔNG phải nguồn quay: nền tối thường (đè nền trong suốt của
+ * app.css — `#root` có id nên cần cùng độ ưu tiên), khung 16:9 = màn stream, bảng phím game minh họa bằng
+ * màu xám trung tính (không accent — DESIGN.md: accent không bao giờ tô keycap). Không animation.
+ */
+html.overlay-mode.overlay-preview,
+html.overlay-mode.overlay-preview body,
+html.overlay-mode.overlay-preview #root {
+  background: #050607;
+  color-scheme: dark;
+}
+
+.overlay-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.overlay-preview-frame,
+.overlay-preview-keyboard,
+.overlay-preview-key {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.overlay-preview-frame {
+  background: #0d1114;
+  box-shadow: inset 0 0 0 1px #1c232a;
+}
+
+.overlay-preview-keyboard {
+  border: 1px solid #2a323b;
+  border-radius: 8px;
+  background: #11161b;
+}
+
+.overlay-preview-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #3d4752;
+  border-radius: 2px;
+  background: #1a2128;
+  color: #9aa5b1;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (forced-colors: active) {
+  .overlay-preview-keyboard,
+  .overlay-preview-key {
+    border-color: CanvasText;
+  }
+}

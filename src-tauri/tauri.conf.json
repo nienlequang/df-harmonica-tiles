@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Harmonica Tiles Overlay",
+  "version": "../package.json",
+  "identifier": "com.dfht.harmonicatiles.overlay",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Harmonica Tiles Overlay",
+        "url": "index.html?overlay=1&song=seed-quoc-ca-viet-nam&layout=game",
+        "width": 576,
+        "height": 600,
+        "x": 700,
+        "y": 150,
+        "minWidth": 200,
+        "minHeight": 150,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "resizable": true,
+        "shadow": false,
+        "skipTaskbar": false,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "shortDescription": "Overlay nốt rơi harmonica cho Delta Force (luôn nổi trên game)",
+    "longDescription": "Bản desktop tùy chọn của Delta Force Harmonica Tiles: cửa sổ trong suốt, luôn nổi, click xuyên qua được, phím tắt toàn cục để điều khiển khi đang ở trong game. App chỉ hiển thị hướng dẫn — không bao giờ gửi phím hay chuột vào game.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

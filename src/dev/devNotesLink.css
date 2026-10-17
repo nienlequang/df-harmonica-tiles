@@ -1,0 +1,28 @@
+/*
+ * Link "Dev notes" ở chân trang Hướng dẫn / Cài đặt (R7-8) — chân trang Hướng dẫn thêm "Mã nguồn (GitHub)" (D-444): chữ
+ * nhỏ, mờ (--text-muted ≥ 4.5:1 trên mọi nền của app — src/ui/contrast.test.ts), gạch chân để nhận ra là link, vùng
+ * bấm ≥ 24 px; focus ring dùng :focus-visible của app.css.
+ */
+.dev-notes-link {
+  margin: 32px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.dev-notes-link a {
+  display: inline-block;
+  min-height: 24px;
+  padding: 4px 8px;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dev-notes-link a:hover {
+  color: var(--text);
+}
+
+.dev-notes-sep {
+  color: var(--text-muted);
+}

@@ -1,0 +1,61 @@
+@title Bài thử lặp đoạn và giữ chuột
+@artist Tác giả thử
+@bpm 160
+@time 4/4
+@scroll +1
+// Bài tự soạn cho test, không phải bài hát có thật. Mỗi nốt 1 beat như bản cảm âm chưa có nhịp. Tông Rê thứ, chỉ Đoạn 6 có nốt Sib (scroll).
+
+# ĐOẠN 1
+X V N V X C X Z [giữ chuột trái] N [thả chuột trái] X
+V N , N V X C V C X
+[giữ chuột trái] B N [thả chuột trái] X V N , N C X Z [giữ chuột trái] N B [thả chuột trái] Z X C V B N , N B V X
+C V N V C X Z X
+V N , N V C X C V N V
+X C X Z [giữ chuột trái] V N [thả chuột trái] X C
+
+# ĐOẠN 2
+N , N B V C X V N V X C V
+V B N B V C X C V X C Z-L:N
+[giữ chuột trái] N [thả chuột trái] Z X V C X C V N
+V N , V N , N V C X C
+C X C V N V C X Z X
+
+# ĐIỆP KHÚC
+N N , N V N , N V C X
+V C X C V X Z X
+V V N V C V N V , N V
+X C X Z X C V X
+N N , N V N , , N V C
+N V C V N V C X
+C V N , N V C X C V
+V C X C X Z X X
+
+# ĐOẠN 3
+// Đoạn 3 để trống (chỉ có ghi chú): kiểm đoạn rỗng.
+
+# ĐOẠN 4
+C V [giữ chuột trái] V C X
+C V N [thả chuột trái] X V N
+, N V [giữ chuột trái] N [thả chuột trái] X C
+V N , [giữ chuột phải] X [thả chuột phải] N V C X
+[giữ chuột trái] N-B [thả chuột trái] Z X C X Z
+V V C X [giữ chuột trái] N N [thả chuột trái] X
+C X V X X
+
+# ĐOẠN 5
+@repeat ĐOẠN 2
+@repeat ĐIỆP KHÚC
+
+# ĐOẠN 6
+X V N V
+, N V N , X
+V B [giữ scroll] N [thả scroll] B V C X
+X V B [giữ scroll] N [thả scroll] , N V
+, [giữ scroll] N [thả scroll] , N V C
+C V B [giữ scroll] N [thả scroll] , B V X
+
+# KẾT
+, N V N , X V
+C X Z X V C X
+@repeat ĐIỆP KHÚC
+@repeat ĐIỆP KHÚC

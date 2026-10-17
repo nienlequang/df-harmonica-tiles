@@ -1,0 +1,216 @@
+/*
+ * Trang Hướng dẫn (`#/guide`, D-260): tài liệu dài đọc trên nền app — cột chữ ≤ 80ch, bảng / code cuộn ngang
+ * trong khung riêng (trang không cuộn ngang ở 320 px), chỉ dùng token của app.css.
+ */
+
+.guide {
+  max-width: 80ch;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.guide-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.guide-tabs a {
+  text-decoration: none;
+}
+
+.guide-tabs a[aria-current='page'] {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--text);
+}
+
+.guide-lang-note {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.guide-body {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.guide-body h1,
+.guide-body h2,
+.guide-body h3,
+.guide-body h4 {
+  margin: 1.6em 0 0.5em;
+  /* Thanh điều hướng của app dính trên đỉnh (~48 px): tiêu đề được cuộn tới không nằm dưới nó. */
+  scroll-margin-top: 72px;
+}
+
+/* Tiêu đề sâu (CHANGELOG của trang Dev notes hạ một bậc → h5) cũng được cuộn tới qua `?s=`. */
+.guide-body :is(h5, h6) {
+  scroll-margin-top: 72px;
+}
+
+/* Điện thoại dọc: thanh điều hướng 2 hàng (~89 px, app.css ≤ 560 px) — tiêu đề được cuộn tới không nằm dưới nó. */
+@media (max-width: 560px) {
+  .guide-body :is(h1, h2, h3, h4, h5, h6) {
+    scroll-margin-top: 104px;
+  }
+}
+
+.guide-body h1 {
+  margin-top: 0;
+  font-size: 1.9rem;
+}
+
+.guide-body h2 {
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.45rem;
+}
+
+.guide-body h3 {
+  font-size: 1.15rem;
+}
+
+.guide-body :is(h1, h2, h3, h4):focus {
+  outline: none;
+}
+
+.guide-body :is(h1, h2, h3, h4):focus-visible {
+  outline: 2px solid var(--focus);
+}
+
+.guide-body p,
+.guide-body ul,
+.guide-body ol,
+.guide-body blockquote,
+.guide-body .guide-table,
+.guide-body .guide-code,
+.guide-body .guide-figure {
+  margin: 0 0 0.9em;
+}
+
+.guide-body ul,
+.guide-body ol {
+  padding-left: 1.5em;
+}
+
+.guide-body li > p,
+.guide-body li > ul,
+.guide-body li > ol {
+  margin: 0;
+}
+
+.guide-body li + li {
+  margin-top: 0.25em;
+}
+
+.guide-body code {
+  padding: 0.05em 0.3em;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.9em;
+}
+
+.guide-body blockquote {
+  padding: 8px 12px;
+  border-left: 3px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.guide-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.guide-body hr {
+  margin: 1.5em 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.guide-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+}
+
+.guide-img-missing {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Bảng rộng (tham số overlay, nguồn bài…) cuộn ngang trong khung, không làm cả trang cuộn ngang. */
+.guide-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.guide-table table {
+  border-collapse: collapse;
+  font-size: 0.92em;
+  line-height: 1.45;
+}
+
+.guide-table th,
+.guide-table td {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  text-align: left;
+}
+
+.guide-table th {
+  background: var(--surface-2);
+}
+
+/* Ô có nhiều mã ngắn (`0` / `1`, từ khóa tìm…): không bẻ giữa một mã — bảng cuộn ngang thay vì vỡ chữ. */
+.guide-table code {
+  white-space: nowrap;
+}
+
+.guide-code {
+  position: relative;
+}
+
+.guide-code pre {
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  padding-right: 92px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.88em;
+  line-height: 1.5;
+}
+
+.guide-code pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.guide-code-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+@media (max-width: 480px) {
+  .guide-body h1 {
+    font-size: 1.5rem;
+  }
+
+  .guide-body h2 {
+    font-size: 1.25rem;
+  }
+
+  .guide-code pre {
+    padding-top: 40px;
+    padding-right: 14px;
+  }
+}

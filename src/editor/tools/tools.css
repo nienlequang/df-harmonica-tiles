@@ -1,0 +1,418 @@
+/*
+ * Công cụ Editor: tap timing, cảm âm, tối ưu tông, bảng optimizer — giao diện "Tactical
+ * HUD" (docs/DESIGN.md). Chỉ dùng token của app.css (đạt AA ở cả hai theme). Keycap tap timing giữ
+ * màu modifier (palette.ts) — accent không bao giờ tô phím (src/editor/editorCss.test.ts).
+ */
+
+/* Nhãn kiểu HUD: in hoa, condensed, giãn chữ. */
+.tool-table thead th,
+.tool-badge,
+.opt-fieldset > legend,
+.tap-progress,
+.tap-mods {
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.tool-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.tool-stack-tight {
+  gap: 4px;
+}
+
+.tool-row-tight {
+  gap: 8px;
+}
+
+.tool-stack > p,
+.tool-note > p {
+  margin: 0;
+}
+
+/* Ghi chú kiểu thông báo HUD: vạch trái accent (thông tin) / hổ phách (cần chú ý). */
+.tool-note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.tool-note-warn {
+  border-left-color: var(--warn);
+}
+
+.tool-note ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--gap);
+}
+
+.tool-row > .field {
+  min-width: 160px;
+}
+
+/* ── Bảng ─────────────────────────────────────────────────────────────── */
+
+.tool-table-wrap {
+  max-height: 340px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+}
+
+.tool-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tool-table th,
+.tool-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tool-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  /* đường kẻ dưới đậm hơn (border-collapse + sticky làm mất border-bottom khi cuộn) */
+  box-shadow: inset 0 -1px 0 var(--border-strong);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tool-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tool-table tbody th {
+  font-weight: 500;
+}
+
+.tool-table .tool-group-row th {
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+.tool-table input[type='text'] {
+  width: 100%;
+  min-width: 12em;
+  padding: 3px 6px;
+  caret-color: var(--accent);
+}
+
+.tool-tokens {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 22em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tag vuông kiểu HUD (`TỐT NHẤT`, `CUNG GỐC`…). */
+.tool-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.tool-badge-ok {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.tool-badge-warn {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.tool-text-warn {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+/* ── Optimizer ────────────────────────────────────────────────────────── */
+
+.opt-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opt-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Legend = tiêu đề section: chữ in hoa + đường mảnh kéo sang phải. */
+.opt-fieldset > legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.opt-fieldset > legend::after {
+  content: '';
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--border);
+}
+
+/* tiêu đề cột số được xuống dòng (vd. "Chạm đổi chế độ") để bảng vừa nửa hộp thoại */
+.opt-table thead th.num {
+  white-space: normal;
+  vertical-align: bottom;
+  min-width: 4.5em;
+}
+
+.opt-row {
+  cursor: pointer;
+}
+
+.opt-row:hover {
+  background: var(--surface-2);
+}
+
+/* Phương án đang chọn: nền accent-dim + vạch accent bên trái. */
+.opt-row.is-selected {
+  background: var(--accent-dim);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.opt-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.opt-choice input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.opt-choice label {
+  cursor: pointer;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.opt-actions {
+  gap: 8px;
+}
+
+/* ── Tap timing ───────────────────────────────────────────────────────── */
+
+/* Vùng gõ: khung ngắm kiểu HUD — viền control (≥ 3:1) + ngoặc góc, focus → ngoặc accent. Vẽ bằng
+   background (như panel HUD của editor.css), không pseudo-element. */
+.tap-pad {
+  --hud-c: var(--border-strong);
+  --hud-l: var(--control-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 200px;
+  padding: 16px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--hud-c) 0 0) left top / 14px 2px,
+    linear-gradient(var(--hud-c) 0 0) left top / 2px 14px,
+    linear-gradient(var(--hud-c) 0 0) right top / 14px 2px,
+    linear-gradient(var(--hud-c) 0 0) right top / 2px 14px,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 14px 2px,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 2px 14px,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 14px 2px,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 2px 14px,
+    repeating-linear-gradient(90deg, var(--hud-l) 0 6px, transparent 6px 12px) top / 100% 1px,
+    repeating-linear-gradient(90deg, var(--hud-l) 0 6px, transparent 6px 12px) bottom / 100% 1px,
+    repeating-linear-gradient(180deg, var(--hud-l) 0 6px, transparent 6px 12px) left / 1px 100%,
+    repeating-linear-gradient(180deg, var(--hud-l) 0 6px, transparent 6px 12px) right / 1px 100%,
+    var(--surface-2);
+  background-repeat: no-repeat;
+  background-origin: border-box;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.tap-pad:hover,
+.tap-pad:focus-visible {
+  --hud-c: var(--accent);
+}
+
+.tap-pad:focus-visible {
+  --hud-l: var(--accent);
+}
+
+.tap-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Keycap: góc 3 px, highlight mép trên nhẹ; màu modifier giữ nguyên. */
+.tap-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  padding: 0 0.15em;
+  /* viền để keycap thường vẫn thấy rõ trên nền sáng */
+  border: 1px solid var(--control-border);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.28);
+  font-family: var(--font-mono);
+  font-weight: 800;
+  line-height: 1.15;
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+}
+
+.tap-key sup {
+  font-size: 0.5em;
+  margin-left: 0.05em;
+}
+
+.tap-key.mod-left {
+  background: var(--mod-left);
+  color: var(--mod-left-text);
+}
+
+.tap-key.mod-right {
+  background: var(--mod-right);
+  color: var(--mod-right-text);
+}
+
+.tap-key.mod-scroll {
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+}
+
+.tap-key.is-rest {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  border: 1px dashed var(--control-border);
+}
+
+.tap-sep {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.tap-current .tap-key {
+  font-size: 64px;
+}
+
+.tap-current .tap-sep {
+  font-size: 40px;
+}
+
+.tap-mods {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tap-done {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--success);
+  text-align: center;
+}
+
+.tap-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tap-next li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.tap-next .tap-key {
+  font-size: 22px;
+}
+
+.tap-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tap-progress {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chế độ tương phản cao: khung vùng tap vẽ bằng background bị bỏ → viền thật. */
+@media (forced-colors: active) {
+  .tap-pad {
+    border-color: CanvasText;
+  }
+
+  .opt-fieldset > legend::after {
+    background: CanvasText;
+  }
+}

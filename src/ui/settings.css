@@ -1,0 +1,540 @@
+/*
+ * Settings view + ShortcutsHelp. Dùng token + component HUD của app.css: card ngoặc góc, tiêu đề section
+ * đánh số `01 / GIAO DIỆN` (counter của `.hud-numbered`).
+ * Bố cục (góp ý 2026-10-16 "gọn, ngang, không khoảng trống lớn"): hai cột cố định (`.settings-col`, card
+ * không nhảy cột khi nội dung đổi), trong card control xếp lưới ngang (`.settings-fields.is-grid`); màn hẹp
+ * mọi thứ về một cột.
+ */
+
+.settings-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Vạch accent dọc trước tiêu đề trang (trang trí). */
+.settings-header h1::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 0.9em;
+  background: var(--accent);
+}
+
+.settings-header p {
+  margin: 0;
+}
+
+/* 2 cột từ ~940 px nội dung (cột ≥ 460 px), hẹp hơn = 1 cột (cột trái rồi cột phải → đúng thứ tự 01…07). */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.settings-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.settings-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+}
+
+.settings-card-title {
+  flex: 1 1 200px;
+  min-width: 0;
+  font-size: 15px;
+  margin: 0;
+}
+
+.settings-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Lưới ngang: 2 control mỗi hàng khi card đủ rộng; `auto-fill` giữ cột trống → control lẻ không bị kéo
+   dài hết card. `.settings-span` = phần tử trải hết hàng (ghi chú, nhóm thiết bị MIDI…). */
+.settings-fields.is-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 16px 24px;
+  align-items: start;
+}
+
+.settings-fields.is-grid > .settings-span {
+  grid-column: 1 / -1;
+}
+
+.settings-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-notes > p {
+  margin: 0;
+}
+
+.settings-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-note {
+  border-left: 2px solid var(--warn);
+  padding-left: 8px;
+}
+
+.settings-fields select {
+  width: 100%;
+}
+
+/* Vùng thông báo (role=status) luôn có trong DOM để screen reader đọc khi có chữ; rỗng thì không viền. */
+.settings-live:empty {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.settings-warning {
+  border-left: 3px solid var(--warn);
+  padding-left: 8px;
+  color: var(--text);
+}
+
+.settings-error {
+  border-left: 3px solid var(--danger);
+  padding-left: 8px;
+  color: var(--danger);
+}
+
+/* MIDI: trạng thái kết nối + đèn nháy khi nhận nốt. */
+.midi-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.midi-activity {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--control-border);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.midi-activity[data-connected='true'] {
+  border-color: var(--success);
+}
+
+.midi-activity.is-blink {
+  animation: midi-blink 0.25s ease-out;
+}
+
+@keyframes midi-blink {
+  from {
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+  }
+  to {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .midi-activity.is-blink {
+    animation-duration: 0.4s;
+  }
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Kiểu điều khiển: radio dạng thẻ ──────────────────────────────────── */
+
+/* Lựa chọn dạng thẻ nằm cạnh nhau khi đủ chỗ. */
+.settings-radios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+}
+
+.settings-radio {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 2px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.settings-radio:hover {
+  border-color: var(--text-muted);
+}
+
+/* Mục đang chọn: viền accent 2 px + nền accent mờ + vạch trái (không chỉ dựa vào màu: chấm radio). */
+.settings-radio:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    inset 3px 0 0 var(--accent);
+}
+
+.settings-radio input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.settings-radio-label {
+  font-weight: 700;
+  font-size: 14px;
+  font-stretch: semi-condensed;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking);
+}
+
+.settings-radio > .field-hint {
+  grid-column: 2;
+}
+
+.settings-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.settings-fieldset > legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 2px;
+  font-weight: 600;
+  font-size: 13px;
+  font-stretch: semi-condensed;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking);
+}
+
+/* legend float: phần tử kế tiếp bắt đầu dòng mới. */
+.settings-fieldset > legend + * {
+  clear: both;
+}
+
+/* 4 ô tên gọi nút: lưới 2 × 2 khi đủ rộng; nhãn dài xuống 2 dòng thì ô nhập vẫn thẳng hàng (căn đáy). */
+.settings-label-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  align-items: end;
+  gap: 12px 20px;
+}
+
+.settings-label-field > label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.settings-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-label-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.settings-label-row .btn {
+  flex: none;
+}
+
+/* ── Âm thanh (card thường, mặc định tắt hết) ─────────────────────────── */
+
+/* Huy hiệu cạnh tiêu đề card: giai điệu đang bật = đỏ (nguy cơ bản quyền trên stream). */
+.settings-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge.settings-badge-melody {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+/* 4 nhóm con thành 2 cột con (giai điệu + click | synth + tiếng luyện tập) — chiều cao gần bằng nhau, không
+   có ô trống giữa các hàng; card hẹp thì xếp chồng. */
+.settings-subgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 18px 24px;
+  align-items: start;
+}
+
+.settings-subcol {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.settings-subgroup-title {
+  margin: 0 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Control chưa dùng được (âm thanh tương ứng đang tắt). */
+.field.is-disabled > label,
+.field.is-disabled > input,
+.field.is-disabled > select {
+  opacity: 0.55;
+}
+
+.field.is-disabled input,
+.field.is-disabled select,
+.field.is-disabled label {
+  cursor: not-allowed;
+}
+
+/* ── ShortcutsHelp ─────────────────────────────────────────────────────── */
+
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shortcuts-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcuts-row {
+  display: grid;
+  grid-template-columns: minmax(72px, max-content) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.shortcuts-row dt,
+.shortcuts-row dd {
+  margin: 0;
+}
+
+.shortcuts-row dt {
+  white-space: nowrap;
+}
+
+/* Chuột / chạm: tên thao tác (nhỏ, in hoa) trên, tác dụng dưới — đọc gọn cả ở cột hẹp của màn chơi. */
+.shortcuts-list.is-stacked .shortcuts-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.shortcuts-list.is-stacked dt {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+.shortcuts-sep {
+  color: var(--text-muted);
+  padding: 0 4px;
+}
+
+/* Nhóm: Phím tắt / Phím game (Nút game) / Chuột (Chạm) — tiêu đề nhỏ in hoa, vạch mảnh phía trên. */
+.shortcuts-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcuts-group + .shortcuts-group {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.shortcuts-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.shortcuts-hint,
+.shortcuts-practice,
+.shortcuts-guide {
+  margin: 0;
+}
+
+.shortcuts-hint {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* 8 phím / nút game: phím (PC) hoặc nút tròn số (Mobile) + bậc + tên nốt, xếp thành 8 cột. */
+.shortcuts-notes {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shortcuts-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.shortcuts-note kbd {
+  min-width: 0;
+  width: 100%;
+  max-width: 32px;
+  padding: 2px 0;
+  font-family: var(--font-hud);
+  font-weight: 700;
+}
+
+.shortcuts-degree {
+  position: relative;
+  display: inline-block;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Đố = "1" có chấm trên: chấm vẽ bằng CSS (U+0307 của font hệ thống lệch — DESIGN.md). */
+.shortcuts-degree.is-high::after {
+  content: '';
+  position: absolute;
+  top: -0.3em;
+  left: 50%;
+  width: 0.22em;
+  height: 0.22em;
+  margin-left: -0.11em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.shortcuts-digit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--control-border);
+  border-radius: 50%;
+  background: var(--surface-2);
+}
+
+.shortcuts-solfege {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-stretch: semi-condensed;
+  white-space: nowrap;
+}
+
+/* Ô màu modifier (màu mang nghĩa, palette.ts) cạnh tên nút chuột. */
+.shortcuts-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 1px;
+  vertical-align: 0;
+}
+
+.shortcuts-swatch.is-left {
+  background: var(--mod-left);
+}
+
+.shortcuts-swatch.is-right {
+  background: var(--mod-right);
+}
+
+.shortcuts-swatch.is-scroll {
+  background: var(--mod-scroll);
+}
+
+.shortcuts-practice {
+  padding: 6px 10px;
+  border-left: 3px solid var(--border-strong);
+  background: var(--surface-2);
+  font-size: 13px;
+}
+
+@media (forced-colors: active) {
+  .shortcuts-degree.is-high::after {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .shortcuts-swatch {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+}

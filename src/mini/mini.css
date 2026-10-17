@@ -1,0 +1,1492 @@
+/*
+ * Trang mini cho cửa sổ nổi Android (src/mini, thử nghiệm) — Tactical HUD (docs/DESIGN.md). Khung nhỏ
+ * ~300×300: làn chiếm phần còn lại, bàn nút sát đáy, chữ ≥ 9 px đậm. Token màu của app.css; accent xanh
+ * neon chỉ cho khung UI (nút ▶, focus) — không bao giờ tô ô / nút phím; hổ phách cho huy hiệu "Thử
+ * nghiệm" + ghi chú. Không animation lặp; không cuộn / zoom bằng chạm (touch-action).
+ */
+
+.mini {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-hud);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mini-missing {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+/* ── Làn + banner ─────────────────────────────────────────────────────── */
+
+.mini-lanes {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.mini-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mini-banner {
+  position: absolute;
+  top: 4px;
+  left: var(--lane-left, 0px);
+  right: var(--lane-right, 0px);
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Panel đang hiện (chưa chạy / tạm dừng / hết bài): banner nhường đỉnh cho tên bài. */
+.mini[data-phase='ready'] .mini-banner,
+.mini[data-phase='paused'] .mini-banner,
+.mini[data-phase='ended'] .mini-banner {
+  visibility: hidden;
+}
+
+.mini-banner .hold-banner-slot {
+  height: auto;
+  max-width: 100%;
+  padding: 0;
+}
+
+.mini-banner .hold-banner {
+  flex: 0 1 auto;
+  gap: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.45);
+}
+
+.mini-banner .hold-banner-mobile {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.mini-banner .hold-banner-next {
+  font-size: 10px;
+}
+
+/* ── Bàn nút ──────────────────────────────────────────────────────────── */
+
+/* Mobile: MobilePad của Player (src/player/mobilePad.css) phủ đáy khu làn, hình học theo khung. */
+
+/* PC: game bar gọn dưới làn, căn theo làn qua --lane-left / --lane-right. */
+.game-bar.mini-pad {
+  flex: none;
+  padding: 4px var(--lane-right, 0px) 6px var(--lane-left, 0px);
+  border-width: 1px 0 0;
+  border-radius: 0;
+}
+
+.mini-pad .gb-key {
+  gap: 2px;
+}
+
+.mini-pad .gb-degree {
+  font-size: 11px;
+}
+
+.mini-pad kbd.gb-cap {
+  width: min(100%, 40px, 12vh);
+  font-size: clamp(12px, 4.4vmin, 18px);
+}
+
+.mini-pad .game-bar-mods {
+  flex-wrap: nowrap;
+  gap: 2px 4px;
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.mini-pad .gb-mod-wrap {
+  gap: 4px;
+}
+
+/* Khung nhỏ: chỉ tên modifier (bỏ "[chuột trái]"), một hàng. */
+.mini-pad .gb-mod {
+  padding: 1px 5px;
+  font-size: 11px;
+}
+
+.mini-pad .gb-mod-button {
+  display: none;
+}
+
+/* ── Lớp chạm (chạm bất kỳ đâu = tạm dừng / chạy tiếp) ──────────────────── */
+
+.mini-tap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mini-tap:disabled {
+  cursor: default;
+}
+
+.mini-tap:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+/* ── Đếm ngược ────────────────────────────────────────────────────────── */
+
+.mini-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--scrim);
+  pointer-events: none;
+}
+
+:root[data-theme='light'] .mini-countdown {
+  background: rgb(232 227 211 / 0.6);
+}
+
+.mini-countdown-num {
+  color: var(--text);
+  font-size: clamp(56px, 32vmin, 160px);
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1;
+  text-shadow: 0 2px 12px var(--bg);
+}
+
+.mini-countdown-hint {
+  padding: 2px 10px;
+  background: var(--glass);
+  color: var(--text);
+  font-size: clamp(13px, 5vmin, 22px);
+  font-weight: 700;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+/* ── Panel khi chưa chạy / tạm dừng / hết bài ─────────────────────────── */
+
+.mini-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px;
+  background: linear-gradient(
+    rgb(10 12 14 / 0.82),
+    rgb(10 12 14 / 0.4) 32%,
+    rgb(10 12 14 / 0.4) 68%,
+    rgb(10 12 14 / 0.82)
+  );
+  /* Phần trống của panel để chạm rơi xuống lớp chạm (= ▶). */
+  pointer-events: none;
+}
+
+:root[data-theme='light'] .mini-panel {
+  background: linear-gradient(
+    rgb(232 227 211 / 0.88),
+    rgb(232 227 211 / 0.45) 32%,
+    rgb(232 227 211 / 0.45) 68%,
+    rgb(232 227 211 / 0.88)
+  );
+}
+
+.mini-top,
+.mini-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-bottom {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.mini-top > *,
+.mini-bottom > *,
+.mini-center-row > * {
+  pointer-events: auto;
+}
+
+.mini-badge {
+  flex: none;
+  padding: 1px 4px;
+  border: 1px solid var(--warn);
+  background: var(--glass);
+  color: var(--warn);
+  font-size: 10px;
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.mini-badge::before {
+  content: '[ ';
+}
+
+.mini-badge::after {
+  content: ' ]';
+}
+
+.mini-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-help-btn {
+  flex: none;
+  font-size: 15px;
+}
+
+/* "◂" về màn chơi (chỉ có trong panel = chỉ khi đang dừng). Nền kính để đọc được trên ô rơi phía sau. */
+.mini-back {
+  flex: none;
+  min-height: 30px;
+  background: var(--glass);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.mini-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-center-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-state {
+  margin: 0;
+  padding: 1px 8px;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* Nút ▶ lớn: vát góc, viền accent (như ▶ của màn đầu, nhỏ hơn). Không animation lặp. */
+.mini-play {
+  --cut: 10px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: clamp(120px, 42vmin, 220px);
+  min-height: clamp(44px, 15vmin, 64px);
+  padding: 0 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.mini-play::before,
+.mini-play::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+}
+
+.mini-play::before {
+  inset: 0;
+  background: var(--accent);
+}
+
+.mini-play::after {
+  inset: 2px;
+  background: rgb(9 11 13 / 0.92);
+}
+
+:root[data-theme='light'] .mini-play::after {
+  background: rgb(244 240 228 / 0.96);
+}
+
+.mini-play:hover:not(:disabled),
+.mini-play:active:not(:disabled) {
+  color: var(--accent-text);
+}
+
+.mini-play:hover:not(:disabled)::after,
+.mini-play:active:not(:disabled)::after {
+  background: var(--accent);
+}
+
+.mini-play:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.mini-play:disabled {
+  cursor: default;
+  filter: none;
+  opacity: 0.55;
+}
+
+.mini-play-icon {
+  font-size: clamp(16px, 5.5vmin, 24px);
+  line-height: 1;
+}
+
+.mini-play-text {
+  font-size: clamp(15px, 5vmin, 22px);
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mini-restart {
+  font-size: 16px;
+}
+
+/* Đếm ngược theo Cài đặt (chỉ nhắc giá trị — đổi ở Cài đặt → Phát bài). */
+.mini-delay {
+  min-width: 0;
+  padding: 2px 6px;
+  background: var(--glass);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking);
+  line-height: 1.3;
+}
+
+.mini-video-btn {
+  min-height: 30px;
+}
+
+/* Video PiP: phần tử thật trong trang (PiP cần video gắn DOM) nhưng không thấy, không nhận chạm. */
+.mini-video-host {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mini-video-host video {
+  display: block;
+  width: 1px;
+  height: 1px;
+}
+
+/* ── Ghi chú, hộp thoại (help / video / hộp thoại trang mini) ─────────────────────────── */
+
+.mini-note {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--warn);
+  color: var(--warn);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.mini-missing .mini-note {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--warn);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 15px;
+}
+
+.mini-help,
+.mini-video,
+.mini-launch {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.mini-help p,
+.mini-video p,
+.mini-launch p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.mini-help-vendors,
+.mini-help-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.mini-help-vendors {
+  list-style: none;
+}
+
+.mini-help-tips {
+  padding-left: 18px;
+}
+
+.mini-help-vendor {
+  padding-left: 8px;
+  border-left: 2px solid var(--border-strong);
+}
+
+.mini-help-vendor-title,
+.mini-help-tips-title,
+.mini-video-mode-title {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.mini-video-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.mini-video-hint,
+.mini-launch-note {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.mini-video-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-video-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.mini-video-progress progress {
+  flex: 1 1 120px;
+  accent-color: var(--accent);
+}
+
+.mini-video-actions,
+.mini-launch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mini-launch-actions {
+  justify-content: flex-end;
+}
+
+.mini-launch-open {
+  text-decoration: none;
+}
+
+/* ── Bố cục "Khớp nút game" (data-layout='game', góp ý 2026-10-16) ──────────── */
+/* Cửa sổ nổi đặt NGAY TRÊN bảng nút kèn thật: khu làn chiếm cả khung, không bàn nút riêng, hit line sát
+   mép dưới (renderer `lanePadding: 'fit'`). Vạch / nhãn DOM đặt bằng `fitGeometry` (cùng hàm với renderer). */
+
+.mini-fit-labels {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Nhãn làn nhỏ, mờ ở đỉnh làn (chỉ để nhận làn — nút thật nằm ngay dưới cửa sổ). */
+.mini-fit-label {
+  position: absolute;
+  top: 3px;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0.8;
+  text-shadow: 0 0 3px var(--bg);
+}
+
+.mini[data-layout='game'] .mini-banner {
+  top: 20px;
+}
+
+/* Hàng chọn bố cục + "Căn chỉnh" trong panel. */
+.mini-layout-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mini-layout-row > * {
+  pointer-events: auto;
+}
+
+.mini-seg {
+  display: inline-flex;
+}
+
+.mini-seg > .btn {
+  min-height: 30px;
+  background: var(--glass);
+}
+
+.mini-seg > .btn[aria-pressed='true'] {
+  background: var(--accent);
+}
+
+.mini-seg > .btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.mini-seg > .btn + .btn {
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.mini-align-btn {
+  min-height: 30px;
+  background: var(--glass);
+}
+
+/* ── Căn chỉnh: vạch dẫn ─────────────────────────────────────────────────── */
+
+.mini-guides {
+  --mini-guide: rgb(255 255 255 / 0.92);
+  --mini-guide-outline: rgb(0 0 0 / 0.6);
+  --mini-edge-core: #effff7;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+:root[data-theme='light'] .mini-guides {
+  --mini-guide: rgb(27 30 24 / 0.88);
+  --mini-guide-outline: rgb(255 255 255 / 0.7);
+  --mini-edge-core: var(--accent);
+}
+
+/* Vạch tâm nút số: 2 px sáng + viền tối mảnh (đọc được trên tile sáng). */
+.mini-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--mini-guide);
+  box-shadow: 0 0 0 1px var(--mini-guide-outline);
+}
+
+/* Nhãn nút số kiểu nút tròn của game: nền sáng chữ tối. */
+.mini-guide-key {
+  position: absolute;
+  left: 50%;
+  /* Ngay trên hàng vòng (MiniAlignGuides `guideKeyTop`; cao GUIDE_KEY_H = 20 px). */
+  top: var(--mini-key-top, 0px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 3px;
+  transform: translateX(-50%);
+  border-radius: 10px;
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+  box-shadow: 0 0 0 1px var(--mini-guide-outline);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Không còn chỗ giữa đáy bảng Căn chỉnh và hàng vòng (cửa sổ rất thấp): ẩn nhãn, vạch vẫn có. */
+.mini-guides[data-keys='hidden'] .mini-guide-key {
+  display: none;
+}
+
+/* Vòng nút chế độ = đúng chỗ vòng "CHẠM" đáp (sát trên mép dưới), viền màu chế độ, tên ở trong. */
+.mini-guide-mode {
+  --mode-color: var(--mod-normal);
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2px solid var(--mode-color);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px var(--mini-guide-outline),
+    inset 0 0 0 1px var(--mini-guide-outline);
+}
+
+/* Theme sáng: viền tối hai bên nét (màu chế độ sáng trên nền sáng), Ngẩng Tự Nhiên xám đậm. */
+:root[data-theme='light'] .mini-guide-mode {
+  box-shadow:
+    0 0 0 1px rgb(27 30 24 / 0.55),
+    inset 0 0 0 1px rgb(27 30 24 / 0.55);
+}
+
+:root[data-theme='light'] .mini-guide-mode[data-mode='natural'] {
+  --mode-color: var(--text-muted);
+}
+
+.mini-guide-mode[data-mode='scroll'] {
+  --mode-color: var(--mod-scroll);
+}
+
+.mini-guide-mode[data-mode='right'] {
+  --mode-color: var(--mod-right);
+}
+
+.mini-guide-mode[data-mode='left'] {
+  --mode-color: var(--mod-left);
+}
+
+/* Vòng rất nhỏ (Ø < GUIDE_NAME_MIN_D = 30 px): chỉ màu, không tên. */
+.mini-guides[data-small='true'] .mini-guide-mode-name {
+  display: none;
+}
+
+/* Tên chế độ ≥ 10 px (D-416): vòng ~38 px của cửa sổ nổi thật vẫn ghi tên, xuống dòng theo từ, từ dài được
+   tràn nhẹ ra hai bên vòng (vòng cách nhau ≥ 0,9 bước cột — không chạm vòng bên cạnh). */
+.mini-guide-mode-name {
+  padding: 0 1px;
+  color: var(--text);
+  font-size: clamp(10px, calc(var(--mini-mode-d, 60px) * 0.19), 12px);
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  text-shadow:
+    0 0 2px var(--bg),
+    0 0 4px var(--bg);
+  overflow-wrap: normal;
+}
+
+/* Thứ đang chỉnh (D-416): tô sáng (vạch dày, màu nhấn / vòng viền dày), thứ kia mờ đi. */
+.mini-guides[data-focus='lines'] .mini-guide {
+  width: 3px;
+  background: var(--accent);
+}
+
+.mini-guides[data-focus='lines'] .mini-guide-mode {
+  opacity: 0.45;
+}
+
+.mini-guides[data-focus='rings'] .mini-guide {
+  opacity: 0.4;
+}
+
+.mini-guides[data-focus='rings'] .mini-guide-mode {
+  border-width: 3px;
+  box-shadow:
+    0 0 0 1px var(--mini-guide-outline),
+    0 0 8px 1px var(--accent-glow),
+    inset 0 0 0 1px var(--mini-guide-outline);
+}
+
+/* Mép dưới cửa sổ = hit line = chỗ đặt ngay trên hàng nút chế độ của game. */
+.mini-guide-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--mini-edge-core);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 8px 1px var(--accent-glow);
+}
+
+/* ── Căn chỉnh: bảng điều khiển (đỉnh khung, nền kính mờ) ────────────────────── */
+/* Chỉnh MỘT số mỗi lúc (D-399): [chọn số] [− thanh trượt giá trị +] [ⓘ Đặt lại Xong]. Cửa sổ cao: thêm tiêu đề +
+   lời nhắc; cửa sổ thấp (đặt ngay trên bảng nút, ~80–150 px): một hàng ~36 px, nền gần trong suốt — mép dưới,
+   chân vạch và 4 vòng luôn thấy. */
+
+.mini-align {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title help actions'
+    'pick ctl ctl';
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-strong);
+  background: linear-gradient(rgb(10 12 14 / 0.86), rgb(10 12 14 / 0.62));
+}
+
+:root[data-theme='light'] .mini-align {
+  background: linear-gradient(rgb(232 227 211 / 0.9), rgb(232 227 211 / 0.66));
+}
+
+.mini-align-title {
+  grid-area: title;
+  padding-left: 6px;
+  border-left: 2px solid var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mini-align-help {
+  grid-area: help;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.mini-align-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mini-align-info {
+  font-size: 15px;
+}
+
+/* Nền kính cho mọi nút / giá trị của bảng (đọc được khi ô rơi phía sau lộ qua nền mờ). */
+.mini-align-info,
+.mini-align-reset,
+.mini-align-nudge,
+.mini-align-pick > .btn:not([aria-pressed='true']) {
+  background: var(--glass);
+}
+
+.mini-align-actions > .btn,
+.mini-align-pick > .btn {
+  min-height: 34px;
+}
+
+.mini-align-pick {
+  grid-area: pick;
+  justify-self: start;
+}
+
+/* Nút chọn hai dòng (D-416): CÁI GÌ (Vạch / Vòng — nhỏ, mờ hơn) trên, THẾ NÀO (Dời / Giãn) dưới. */
+.mini-align-pick > .btn {
+  flex-direction: column;
+  gap: 0;
+  line-height: 1.1;
+}
+
+.mini-pick-what {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.mini-pick-how {
+  font-size: 13px;
+}
+
+.mini-align-ctl {
+  grid-area: ctl;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mini-align-name {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mini-align-range {
+  flex: 1 1 auto;
+  min-width: 60px;
+  margin: 0;
+}
+
+.mini-align-value {
+  flex: none;
+  min-width: 4.4em;
+  padding: 3px 4px;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* − / + đủ to cho ngón tay (giữ để lặp — không cuộn / không menu khi giữ). */
+.mini-align-nudge {
+  flex: none;
+  min-width: 40px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  touch-action: none;
+}
+
+/* Chữ dài / ngắn của một nút (ShortLong): ngắn ở cửa sổ hẹp / thấp. */
+.mini-short {
+  display: none;
+}
+
+/* Cửa sổ hẹp mà cao (vd. 360 × 360): tiêu đề + nút một hàng, lời nhắc, chọn, chỉnh — mỗi thứ một hàng. */
+@media (max-width: 640px) {
+  .mini-align {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title actions'
+      'help help'
+      'pick pick'
+      'ctl ctl';
+  }
+
+  .mini-align .mini-long {
+    display: none;
+  }
+
+  .mini-align .mini-short {
+    display: inline;
+  }
+
+  .mini-align-ctl {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .mini-align-name {
+    flex: 1 1 100%;
+  }
+}
+
+/* Cửa sổ thấp (đặt sát trên bảng nút của màn ngang điện thoại): một hàng, không tiêu đề / lời nhắc / tên
+   (tên đầy đủ là nhãn của thanh trượt và nút − / +; ⓘ có hướng dẫn). */
+@media (max-height: 220px) {
+  .mini-align {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'pick ctl actions';
+    gap: 4px 6px;
+    padding: 3px 6px;
+    background: linear-gradient(rgb(10 12 14 / 0.7), rgb(10 12 14 / 0.45));
+  }
+
+  :root[data-theme='light'] .mini-align {
+    background: linear-gradient(rgb(232 227 211 / 0.8), rgb(232 227 211 / 0.5));
+  }
+
+  .mini-align-title,
+  .mini-align-help,
+  .mini-align-name {
+    display: none;
+  }
+
+  .mini-align-actions,
+  .mini-align-ctl {
+    gap: 4px;
+  }
+
+  .mini-align-ctl {
+    flex-wrap: nowrap;
+  }
+
+  .mini-align-actions > .btn,
+  .mini-align-pick > .btn {
+    min-height: 30px;
+  }
+
+  .mini-align-pick > .btn {
+    padding: 1px 6px;
+  }
+
+  .mini-pick-how {
+    font-size: 12px;
+  }
+
+  .mini-align-actions > .btn:not(.btn-icon) {
+    padding: 3px 7px;
+  }
+
+  .mini-align-nudge {
+    min-width: 34px;
+    min-height: 30px;
+  }
+
+  .mini-align-value {
+    min-width: 4em;
+  }
+
+  .mini-align .mini-long {
+    display: none;
+  }
+
+  .mini-align .mini-short {
+    display: inline;
+  }
+}
+
+/* Thấp và không đủ rộng cho thanh trượt: chỉ − giá trị + (giữ để lặp). */
+@media (max-height: 220px) and (max-width: 619px) {
+  .mini-align-range {
+    display: none;
+  }
+
+  .mini-align-ctl {
+    justify-content: center;
+  }
+}
+
+/* Thấp và hẹp (< 470 px): hai hàng — chọn + nút, rồi − giá trị +; < 380 px: ba hàng. */
+@media (max-height: 220px) and (max-width: 469px) {
+  .mini-align {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'pick actions'
+      'ctl ctl';
+  }
+}
+
+@media (max-height: 220px) and (max-width: 379px) {
+  .mini-align {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'pick'
+      'ctl'
+      'actions';
+  }
+
+  .mini-align-pick {
+    justify-self: center;
+  }
+
+  .mini-align-actions {
+    justify-content: center;
+  }
+}
+
+/* ── Panel ▶ (đang dừng) theo cỡ cửa sổ — D-401 ─────────────────────────────── */
+
+/* Kiểu PC: "Chơi bản điện thoại? [Đổi sang Mobile]". */
+.mini-scheme {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 8px;
+  pointer-events: none;
+}
+
+.mini-scheme > * {
+  pointer-events: auto;
+}
+
+.mini-scheme-text {
+  padding: 1px 6px;
+  background: var(--glass);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mini-scheme-btn {
+  min-height: 30px;
+  background: var(--glass);
+}
+
+/* Cửa sổ thấp: lưới — hàng tiêu đề (+ nút đổi kiểu), ▶ giữa, bố cục + video ở đáy; hẹp thì mỗi thứ một hàng. */
+@media (max-height: 220px) {
+  /* Hàng cao theo nội dung, dư chỗ thì giãn đều (không hàng nào co lại cho control chồng lên nhau). */
+  .mini-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'top top'
+      'center center'
+      'layout bottom';
+    align-content: space-between;
+    gap: 4px 6px;
+    padding: 4px 6px;
+  }
+
+  .mini-panel[data-note] {
+    grid-template-areas:
+      'top scheme'
+      'center center'
+      'layout bottom';
+  }
+
+  .mini-top {
+    grid-area: top;
+    min-width: 0;
+  }
+
+  .mini-scheme {
+    grid-area: scheme;
+    justify-content: flex-end;
+  }
+
+  .mini-scheme-text {
+    display: none;
+  }
+
+  .mini-center {
+    grid-area: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .mini-layout-row {
+    grid-area: layout;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .mini-bottom {
+    grid-area: bottom;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+  }
+
+  .mini-delay {
+    display: none;
+  }
+
+  .mini-play {
+    min-height: 36px;
+  }
+}
+
+@media (max-height: 220px) and (max-width: 479px) {
+  .mini-panel {
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      'top top'
+      'center center'
+      'layout layout'
+      'bottom bottom';
+  }
+
+  .mini-panel[data-note] {
+    grid-template-areas:
+      'top top'
+      'center center'
+      'layout layout'
+      'scheme bottom';
+  }
+
+  .mini-scheme {
+    justify-content: flex-start;
+  }
+
+  .mini-layout-row {
+    justify-content: center;
+  }
+
+  .mini-panel .mini-long {
+    display: none;
+  }
+
+  .mini-panel .mini-short {
+    display: inline;
+  }
+}
+
+/* Dưới ~180 px: bỏ dòng "Tạm dừng" / "Hết bài" (chữ trên nút ▶ đã nói: Chạy tiếp / Chơi lại). */
+@media (max-height: 180px) {
+  .mini-state {
+    display: none;
+  }
+}
+
+/* Cửa sổ rất thấp (~80–130 px — chiều cao thật khi đặt ngay trên bảng nút kèn): 2 hàng [◂ tên … ⓘ] và
+   [▶ | bố cục | Căn chỉnh | Video nổi]; chữ ngắn, nút 30 px. */
+@media (max-height: 130px) {
+  /* Flex xuống dòng (không lưới: cột "auto" của lưới bị nút đổi kiểu / tên bài nới rộng làm hàng dưới tràn). Hàng
+     1 = .mini-top (co, tên bài cắt "…") + nút đổi kiểu; `::before` rộng 100 % ép xuống dòng; hàng 2 = ▶, bố cục,
+     video (đẩy sang phải). Thiếu chỗ thì xuống thêm dòng — không bao giờ đè nhau. */
+  .mini-panel {
+    display: flex;
+    flex-flow: row wrap;
+    align-content: space-between;
+    align-items: center;
+    gap: 0 6px;
+    padding: 3px 6px;
+    /* Khung quá nhỏ để thấy làn lúc dừng: nền đều, chữ trên nút luôn đọc được. */
+    background: rgb(10 12 14 / 0.8);
+  }
+
+  :root[data-theme='light'] .mini-panel {
+    background: rgb(232 227 211 / 0.88);
+  }
+
+  .mini-panel::before {
+    content: '';
+    order: 2;
+    flex: 0 0 100%;
+    height: 4px;
+  }
+
+  .mini-top {
+    order: 1;
+    flex: 1 1 0;
+  }
+
+  .mini-scheme {
+    order: 1;
+    flex: none;
+  }
+
+  .mini-center,
+  .mini-layout-row,
+  .mini-bottom {
+    order: 3;
+    flex: none;
+  }
+
+  .mini-bottom {
+    margin-left: auto;
+  }
+
+  .mini-center {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .mini-state {
+    display: none;
+  }
+
+  .mini-play {
+    --cut: 7px;
+    gap: 5px;
+    min-width: 0;
+    min-height: 30px;
+    padding: 0 10px;
+  }
+
+  .mini-play-icon,
+  .mini-play-text {
+    font-size: 14px;
+  }
+
+  .mini-center .mini-note {
+    font-size: 11px;
+  }
+
+  .mini-panel .btn-sm:not(.btn-icon) {
+    padding: 3px 7px;
+    font-size: 12px;
+  }
+
+  .mini-panel .mini-long {
+    display: none;
+  }
+
+  .mini-panel .mini-short {
+    display: inline;
+  }
+}
+
+/* Rất thấp mà hẹp (không phải cửa sổ đặt trên bảng nút — bảng nút rộng ≥ ~450 px): xuống dòng tự nhiên từ đầu. */
+@media (max-height: 130px) and (max-width: 479px) {
+  .mini-panel {
+    align-content: flex-start;
+    row-gap: 4px;
+  }
+}
+
+/* ── Chỉ báo cỡ cửa sổ "Rộng" / "Cao" (đúng tỉ lệ thật — D-405) ───────────────── */
+/* Panel ▶: ở hàng đầu, trước ⓘ (tên bài co lại "…"). Căn chỉnh: hàng cuối của bảng (chỉ khi có chỉ báo — bố cục
+   bảng khi không biết cỡ màn giữ nguyên). Vừa = xanh "success", cần kéo = hổ phách (cảnh báo), rộng hơn cần = mờ. */
+
+.mini-fit-status {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mini-fit-chip {
+  padding: 1px 5px;
+  border: 1px solid currentColor;
+  background: var(--glass);
+  white-space: nowrap;
+}
+
+.mini-fit-chip[data-state='ok'] {
+  color: var(--success);
+}
+
+.mini-fit-chip[data-state='narrow'],
+.mini-fit-chip[data-state='moveLeft'],
+.mini-fit-chip[data-state='moveRight'],
+.mini-fit-chip[data-state='short'],
+.mini-fit-chip[data-state='tall'] {
+  color: var(--warn);
+}
+
+.mini-fit-chip[data-state='wide'] {
+  color: var(--text-muted);
+}
+
+/* Nhắc một lần "kéo rộng thêm ¼ nút" (máy dùng trang mini trước v1.0.1, không biết cỡ màn — D-441): chip bấm được ở
+   chỗ chỉ báo, cao ≥ 24 px để chạm. */
+.mini-fit-notice-btn {
+  min-height: 24px;
+  color: var(--warn);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Số px (cửa sổ / cần) — chỉ ở cửa sổ cao (đang kéo từ cỡ mặc định của hãng xuống); tooltip luôn có. */
+.mini-fit-numbers {
+  display: none;
+  padding: 1px 4px;
+  background: var(--glass);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Chỉ ở panel ▶ (bảng Căn chỉnh vốn đã chật — số có ở tooltip). */
+@media (min-height: 221px) {
+  .mini-panel .mini-fit-numbers {
+    display: inline;
+  }
+}
+
+/* Panel ▶ (chung hàng với ◂ / tên bài / ⓘ): chữ dài chỉ khi đủ rộng (≥ 760 px); hẹp hơn chữ ngắn — giữ ý của chữ
+   dài (D-416). Bảng Căn chỉnh: chỉ báo có hàng riêng → chữ dài từ 600 px (cửa sổ nổi thật ~550–650 px). */
+@media (max-width: 759px) {
+  .mini-fit-status .mini-long {
+    display: none;
+  }
+
+  .mini-fit-status .mini-short {
+    display: inline;
+  }
+}
+
+@media (min-width: 600px) {
+  .mini-align .mini-fit-status .mini-long {
+    display: inline;
+  }
+
+  .mini-align .mini-fit-status .mini-short {
+    display: none;
+  }
+}
+
+/* Panel ▶ hẹp (< 420 px): chỉ báo xuống dòng riêng dưới hàng ◂ tên ⓘ. */
+@media (max-width: 419px) {
+  .mini-top {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .mini-top > .mini-fit-status {
+    order: 1;
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+/* Bảng Căn chỉnh: thêm hàng 'fit' (cuối) cho chỉ báo. */
+.mini-align[data-status] {
+  grid-template-areas:
+    'title help actions'
+    'pick ctl ctl'
+    'fit fit fit';
+}
+
+.mini-align > .mini-fit-status {
+  grid-area: fit;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .mini-align[data-status] {
+    grid-template-areas:
+      'title actions'
+      'help help'
+      'pick pick'
+      'ctl ctl'
+      'fit fit';
+  }
+}
+
+/* Cửa sổ thấp: hàng chỉ báo gọn 13 px (chữ 11 px, không viền) để bảng không xuống tới hàng vòng (~45–70 px từ
+   đỉnh). */
+@media (max-height: 220px) {
+  .mini-align[data-status] {
+    grid-template-areas:
+      'pick ctl actions'
+      'fit fit fit';
+    row-gap: 2px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .mini-align > .mini-fit-status {
+    gap: 0 8px;
+    font-size: 11px;
+    line-height: 13px;
+  }
+
+  .mini-align .mini-fit-chip {
+    padding: 0 3px;
+    border: 0;
+  }
+}
+
+/* Rất thấp (~80–95 px): chữ vẫn 11 px (D-416), hàng 11 px, nút vẫn 30 px (chạm được), sát đỉnh — bảng cao ~43 px,
+   vẫn trên đỉnh hàng vòng (Ø trần 0,42 × cao). */
+@media (max-height: 95px) {
+  .mini-align[data-status] {
+    row-gap: 0;
+    padding-top: 0;
+    padding-bottom: 1px;
+  }
+
+  .mini-align > .mini-fit-status {
+    line-height: 11px;
+  }
+
+  .mini-align-pick > .btn {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+@media (max-height: 220px) and (max-width: 469px) {
+  .mini-align[data-status] {
+    grid-template-areas:
+      'pick actions'
+      'ctl ctl'
+      'fit fit';
+  }
+}
+
+@media (max-height: 220px) and (max-width: 379px) {
+  .mini-align[data-status] {
+    grid-template-areas:
+      'pick'
+      'ctl'
+      'actions'
+      'fit';
+  }
+}
+
+/* Tương phản cao (Windows): vạch dẫn / mép dưới là nền màu → giữ màu hệ thống thay vì bị xóa. */
+@media (forced-colors: active) {
+  .mini-guide,
+  .mini-guide-edge {
+    forced-color-adjust: none;
+    background: CanvasText;
+    box-shadow: none;
+  }
+
+  .mini-guide-key {
+    border: 1px solid CanvasText;
+  }
+
+  .mini-guides[data-focus='lines'] .mini-guide {
+    background: Highlight;
+  }
+}

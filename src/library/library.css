@@ -1,0 +1,370 @@
+/* Thư viện bài hát (route #/library). Dùng token + component HUD của app.css (card ngoặc góc, tag). */
+
+.library {
+  position: relative;
+}
+
+.library-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.library-heading {
+  min-width: 0;
+}
+
+/* Tiêu đề trang HUD: in hoa, vạch accent dọc phía trước (trang trí). */
+.library-heading h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.library-heading h1::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 0.9em;
+  background: var(--accent);
+}
+
+.library-heading p {
+  margin: 0;
+}
+
+/* "Thêm bài" (góp ý 2026-10-15 C): 4 cách thêm bài theo thứ tự, mỗi ô = nút + một dòng giải thích.
+   Số thứ tự 01–04 bằng counter (trang trí, accent chỉ ở khung UI). Ô hẹp → nút xuống dòng được. */
+.library-create {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.library-create-title {
+  margin: 0;
+}
+
+.library-create-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: library-create;
+  display: grid;
+  /* 2 × 2 trên màn rộng: nhãn nút đủ một dòng; màn hẹp xếp dọc */
+  grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
+  gap: 10px;
+}
+
+.library-create-item {
+  display: grid;
+  grid-template-columns: 2.1em minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  column-gap: 8px;
+  row-gap: 6px;
+  min-width: 0;
+  padding: 12px 12px 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.library-create-item:hover,
+.library-create-item:focus-within {
+  border-color: var(--border-strong);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.library-create-item::before {
+  counter-increment: library-create;
+  content: counter(library-create, decimal-leading-zero);
+  content: counter(library-create, decimal-leading-zero) / '';
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  padding-top: 7px;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-create-item > .btn {
+  grid-column: 2;
+  justify-self: start;
+  max-width: 100%;
+  justify-content: flex-start;
+  min-height: 38px;
+  text-align: left;
+  white-space: normal;
+  text-decoration: none;
+}
+
+.library-create-hint {
+  grid-column: 2;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.library-card-actions a.btn {
+  text-decoration: none;
+}
+
+.library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.library-toolbar input.library-search {
+  flex: 1 1 280px;
+  min-width: 0;
+  max-width: 520px;
+  padding: 8px 12px;
+}
+
+/* `[ 2 BÀI ]` — tag HUD (ngoặc là trang trí, vùng aria-live vẫn đọc "2 bài"). Hai class để thắng
+   `.tag` của app.css (nạp sau). */
+.library-count.tag {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-drop-hint {
+  margin: -4px 0 0;
+  font-size: 13px;
+}
+
+.library-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 14px;
+}
+
+.library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.library-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Tên bài giữ nguyên hoa / thường (DESIGN.md). */
+.library-card-title {
+  margin: 0;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+
+.library-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 8px;
+  flex: none;
+  padding-top: 3px;
+}
+
+/* Huy hiệu nguồn bài = tag ngoặc vuông: [ MẪU ] (accent), [ CỦA BẠN ], [ 1 LỖI ] (đỏ). */
+.library-card-badges .badge.tag {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+}
+
+.badge.library-badge-seed {
+  color: var(--accent);
+}
+
+.badge.library-badge-user {
+  color: var(--text);
+}
+
+.badge.library-badge-error {
+  color: var(--danger);
+}
+
+.badge.library-badge-error::before,
+.badge.library-badge-error::after {
+  color: var(--danger);
+}
+
+.library-card-artist {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Thông số dạng đồng hồ HUD: nhãn nhỏ in hoa, số tabular. */
+.library-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  margin: 2px 0 0;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.library-card-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 18px 0 12px;
+  border-left: 1px solid var(--border);
+}
+
+.library-card-stats > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.library-card-stats dt {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.library-card-stats dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Danh sách lỗi cú pháp (thu gọn mặc định). */
+.library-card-errors {
+  font-size: 14px;
+}
+
+.library-card-errors > summary {
+  cursor: pointer;
+  width: fit-content;
+  color: var(--danger);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+
+.library-card-errors > ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  overflow-wrap: anywhere;
+}
+
+.library-card-errors > p {
+  margin: 4px 0 0;
+}
+
+.library-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.library-card-main,
+.library-card-more,
+.library-card-export {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.library-card-main .btn {
+  flex: 1 1 auto;
+  min-height: 38px;
+}
+
+.library-card-export > .muted {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Dòng fan-made cuối trang (trước ở ☰ Menu — DESIGN.md nguyên tắc 1). */
+.library-footer {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.library-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.library-empty p {
+  margin: 0;
+}
+
+/* Lớp phủ khi kéo file vào trang: không chặn sự kiện drop. */
+.library-drop-overlay {
+  position: fixed;
+  inset: 12px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  background: var(--scrim);
+  pointer-events: none;
+}
+
+.library-drop-overlay p {
+  margin: 0;
+  padding: 14px 22px;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking);
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 640px) {
+  .library-heading h1 {
+    font-size: 22px;
+  }
+
+  .library-toolbar input.library-search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}

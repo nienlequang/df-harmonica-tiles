@@ -1,0 +1,87 @@
+/*
+ * UpdatePrompt (PWA): thẻ nhỏ cố định, không backdrop, không chặn phần còn lại của trang (vùng bao
+ * không nhận chuột, chỉ thẻ nhận). Dưới modal (backdrop z-index 100) và toast (200): không che nội
+ * dung hộp thoại đang mở.
+ */
+
+.update-prompt-region {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+/*
+ * Màn đầu / Player: giữa đỉnh màn hình — khoảng trống giữa hàng header (tên bài bên trái, nút bên
+ * phải), xa game bar và hit line; không che nút ☰ ở góc phải. Toast của Player cũng ở đây nhưng
+ * chỉ hiện vài giây (D-063).
+ */
+.update-prompt-region.is-top {
+  top: 8px;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  align-items: center;
+  max-width: min(420px, calc(100vw - 120px));
+  transform: translateX(-50%);
+}
+
+/* Thẻ thông báo HUD: panel kính tối, vạch accent bên trái (cùng kiểu toast). */
+.update-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--glass);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+
+.update-prompt.is-info {
+  border-left-color: var(--control-border);
+}
+
+/* "CÓ BẢN MỚI": nhãn HUD in hoa; thông báo offline là câu → chữ thường. */
+.update-prompt-text {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.update-prompt:not(.is-info) .update-prompt-text {
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking);
+}
+
+.update-prompt .btn {
+  flex: none;
+}
+
+@media (max-width: 640px) {
+  /* Trên điện thoại: phía trên toast ở đáy (toast giữa đáy, cao ~40 px). */
+  .update-prompt-region:not(.is-top) {
+    right: 10px;
+    bottom: 64px;
+    left: 10px;
+    align-items: stretch;
+    max-width: none;
+  }
+}
+
+/* "Có bản mới" ngắn: không xuống dòng (thẻ hẹp ở đỉnh màn điện thoại). */
+.update-prompt:not(.is-info) .update-prompt-text {
+  white-space: nowrap;
+}

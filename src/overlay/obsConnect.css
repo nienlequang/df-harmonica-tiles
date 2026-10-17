@@ -1,0 +1,214 @@
+/*
+ * Khối "Gửi thẳng vào OBS" (src/overlay/ObsConnectPanel.tsx) trong hộp thoại "Tạo link OBS" — giao diện
+ * "Tactical HUD" (docs/DESIGN.md): token màu của app.css (AA ở cả hai theme), viền control
+ * `--control-border`, accent chỉ ở số bước / focus / mũi tên mục đang mở. Không animation.
+ */
+
+.obs-connect {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* ── 3 bước trong OBS ─────────────────────────────────────────────────── */
+
+.obs-connect-steps {
+  margin: 0;
+  padding-left: 1.6em;
+}
+
+.obs-connect-steps li + li {
+  margin-top: 4px;
+}
+
+.obs-connect-steps li::marker {
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Form: mật khẩu, nhớ, nâng cao ─────────────────────────────────────── */
+
+.obs-connect-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+/* app.css không định dạng ô mật khẩu: giống ô chữ của app (viền control ≥ 3:1). */
+.obs-connect input[type='password'] {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  min-width: 0;
+  caret-color: var(--accent);
+}
+
+.obs-connect input[type='password']:hover {
+  border-color: var(--text-muted);
+}
+
+.obs-connect input[type='password']:focus {
+  border-color: var(--accent);
+}
+
+.obs-connect-form input[type='text'],
+.obs-connect-form input[type='number'] {
+  min-width: 0;
+  background: var(--surface);
+}
+
+/* Ô Nhớ: checkbox + nhãn một hàng, gợi ý thẳng dưới nhãn. */
+.obs-connect-remember {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+}
+
+.obs-connect-remember > input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.obs-connect-remember > label {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.obs-connect-remember > .field-hint {
+  grid-column: 2;
+}
+
+/* Nâng cao (thu gọn): summary kiểu nhãn HUD nhỏ với mũi tên tự vẽ. */
+.obs-connect-advanced > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+
+.obs-connect-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.obs-connect-advanced > summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid currentColor;
+}
+
+.obs-connect-advanced > summary:hover {
+  color: var(--text);
+}
+
+.obs-connect-advanced[open] > summary {
+  color: var(--text);
+}
+
+.obs-connect-advanced[open] > summary::before {
+  border-left-color: var(--accent);
+  transform: rotate(90deg);
+}
+
+.obs-connect-address {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7.5em;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.obs-connect-advanced > .field-hint {
+  margin-top: 6px;
+}
+
+.obs-connect-actions {
+  gap: 8px;
+}
+
+/* ── Trạng thái: thông báo HUD, vạch trái theo mức ─────────────────────── */
+
+.obs-connect-live:empty {
+  display: none;
+}
+
+.obs-connect-live {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.obs-connect-msg {
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.obs-connect-msg-ok {
+  border-left-color: var(--success);
+  color: var(--success);
+  font-weight: 600;
+}
+
+.obs-connect-msg-warn {
+  border-left-color: var(--warn);
+  color: var(--text);
+}
+
+.obs-connect-msg-info {
+  border-left-color: var(--border-strong);
+  color: var(--text-muted);
+}
+
+.obs-connect-note {
+  font-size: 13px;
+}
+
+/* Màn hẹp: địa chỉ + cổng mỗi ô một hàng. */
+@media (max-width: 420px) {
+  .obs-connect-address {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Tương phản cao: mũi tên + vạch trạng thái theo màu hệ thống. */
+@media (forced-colors: active) {
+  .obs-connect-advanced > summary::before,
+  .obs-connect-advanced[open] > summary::before {
+    border-left-color: CanvasText;
+  }
+
+  .obs-connect-msg {
+    border-left-width: 4px;
+    border-left-color: CanvasText;
+  }
+}

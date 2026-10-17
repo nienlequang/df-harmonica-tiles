@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Overlay chỉ cần nghe sự kiện \"dfht-command\" (phím tắt toàn cục do Rust đăng ký). Không cấp quyền nào khác cho trang.",
+  "windows": ["main"],
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten"]
+}

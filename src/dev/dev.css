@@ -1,0 +1,63 @@
+/*
+ * Trang Dev notes (`#/dev`, R7-8): dùng bố cục / kiểu chữ của trang Hướng dẫn (guide.css — cột ≤ 80ch, bảng / code
+ * cuộn ngang trong khung riêng); ở đây chỉ thêm phần đầu trang (thông tin bản build) và vạch ngăn CHANGELOG. Chỉ dùng
+ * token của app.css.
+ */
+
+.dev-header {
+  margin-bottom: 8px;
+}
+
+.dev-header h1 {
+  margin: 0 0 8px;
+  font-size: 1.9rem;
+}
+
+/* Link "Mã nguồn (GitHub)" (D-444): một dòng nhỏ dưới lời giới thiệu, màu link thường của trang. */
+.dev-source {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.dev-build dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 12px 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.dev-build dl > div {
+  min-width: 0;
+}
+
+.dev-build dt {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.dev-build dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.dev-build code {
+  padding: 0.05em 0.3em;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 0.9em;
+}
+
+.dev-changelog {
+  margin-top: 40px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-strong);
+}
+
+@media (max-width: 480px) {
+  .dev-header h1 {
+    font-size: 1.5rem;
+  }
+}

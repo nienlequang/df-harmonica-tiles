@@ -1,0 +1,384 @@
+/* "Tạo bài với AI" (route #/ai) + phần dùng chung với ô dán của Editor (dòng kết quả, chỗ lỗi, ô tông).
+   Token + component HUD của app.css (card ngoặc góc, hud-section-title đánh số); accent chỉ ở khung UI. */
+
+.ai-view {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.ai-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: clamp(22px, 3vw, 30px);
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+/* Vạch accent dọc trước tiêu đề (như Thư viện). */
+.ai-header h1::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 0.9em;
+  background: var(--accent);
+}
+
+.ai-header p {
+  flex: 1 1 420px;
+  margin: 0;
+}
+
+/* Nút trông như link (hành động: mở bản nháp trống trong Editor). */
+.ai-link-btn {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.ai-link-btn:hover {
+  color: var(--accent-strong);
+}
+
+:root[data-theme='light'] .ai-link-btn:hover {
+  color: var(--text);
+}
+
+/* ── Các bước: 1 | 2 trên một hàng (màn rộng), 3 (ô dán) và 4 (Lưu) trải hết bề ngang ── */
+
+.ai-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+  /* hai thẻ bước 1 | 2 cao bằng nhau */
+  align-items: stretch;
+}
+
+.ai-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ai-step .hud-section-title {
+  margin: 0;
+}
+
+.ai-step-paste,
+.ai-step-save {
+  grid-column: 1 / -1;
+}
+
+.ai-step-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.ai-step-actions {
+  gap: 8px;
+}
+
+.ai-copy-failed {
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--warn);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+/* `.field` của app.css đặt display → thuộc tính hidden phải thắng lại. */
+.ai-prompt-box[hidden] {
+  display: none;
+}
+
+.ai-prompt-box textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ai-chat-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ai-chat-links a.btn {
+  text-decoration: none;
+}
+
+.ai-tips {
+  font-size: 14px;
+}
+
+.ai-tips summary {
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ai-tips ul {
+  margin: 8px 0;
+  padding-left: 1.2em;
+}
+
+.ai-tips li + li {
+  margin-top: 4px;
+}
+
+/* Bước 3: ô dán lớn, nổi bật (vạch accent bên trái + viền điều khiển dày). */
+.ai-step-paste {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ai-paste-label {
+  font-size: 15px;
+}
+
+.ai-paste-field textarea.ai-paste {
+  width: 100%;
+  min-height: 200px;
+  padding: 10px 12px;
+  border-width: 2px;
+  border-style: dashed;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ai-paste-field textarea.ai-paste:focus {
+  border-style: solid;
+}
+
+/* Bước 4 */
+.ai-title-field {
+  max-width: 520px;
+}
+
+.ai-title-field input {
+  width: 100%;
+}
+
+.ai-save-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-start;
+}
+
+.ai-save-action {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 1 300px;
+  min-width: 0;
+}
+
+.ai-save-action > .btn {
+  align-self: flex-start;
+}
+
+.ai-saved {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-saved-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.ai-saved .btn {
+  text-decoration: none;
+}
+
+/* ── Dùng chung: dòng kết quả chuyển đổi, chỗ không đọc được, ô chọn tông ── */
+
+.paste-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.paste-status {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.paste-status.is-ok {
+  font-weight: 600;
+}
+
+.paste-status.is-warn {
+  padding-left: 8px;
+  border-left: 3px solid var(--warn);
+}
+
+.paste-status-icon {
+  flex: none;
+  color: var(--success);
+  font-weight: 700;
+}
+
+.paste-status.is-warn .paste-status-icon {
+  color: var(--warn);
+}
+
+.paste-issues {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.paste-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 4px 12px;
+}
+
+.paste-key .field-select {
+  min-width: 0;
+}
+
+.paste-key .field-hint {
+  font-size: 13px;
+  padding-bottom: 6px;
+}
+
+/* ── Ô "Dán kết quả của AI vào đây" phía trên ô soạn của Editor (AiPasteBox) ── */
+
+.editor-ai {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.editor-ai-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+}
+
+.editor-ai-label {
+  font-size: 13px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.editor-ai-prompt {
+  font-size: 13px;
+}
+
+.editor-ai textarea.editor-ai-input {
+  width: 100%;
+  min-height: 3.4em;
+  border-style: dashed;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.editor-ai textarea.editor-ai-input:focus {
+  border-style: solid;
+}
+
+.editor-ai-hint.field-hint {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Kết quả không đẩy ô soạn ra khỏi khung: dài thì cuộn trong ô. */
+.editor-ai-result {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 32vh;
+  overflow: auto;
+}
+
+.editor-ai .paste-status,
+.editor-ai-applied {
+  margin: 0;
+  font-size: 14px;
+}
+
+.editor-ai .paste-issues {
+  font-size: 12px;
+}
+
+.editor-ai-actions {
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .ai-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ai-paste-field textarea.ai-paste {
+    min-height: 160px;
+  }
+}
+
+@media (forced-colors: active) {
+  .ai-step-paste {
+    border-left: 3px solid CanvasText;
+  }
+
+  .paste-status.is-warn {
+    border-left-color: CanvasText;
+  }
+}

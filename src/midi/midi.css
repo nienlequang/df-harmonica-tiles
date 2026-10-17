@@ -1,0 +1,610 @@
+/*
+ * Tạo bài từ file / Thu melody (route #/midi) — giao diện "Tactical HUD" (docs/DESIGN.md).
+ * Dùng token của app.css. Accent chỉ tô khung UI (bước hiện tại / thanh tiến độ của stepper, tab
+ * đang chọn, hàng đang chọn, tag gợi ý). Thông báo: lỗi = --danger, cảnh báo = --warn, ghi chú = muted.
+ *
+ * Panel HUD (`--hud-*`): viền mảnh + ngoặc góc L 10 px vẽ bằng nhiều lớp background trên viền trong
+ * suốt (không pseudo-element: không chặn click / kéo thả); viền thật cho forced-colors ở cuối file.
+ */
+
+.midi-selection {
+  --hud-c: var(--border-strong);
+  --hud-l: var(--border);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--hud-c) 0 0) left top / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) left top / 2px 10px,
+    linear-gradient(var(--hud-c) 0 0) right top / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) right top / 2px 10px,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 2px 10px,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 2px 10px,
+    linear-gradient(var(--hud-l) 0 0) top / 100% 1px,
+    linear-gradient(var(--hud-l) 0 0) bottom / 100% 1px,
+    linear-gradient(var(--hud-l) 0 0) left / 1px 100%,
+    linear-gradient(var(--hud-l) 0 0) right / 1px 100%,
+    var(--surface-2);
+  background-repeat: no-repeat;
+  background-origin: border-box;
+}
+
+/* Nhãn kiểu HUD: in hoa, condensed, giãn chữ. */
+.midi-header h1,
+.midi-tab,
+.midi-steps li,
+.midi-step-count,
+.midi-step-head h2,
+.midi-subhead,
+.midi-tracks th,
+.midi-badge,
+.midi-phase {
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.midi-import {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.midi-header h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.midi-header p {
+  margin: 0;
+}
+
+/* ── Tabs ── */
+
+.midi-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.midi-tab {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  padding: 8px 16px;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+
+.midi-tab:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* Tab đang chọn: nền panel + vạch accent trên đỉnh (như mục đang chọn của HUD). */
+.midi-tab[aria-selected='true'] {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+  border-bottom: 1px solid var(--surface);
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.midi-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Chỉ báo bước: stepper HUD `01 CHỌN FILE ── 02 CHỌN TRACK ── …` ── */
+
+.midi-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 0;
+  color: var(--text-muted);
+}
+
+.midi-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Đoạn nối giữa hai bước; sau bước đã xong = accent (thanh tiến độ). */
+.midi-steps li + li::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  margin: 0 4px 0 8px;
+  background: var(--border-strong);
+}
+
+.midi-steps li.is-done + li::before {
+  background: var(--accent);
+}
+
+/* Số bước: ô vuông viền mảnh, hai chữ số (thêm "0" đứng trước bằng pseudo — span đã aria-hidden). */
+.midi-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 2px;
+  border: 1px solid var(--control-border);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.midi-step-num::before {
+  content: '0';
+}
+
+.midi-steps li.is-done {
+  color: var(--text);
+}
+
+.midi-steps li.is-done .midi-step-num {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.midi-steps li.is-current {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.midi-steps li.is-current .midi-step-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+/* ── Khung bước ── */
+
+/* Kicker `[ BƯỚC 2/5 ]` */
+.midi-step-count {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-step-count::before {
+  content: '[ ';
+  content: '[ ' / '';
+}
+
+.midi-step-count::after {
+  content: ' ]';
+  content: ' ]' / '';
+}
+
+/* Tiêu đề bước + đường mảnh kéo sang phải. */
+.midi-step-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.midi-step-head h2::after {
+  content: '';
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Tiêu đề bước nhận focus bằng script khi đổi bước (tabIndex -1, không phải control): thay khung
+   focus bao cả dòng bằng vạch accent trước chữ + đường kẻ accent — vẫn thấy rõ đang ở đâu. */
+.midi-step-head h2 {
+  position: relative;
+}
+
+.midi-step-head h2:focus-visible {
+  outline: none;
+}
+
+.midi-step-head h2:focus-visible::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: -9px;
+  width: 3px;
+  background: var(--accent);
+}
+
+.midi-step-head h2:focus-visible::after {
+  height: 2px;
+  background: var(--accent);
+}
+
+.midi-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.midi-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--gap) 20px;
+}
+
+.midi-fields > .field {
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 320px;
+}
+
+.midi-fields > .field-toggle {
+  max-width: none;
+}
+
+.midi-number input {
+  max-width: 140px;
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-number input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.midi-number input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.midi-subhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.midi-subhead::after {
+  content: '';
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--border);
+}
+
+.midi-small {
+  font-size: 12px;
+}
+
+.midi-count {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-status {
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-status:empty {
+  display: none;
+}
+
+/* Thông báo kiểu HUD: vạch trái theo mức — lỗi = danger, cảnh báo = --warn, ghi chú = muted. */
+.midi-error,
+.midi-warning,
+.midi-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+}
+
+.midi-error {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+  color: var(--text);
+}
+
+.midi-warning {
+  border-color: var(--border);
+  border-left-color: var(--warn);
+  background: var(--surface);
+}
+
+.midi-notice {
+  border-left-color: var(--text-muted);
+  background: var(--surface-2);
+}
+
+/* ── Bước 1: chọn file ── */
+
+/* Vùng thả: khung ngắm HUD — viền nét đứt (control ≥ 3:1) + ngoặc góc L + lưới mờ 24 px; kéo file
+   vào → ngoặc + viền accent, nền accent-dim. */
+.midi-dropzone {
+  --hud-c: var(--border-strong);
+  --hud-l: var(--control-border);
+  --hud-grid: var(--bg-grid);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 16px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--hud-c) 0 0) left top / 12px 2px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) left top / 2px 12px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) right top / 12px 2px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) right top / 2px 12px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 12px 2px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 2px 12px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 12px 2px no-repeat,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 2px 12px no-repeat,
+    repeating-linear-gradient(90deg, var(--hud-l) 0 8px, transparent 8px 14px) top / 100% 1px
+      no-repeat,
+    repeating-linear-gradient(90deg, var(--hud-l) 0 8px, transparent 8px 14px) bottom / 100% 1px
+      no-repeat,
+    repeating-linear-gradient(180deg, var(--hud-l) 0 8px, transparent 8px 14px) left / 1px 100%
+      no-repeat,
+    repeating-linear-gradient(180deg, var(--hud-l) 0 8px, transparent 8px 14px) right / 1px 100%
+      no-repeat,
+    linear-gradient(var(--hud-grid) 0 1px, transparent 1px) center / 24px 24px,
+    linear-gradient(90deg, var(--hud-grid) 0 1px, transparent 1px) center / 24px 24px,
+    var(--hud-bg, var(--surface-2));
+  background-origin: border-box;
+  text-align: center;
+}
+
+.midi-dropzone.is-over {
+  --hud-c: var(--accent);
+  --hud-l: var(--accent);
+  --hud-bg: var(--accent-dim);
+}
+
+.midi-dropzone-text {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ── Bước 2: bảng track ── */
+
+.midi-table-wrap {
+  /* relative: chữ .sr-only (absolute) trong bảng không tràn ra ngoài vùng cuộn ngang */
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+.midi-tracks {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.midi-tracks th,
+.midi-tracks td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.midi-tracks tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.midi-tracks thead th {
+  background: var(--surface-2);
+  border-bottom-color: var(--border-strong);
+}
+
+.midi-tracks th {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.midi-tracks .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.midi-tracks tbody tr {
+  cursor: pointer;
+}
+
+.midi-tracks tbody tr:hover {
+  background: var(--surface-2);
+}
+
+/* Hàng đang chọn: nền accent-dim + vạch accent ở mép trái. */
+.midi-tracks tbody tr.is-selected {
+  background: var(--accent-dim);
+}
+
+.midi-tracks tbody tr.is-selected > :first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.midi-tracks input[type='radio'],
+.midi-tracks input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+.midi-track-cell {
+  min-width: 150px;
+}
+
+.midi-track-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Tag "Gợi ý": khung accent vuông thay cho viên thuốc nền accent. */
+.midi-badge {
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.midi-roll-cell {
+  width: 180px;
+  min-width: 120px;
+}
+
+/* Tập đã chọn (track gộp / bè + giọng): số nốt, piano roll, nghe thử */
+.midi-selection {
+  padding: 10px 12px;
+}
+
+.midi-merged-roll {
+  flex: 1 1 240px;
+  min-width: 0;
+  width: auto;
+}
+
+/* ── Piano roll ── */
+
+.midi-roll {
+  display: block;
+  width: 100%;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* ── Bước 5: xem trước .harm ── */
+
+.midi-harm-preview {
+  margin: 0;
+  max-height: 360px;
+  overflow: auto;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-strong);
+  border-radius: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* ── Thu melody ── */
+
+.midi-device {
+  align-items: flex-end;
+}
+
+.midi-device-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+
+/* Đèn tín hiệu: ô vuông nhỏ, sáng = success (+ quầng tĩnh, không nhấp nháy). */
+.midi-activity {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--surface-3);
+  border: 1px solid var(--control-border);
+  flex: none;
+}
+
+.midi-activity.is-on {
+  background: var(--success);
+  border-color: var(--success);
+  box-shadow: 0 0 6px var(--success);
+}
+
+.midi-record-controls {
+  min-height: 40px;
+}
+
+.midi-phase {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .midi-roll-cell {
+    width: 120px;
+  }
+  .midi-fields > .field {
+    max-width: none;
+  }
+  .midi-header h1 {
+    font-size: 24px;
+  }
+  .midi-step-head h2 {
+    font-size: 19px;
+  }
+  /* Stepper xuống nhiều hàng: bỏ đoạn nối (hàng mới không bắt đầu bằng gạch); tiến độ vẫn đọc được
+     qua ô số (xong = viền accent, hiện tại = nền accent). */
+  .midi-steps {
+    gap: 6px 14px;
+  }
+  .midi-steps li + li::before {
+    display: none;
+  }
+}
+
+/* Chế độ tương phản cao: viền / ngoặc vẽ bằng background bị bỏ → viền thật; bước hiện tại vẫn khác
+   biệt bằng viền dày (không chỉ dựa vào nền). */
+@media (forced-colors: active) {
+  .midi-selection,
+  .midi-dropzone {
+    border-color: CanvasText;
+  }
+
+  .midi-dropzone {
+    border-style: dashed;
+  }
+
+  .midi-steps li.is-current .midi-step-num {
+    border: 2px solid Highlight;
+  }
+
+  .midi-step-head h2:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

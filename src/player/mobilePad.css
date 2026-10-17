@@ -1,0 +1,564 @@
+/*
+ * ── Bàn nút kiểu game Mobile (MobilePad.tsx, SPEC Phase 4m) ─────────────
+ * Bố cục giống màn chơi kèn trên điện thoại (docs/GAME-UI-REFERENCE.md "Bản mobile"): 8 nút tròn lớn
+ * trải hết bề ngang ở đáy khu tiles, 4 nút chế độ tròn nhỏ phía trên (căn giữa cột 3 … cột 7). Kích thước
+ * / vị trí theo CSS var do MobilePad đặt từ `padGeometry` (cùng hàm renderer dùng cho lane + hit line).
+ * Màu theo token: nút số đang cần = màu modifier (dùng chung .gb-tone-* / .gbm-* của game bar), nút
+ * chế độ đang chọn = màu chế độ, sắp chạm = vòng hổ phách tĩnh (D-272) + "ping" MỘT lần; accent xanh neon
+ * không tô nút. Hiệu ứng chỉ chạy một lần (không lặp — DESIGN.md); giảm chuyển động → chỉ mờ dần.
+ */
+
+.mpad {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  /* Chỉ các nút nhận con trỏ (khe giữa nút chế độ vẫn là khu tiles). */
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dải nền sau hàng nút số (dưới hit line): panel tối như bảng nút trong game, mép trên mờ dần. */
+.mpad::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--mpad-digit-top) - 2px);
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, var(--gb-panel) 28%);
+}
+
+/*
+ * Hai nhóm (aria "Nút chế độ…" / "Nút nốt…") phủ cả bàn nút: nút con đặt tuyệt đối theo bàn nút như cũ,
+ * nhưng nhóm có hộp thật (không phải hộp 0 × 0 — công cụ trợ năng / e2e coi đó là ẩn).
+ */
+.mpad-modes,
+.mpad-digits {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Nút chế độ ── */
+
+.mpad .mpad-mode {
+  position: absolute;
+  top: calc(var(--mpad-mode-top) - 3px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: calc(var(--mpad-col) * 0.96);
+  margin: 0;
+  padding: 3px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--mpad-mode-font);
+  font-weight: 700;
+  font-stretch: condensed;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+}
+
+.mpad .mpad-mode-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mpad-mode-d);
+  height: var(--mpad-mode-d);
+  overflow: visible;
+}
+
+.mpad .mpad-mode-name {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.12em 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+/*
+ * Nhãn trong hình tròn: hai dòng, chữ theo nền của nút. Chỉ xuống dòng ở dấu cách — từ dài nhất
+ * (`--mpad-name-ch` ký tự, MobilePad đặt) phải lọt một dòng nên chữ thu nhỏ khi cần ("SEMITONE" không
+ * thành "SEMITON / E"); tên tiếng Việt (từ ≤ 5 ký tự) giữ nguyên cỡ.
+ */
+.mpad[data-label='inside'] .mpad-mode-name {
+  max-width: 88%;
+  color: var(--text);
+  overflow-wrap: normal;
+  font-size: min(1em, calc(var(--mpad-mode-d) * 0.84 / (var(--mpad-name-ch, 1) * 0.72)));
+}
+
+/*
+ * Nhãn dưới hình tròn (nút nhỏ — màn dọc hẹp, trang mini): hai nút kề nhau chỉ cách một cột nên nhãn
+ * xếp so le hai dòng (Nửa Cung / Ngẩng Tự Nhiên dòng trên, Ngẩng Lên / Cúi Xuống dòng dưới) — mỗi nhãn
+ * MỘT dòng, rộng tới gần hai cột mà không chạm nhãn bên cạnh (xuống dòng trong một cột làm "NGẨNG TỰ"
+ * dính "CÚI XUỐNG", và font rộng hơn Bahnschrift trên Android thì mất chữ). Phần tràn khỏi nút không
+ * nhận chạm (vùng chạm vẫn là nút của mình). Viền chữ theo nền để đọc được trên khu tiles.
+ */
+.mpad[data-label='below'] .mpad-mode-name {
+  flex: none;
+  display: block;
+  width: max-content;
+  max-width: calc(var(--mpad-col) * 2 - 8px);
+  padding: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: none;
+  line-clamp: none;
+  text-shadow:
+    0 0 2px var(--bg),
+    0 0 4px var(--bg);
+  pointer-events: none;
+}
+
+.mpad[data-label='below'] .mpad-mode:nth-child(even) .mpad-mode-name {
+  margin-top: calc(var(--mpad-mode-font) * 1.25);
+}
+
+.mpad[data-label='below'] .mpad-mode.is-selected .mpad-mode-name {
+  color: var(--text);
+}
+
+.mpad[data-label='inside'] .gbm-mode-left.is-selected .mpad-mode-name {
+  color: var(--mod-left-text);
+}
+
+.mpad[data-label='inside'] .gbm-mode-right.is-selected .mpad-mode-name {
+  color: var(--mod-right-text);
+}
+
+.mpad[data-label='inside'] .gbm-mode-natural.is-selected .mpad-mode-name {
+  color: var(--mod-normal-text);
+}
+
+:root[data-theme='light'] .mpad[data-label='inside'] .gbm-mode-natural.is-selected .mpad-mode-name {
+  color: #ffffff;
+}
+
+.mpad[data-label='inside'] .gbm-mode-scroll.is-selected .mpad-mode-name {
+  color: var(--mod-scroll-text);
+}
+
+.mpad .gbm-mode.is-cue .mpad-mode-name {
+  color: var(--text);
+}
+
+.mpad[data-label='below'] .gbm-mode.is-cue .mpad-mode-name {
+  color: var(--warn);
+}
+
+/* Sắp phải chạm: một vòng hổ phách nở ra rồi tắt (một lần mỗi lần chạm kế tới gần). */
+.mpad-ping,
+.mpad-need-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mpad-ping {
+  border: 2px solid var(--warn);
+  animation: mpad-ping 0.6s ease-out forwards;
+}
+
+@keyframes mpad-ping {
+  from {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* Chạm nốt sai chế độ → nút chế độ cần chạm loé hai lần (chạy một lần). */
+.mpad-need-ring {
+  inset: -6px;
+  border: 3px solid var(--warn);
+  animation: mpad-need 0.8s steps(1, end) forwards;
+}
+
+@keyframes mpad-need {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── Nút số ── */
+
+.mpad .mpad-digit {
+  position: absolute;
+  top: calc(var(--mpad-digit-top) - 4px);
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 12.5%;
+  margin: 0;
+  padding: 4px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.mpad .mpad-circle {
+  position: relative;
+  width: var(--mpad-digit-d);
+  height: var(--mpad-digit-d);
+  border-width: 2px;
+  font-size: calc(var(--mpad-digit-d) * 0.42);
+}
+
+/* Nút chưa cần: tròn tối bán trong suốt, viền sáng mảnh (như nút trong game). */
+.mpad .gbm-key:not(.is-active) .mpad-circle {
+  border-color: var(--gb-cap-border);
+  background: rgb(22 28 34 / 0.86);
+}
+
+:root[data-theme='light'] .mpad .gbm-key:not(.is-active) .mpad-circle {
+  background: rgb(232 227 211 / 0.92);
+}
+
+.mpad .mpad-digit.is-pressed .mpad-circle {
+  transform: scale(0.92);
+}
+
+/* Bấm được (luyện tập): chỉ các nút nhận con trỏ; không cuộn / zoom / chạm đúp phóng to. */
+.mpad.is-interactive .mpad-mode,
+.mpad.is-interactive .mpad-digit {
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.mpad .mpad-mode:focus-visible {
+  outline: none;
+}
+
+.mpad .mpad-mode:focus-visible .mpad-mode-circle {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/*
+ * Trúng nốt: tia sáng tỏa ra quanh nút (một lần). Nằm cạnh hình tròn trong ô nút số (không trong hình tròn —
+ * hình tròn remount khi nốt ở hit line đổi): đặt theo cùng toạ độ của hình tròn (ô có đệm trên 4px, hình
+ * tròn căn giữa), lớn hơn hình tròn 1px mỗi phía.
+ */
+.mpad-spark {
+  position: absolute;
+  top: 3px;
+  left: calc(50% - var(--mpad-digit-d) / 2 - 1px);
+  width: calc(var(--mpad-digit-d) + 2px);
+  height: calc(var(--mpad-digit-d) + 2px);
+  border: 3px solid var(--text);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: mpad-spark 0.45s ease-out forwards;
+}
+
+.mpad-spark-good {
+  border-width: 2px;
+  border-color: var(--text-muted);
+}
+
+@keyframes mpad-spark {
+  from {
+    opacity: 1;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/*
+ * Lớp vòng "CHẠM" (renderer vẽ, vòng R7): canvas trong suốt cuối bàn nút → nằm TRÊN nút chế độ (vòng đáp đè
+ * lên nút, đồng tâm); phủ đúng hộp canvas tiles (bàn nút sát đáy hộp, cao = hộp — biến do MobilePad đặt).
+ */
+.mpad-cues {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: block;
+  width: 100%;
+  height: var(--mpad-box-h, 0px);
+  pointer-events: none;
+}
+
+/* PERFECT / GOOD / MISS / SAI ngay trên nút của cột, vắt qua hit line (màu chữ theo .practice-flash-*). */
+.mpad-pops {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mpad-pop {
+  position: absolute;
+  top: var(--mpad-digit-top);
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  background: rgb(9 11 13 / 0.84);
+  font-size: clamp(11px, calc(var(--mpad-digit-d) * 0.24), 19px);
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking);
+  white-space: nowrap;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  animation: mpad-pop 0.75s ease-out forwards;
+}
+
+:root[data-theme='light'] .mpad-pop {
+  background: rgb(251 249 242 / 0.94);
+}
+
+@keyframes mpad-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20%);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -110%);
+  }
+}
+
+/*
+ * Giảm chuyển động → chỉ mờ dần (D-289). `!important` + cả shorthand: app.css tắt MỌI animation bằng
+ * `*, *::before, *::after { animation: none !important }` — selector lớp ở đây ưu tiên hơn `*`, nên hiệu ứng
+ * vẫn mờ rồi tắt thay vì đứng yên. (MobilePad cũng tự gỡ chúng khỏi DOM sau PAD_POP_MS / PAD_NEED_MS.)
+ */
+@media (prefers-reduced-motion: reduce) {
+  .mpad-ping,
+  .mpad-spark,
+  .mpad-need-ring {
+    animation: mpad-fade 0.6s ease-out forwards !important;
+    transform: none;
+  }
+
+  .mpad-pop {
+    animation: mpad-fade 0.75s ease-out forwards !important;
+    transform: translate(-50%, -50%);
+  }
+
+  .mpad .mpad-digit.is-pressed .mpad-circle {
+    transform: none;
+  }
+}
+
+@keyframes mpad-fade {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Combo nhỏ ở góc trên phải khu tiles (luyện tập trên bàn chạm). */
+.mpad-combo {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--text);
+  line-height: 1;
+  pointer-events: none;
+  text-shadow:
+    0 0 3px var(--bg),
+    0 0 6px var(--bg);
+}
+
+.mpad-combo-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.mpad-combo-value {
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 800;
+  font-stretch: condensed;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Gợi ý xoay ngang (điện thoại dọc): chip nhỏ đóng được, ở mép trên khu tiles. */
+.mpad-rotate {
+  position: absolute;
+  top: 8px;
+  left: 64px;
+  right: 64px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mpad-rotate-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 4px 3px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.3;
+  pointer-events: auto;
+}
+
+.mpad-rotate-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.mpad-rotate-close:hover {
+  border-color: var(--control-border);
+}
+
+/* ── Sân khấu kiểu game (màn chơi khi Kiểu điều khiển = Mobile) ── */
+
+.player-stage.is-mpad {
+  max-width: none;
+}
+
+/*
+ * Banner gọn nhưng CAO CỐ ĐỊNH: banner cao lên khi "SẮP CHẠM" hiện (xuống dòng trên màn hẹp) sẽ làm khu
+ * tiles co lại → hit line + bàn nút nhảy theo nhịp chạm. Màn hẹp: đủ chỗ cho hai dòng.
+ */
+.player-stage.is-mpad .hold-banner-slot {
+  height: 38px;
+  padding: 2px 8px 4px;
+}
+
+.player-stage.is-mpad .hold-banner {
+  padding: 2px 12px;
+  font-size: clamp(12px, 1.5vw, 17px);
+}
+
+@media (max-width: 720px) {
+  .player-stage.is-mpad .hold-banner-slot {
+    height: 48px;
+  }
+}
+
+/* Kết quả hiện ngay trên nút (bàn chạm) thay cho chữ lớn giữa hit line. */
+.player-stage.is-mpad .practice-flash-slot {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .mpad-ping,
+  .mpad-need-ring,
+  .mpad-spark {
+    border-color: CanvasText;
+  }
+
+  /*
+   * Nút chế độ đang chọn = nền Highlight với forced-color-adjust: none (player.css) — thuộc tính này được kế
+   * thừa, nên nhãn trong hình tròn giữ màu chữ tác giả (màu chế độ) trên Highlight → không đọc được. Ép
+   * HighlightText (thắng các luật màu theo chế độ ở trên). Nhãn dưới hình tròn nằm trên nền trang → CanvasText.
+   */
+  .mpad[data-label='inside'] .gbm-mode.is-selected .mpad-mode-name {
+    color: HighlightText !important;
+  }
+
+  .mpad[data-label='below'] .mpad-mode-name {
+    color: CanvasText;
+  }
+
+  .mpad .gbm-key:not(.is-active) .mpad-circle {
+    border-color: ButtonText;
+  }
+}
+
+/*
+ * Nút tạm dừng trong khu tiles của Player: chỉ trên điện thoại (bấm Phát thì trang cuộn tới khu tiles,
+ * thanh điều khiển khuất phía trên) — cùng điều kiện SHORT_SCREEN_QUERY của PlayerView.
+ */
+.player-stage-toggle {
+  display: none;
+}
+
+@media (max-height: 520px), (max-width: 720px) {
+  .player-stage.is-mpad .player-stage-toggle {
+    display: flex;
+  }
+}
+
+/*
+ * Màn thấp (điện thoại ngang): khu tiles + bàn nút chiếm trọn một màn hình (header / thanh điều khiển ở
+ * trên, bấm Phát thì trang cuộn xuống khu tiles — PlayerView).
+ */
+@media (max-height: 520px) {
+  .player.is-mpad .player-main {
+    padding: 6px 8px 8px;
+  }
+
+  .player.is-mpad .player-canvas-wrap,
+  .player.is-mpad.is-practice .player-canvas-wrap {
+    flex: none;
+    height: calc(100vh - 14px);
+    height: calc(100dvh - 14px);
+    min-height: 0;
+  }
+}

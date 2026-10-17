@@ -1,0 +1,15 @@
+# Không upload lên Vercel (Vercel tự npm ci + build từ source).
+node_modules
+dist
+dist-single
+dev-dist
+release
+coverage
+playwright-report
+test-results
+.claude
+.vercel
+CLAUDE.local.md
+*.local
+src-tauri/target
+src-tauri/gen

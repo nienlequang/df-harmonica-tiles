@@ -1,0 +1,442 @@
+/*
+ * "Cửa sổ nổi" (src/pip) — Tactical HUD (docs/DESIGN.md). File này nạp ở tab gốc rồi được chép
+ * sang document cửa sổ nổi cùng mọi stylesheet khác (pipDocument.ts). Token màu lấy từ app.css; accent
+ * xanh neon chỉ cho khung UI (nút chính, focus, mép căn chỉnh) — không bao giờ tô tile / phím game.
+ * Chỉ CSS rẻ: không animation liên tục, tôn trọng prefers-reduced-motion.
+ */
+
+/* ── Document cửa sổ nổi ──────────────────────────────────────────────── */
+
+html.pip-doc,
+body.pip-doc {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.pip-root {
+  position: fixed;
+  inset: 0;
+}
+
+.pip-stage {
+  --pip-guide: rgb(255 255 255 / 0.92);
+  --pip-guide-dim: rgb(255 255 255 / 0.3);
+  --pip-guide-outline: rgb(0 0 0 / 0.6);
+  --pip-edge-core: #effff7;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-hud);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+:root[data-theme='light'] .pip-stage {
+  --pip-guide: rgb(27 30 24 / 0.88);
+  --pip-guide-dim: rgb(27 30 24 / 0.32);
+  --pip-guide-outline: rgb(255 255 255 / 0.7);
+  --pip-edge-core: var(--accent);
+}
+
+.pip-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pip-stage-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pip-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 8px 12px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--warn);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* ── Banner giữ / chế độ ngay trên hit line (HoldBanner, gọn như overlay khớp game) ──── */
+
+.pip-banner {
+  position: absolute;
+  left: var(--lane-left, 0px);
+  right: var(--lane-right, 0px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pip-banner .hold-banner-slot {
+  height: auto;
+  padding: 0;
+  max-width: 100%;
+}
+
+.pip-banner .hold-banner {
+  flex: 0 1 auto;
+  gap: 8px;
+  padding: 3px 10px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.45);
+}
+
+.pip-banner .hold-banner-mobile {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.pip-banner .hold-banner-next {
+  font-size: 11px;
+}
+
+/* Kiểu Mobile: bàn nút ở đáy → banner ở đầu khu làn, dưới thanh công cụ (thanh tự ẩn khi đang chạy). */
+.pip-stage[data-scheme='mobile'] .pip-banner {
+  top: 40px;
+}
+
+/* Đang căn chỉnh: banner nhường chỗ cho nhãn phím ở đáy. */
+.pip-stage[data-align='true'] .pip-banner {
+  visibility: hidden;
+}
+
+/* ── Huy hiệu "Đang phát giai điệu" (giai điệu mẫu bật): luôn hiện, góc trên phải ───────── */
+
+.pip-melody {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  z-index: 4;
+  max-width: calc(100% - 12px);
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.45);
+}
+
+/* Thanh công cụ nhường hàng trên cùng cho huy hiệu. */
+.pip-stage[data-melody='true'] .pip-toolbar {
+  top: 26px;
+}
+
+/* ── Thanh công cụ (tự ẩn khi đang chạy, hiện khi rê chuột / focus) ─────────────── */
+
+.pip-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--glass);
+  border-bottom: 1px solid var(--border-strong);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.35);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+/* Vạch accent mảnh ở mép dưới-trái (chi tiết HUD, không chiếm chỗ). */
+.pip-toolbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 44px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.pip-stage[data-playing='true'] .pip-toolbar {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.pip-stage[data-playing='true']:hover .pip-toolbar,
+.pip-stage[data-playing='true'] .pip-toolbar:focus-within {
+  opacity: 1;
+  transform: none;
+}
+
+.pip-toolbar .btn {
+  min-height: 30px;
+}
+
+.pip-play {
+  min-width: 40px;
+  font-size: 14px;
+}
+
+.pip-restart {
+  font-size: 16px;
+}
+
+.pip-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pip-hint {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 420px) {
+  .pip-hint {
+    display: none;
+  }
+}
+
+/* ── Đếm ngược trước khi chạy ─────────────────────────────────────────── */
+
+.pip-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.pip-countdown-num {
+  color: #ffffff;
+  font-size: clamp(56px, 30vmin, 200px);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  -webkit-text-stroke: 3px rgb(0 0 0 / 0.75);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 0.6);
+  animation: pip-countdown-pop 0.3s ease-out;
+}
+
+.pip-countdown-hint {
+  padding: 3px 10px;
+  border: 1px solid var(--warn);
+  background: var(--glass);
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+@keyframes pip-countdown-pop {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Căn chỉnh: 8 vạch dẫn + mép dưới ───────────────────────────────────── */
+
+.pip-align {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pip-align-cols {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--lane-left, 0px);
+  right: var(--lane-right, 0px);
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-right: 1px dashed var(--pip-guide-dim);
+}
+
+.pip-align-col {
+  position: relative;
+  border-left: 1px dashed var(--pip-guide-dim);
+}
+
+/* Vạch giữa cột = tâm phím game: đậm ở đáy (chỗ căn với keycap ngay bên dưới cửa sổ), mờ dần lên
+   trên để không che nhãn tile. */
+.pip-align-col::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  height: 40%;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, var(--pip-guide) 30%, transparent);
+}
+
+/* Viền tối mảnh hai bên vạch giữa (đọc được trên tile sáng). */
+.pip-align-col::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  height: 40%;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, var(--pip-guide-outline) 30%, transparent);
+  z-index: -1;
+}
+
+/* Nhãn kiểu keycap game: nền sáng chữ tối, vát góc. */
+.pip-align-key {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  transform: translateX(-50%);
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+  box-shadow: 0 0 0 1px var(--pip-guide-outline);
+}
+
+/* Cách đặt cửa sổ, ngay dưới thanh công cụ. */
+.pip-align-help {
+  position: absolute;
+  top: 50px;
+  left: 8px;
+  right: 8px;
+  z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-left: 2px solid var(--accent);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* Mép dưới cửa sổ = mép trên bảng phím game: tia sáng lõi trắng + glow accent (khung UI). */
+.pip-align-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--pip-edge-core);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 8px 1px var(--accent-glow);
+}
+
+.pip-align-edge-label {
+  position: absolute;
+  right: 6px;
+  bottom: 48px;
+  max-width: calc(100% - 12px);
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-left: 2px solid var(--accent);
+  background: var(--glass);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Nút ở tab gốc (Player) ───────────────────────────────────────────── */
+
+.pip-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pip-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Đèn trạng thái tĩnh (không nhấp nháy). */
+.pip-status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.pip-note {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 2px solid var(--warn);
+  color: var(--warn);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pip-toolbar {
+    transition: none;
+  }
+
+  .pip-countdown-num {
+    animation: none;
+  }
+}

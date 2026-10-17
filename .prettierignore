@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-single
+dev-dist
+coverage
+playwright-report
+test-results
+release
+package-lock.json
+src-tauri/target
+src-tauri/gen
+*.harm
+docs/SPEC.md
+public/icons/*.png

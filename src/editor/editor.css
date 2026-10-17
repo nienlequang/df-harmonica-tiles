@@ -1,0 +1,927 @@
+/*
+ * Editor (#/edit/:id), Donate modal, Share view (#/s/…) — giao diện "Tactical HUD" (docs/DESIGN.md).
+ * Màu / font lấy từ token của app.css (AA ở cả hai theme). Accent chỉ tô khung UI (số thứ tự, focus,
+ * mục đang chọn, caret), KHÔNG tô chip nốt (màu modifier giữ nguyên). Chẩn đoán: lỗi = --danger,
+ * cảnh báo = --warn, ghi chú = muted. Không animation.
+ * Bất biến (src/editor/editorCss.test.ts): ô soạn và gutter cùng font / line-height / padding dọc.
+ *
+ * Panel HUD (`--hud-*`): viền mảnh + ngoặc góc L 10 px vẽ bằng nhiều lớp background trên viền trong
+ * suốt (không pseudo-element: ngoặc đứng yên trong vùng cuộn, không chặn click). --hud-c = màu ngoặc,
+ * --hud-l = màu viền, --hud-bg = nền; viền thật cho forced-colors ở cuối file. Share view dùng `.card`
+ * của app.css (ngoặc góc sẵn có).
+ */
+
+.editor-preview,
+.harm-editor,
+.editor-menu-list,
+.donate-chunk {
+  --hud-c: var(--border-strong);
+  --hud-l: var(--border);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--hud-c) 0 0) left top / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) left top / 2px 10px,
+    linear-gradient(var(--hud-c) 0 0) right top / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) right top / 2px 10px,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) left bottom / 2px 10px,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 10px 2px,
+    linear-gradient(var(--hud-c) 0 0) right bottom / 2px 10px,
+    linear-gradient(var(--hud-l) 0 0) top / 100% 1px,
+    linear-gradient(var(--hud-l) 0 0) bottom / 100% 1px,
+    linear-gradient(var(--hud-l) 0 0) left / 1px 100%,
+    linear-gradient(var(--hud-l) 0 0) right / 1px 100%,
+    var(--hud-bg, var(--surface));
+  background-repeat: no-repeat;
+  background-origin: border-box;
+}
+
+/* Nhãn kiểu HUD: in hoa, condensed, giãn chữ. */
+.editor-label,
+.editor-status,
+.editor-caret,
+.editor-menu-item,
+.editor-toolbar .btn,
+.pv-section > h3,
+.pv-dl dt,
+.pv-group-name,
+.pv-line-jump,
+.pv-line-beats,
+.donate-chunk-title,
+.share-kicker,
+.share-source summary {
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.editor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.editor-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+/* Tiêu đề chứa tên bài → giữ hoa/thường. */
+.editor-heading h1 {
+  margin: 0;
+  font-family: var(--font-hud);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+
+/* Trạng thái lưu: tag ngoặc vuông [ ĐÃ LƯU … ] / [ ● CHƯA LƯU ] */
+.editor-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.editor-status::before {
+  content: '[ ';
+  content: '[ ' / '';
+}
+
+.editor-status::after {
+  content: ' ]';
+  content: ' ]' / '';
+}
+
+.editor-status.is-dirty {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+/* Thanh công cụ: dải viền mảnh, nút vuông. */
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+}
+
+.editor-toolbar .btn {
+  min-height: 32px;
+  border-radius: 2px;
+  font-size: 14px;
+}
+
+.editor-toolbar > .btn-primary {
+  margin-right: 4px;
+}
+
+.editor-menu {
+  position: relative;
+}
+
+.editor-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  min-width: 260px;
+  max-width: calc(100vw - 16px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  counter-reset: ed-tool;
+  box-shadow: var(--shadow);
+}
+
+.editor-menu-list[hidden] {
+  display: none;
+}
+
+/* Mục menu: số thứ tự accent (01, 02…) + vạch accent bên trái khi rê / focus. */
+.editor-menu-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  counter-increment: ed-tool;
+}
+
+.editor-menu-item::before {
+  flex: none;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  content: counter(ed-tool, decimal-leading-zero);
+  content: counter(ed-tool, decimal-leading-zero) / '';
+}
+
+.editor-menu-item:hover,
+.editor-menu-item:focus-visible {
+  background: var(--accent-dim);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+/* Bài chỉ đọc (seed / bài chia sẻ): thông báo cần chú ý → vạch hổ phách. */
+.editor-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  border-radius: 2px;
+  background: var(--surface);
+}
+
+.editor-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--gap);
+  height: calc(100vh - 200px);
+  min-height: 440px;
+  counter-reset: ed-pane;
+}
+
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Tiêu đề pane: `01 / NGUỒN .HARM ─────` (số accent, đường mảnh kéo sang phải). */
+.editor-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  counter-increment: ed-pane;
+}
+
+.editor-label::before {
+  flex: none;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  content: counter(ed-pane, decimal-leading-zero) ' /';
+  content: counter(ed-pane, decimal-leading-zero) ' /' / '';
+}
+
+.editor-label::after {
+  content: '';
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--border);
+}
+
+.editor-statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 12px;
+}
+
+.editor-caret {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.editor-preview {
+  overflow: auto;
+  padding: 12px 14px;
+}
+
+.editor-preview:focus-within,
+.harm-editor:focus-within {
+  --hud-c: var(--accent);
+}
+
+/* ── Ô soạn + gutter ─────────────────────────────────────────────────── */
+
+/* Font / line-height / padding-top của textarea và gutter phải giữ y hệt nhau (gutter thẳng hàng
+   với từng dòng nguồn) — chỉ đổi màu ở đây. */
+.harm-editor {
+  --harm-line: 20px;
+  --hud-l: var(--control-border);
+  --hud-bg: var(--bg);
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Theme sáng: ô soạn sáng như panel (nền cát của trang hơi tối cho vùng chữ dày). */
+:root[data-theme='light'] .harm-editor {
+  --hud-bg: var(--surface);
+}
+
+.harm-gutter {
+  flex: none;
+  min-width: 4.2em;
+  overflow: hidden;
+  padding: 8px 0;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  color: var(--text-muted);
+  font: 13px / var(--harm-line) var(--font-mono);
+  text-align: right;
+  user-select: none;
+}
+
+.harm-gutter-inner {
+  will-change: transform;
+}
+
+.harm-gutter-line {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: var(--harm-line);
+  padding: 0 8px 0 6px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.harm-gutter-mark {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Lỗi = danger, cảnh báo = --warn, ghi chú = muted (không dùng accent). Nền pha 12 %: số dòng màu
+   danger / warn vẫn ≥ 4.5:1 trên nền đó ở cả hai theme. */
+.harm-gutter-line.is-error {
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface-2));
+  box-shadow: inset 2px 0 0 var(--danger);
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.harm-gutter-line.is-warning {
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface-2));
+  box-shadow: inset 2px 0 0 var(--warn);
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.harm-gutter-line.is-info {
+  color: var(--text-muted);
+}
+
+.harm-textarea {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  caret-color: var(--accent);
+  font: 13px / var(--harm-line) var(--font-mono);
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+  resize: none;
+  tab-size: 2;
+}
+
+.harm-textarea::selection {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: var(--text);
+}
+
+.harm-textarea:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ── Preview ─────────────────────────────────────────────────────────── */
+
+.pv {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  counter-reset: pv-sec;
+}
+
+/* Section con: `02.1  THÔNG TIN BÀI ─────` (02 = số của pane Xem trước). */
+.pv-section > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  counter-increment: pv-sec;
+}
+
+.pv-section > h3::before {
+  flex: none;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  content: counter(ed-pane, decimal-leading-zero) '.' counter(pv-sec);
+  content: counter(ed-pane, decimal-leading-zero) '.' counter(pv-sec) / '';
+}
+
+.pv-section > h3::after {
+  content: '';
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Ô số liệu kiểu đồng hồ HUD: nhãn nhỏ in hoa + giá trị số tabular, vạch mảnh bên trái. */
+.pv-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.pv-dl > div {
+  min-width: 0;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-strong);
+}
+
+.pv-dl dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pv-dl dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.pv-diag-summary,
+.pv-diag-none {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pv-diags {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Dòng chẩn đoán: vạch trái theo mức (lỗi = danger, cảnh báo = --warn, ghi chú = muted). */
+.pv-diag {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  box-shadow: inset 2px 0 0 var(--hud-sev, var(--border-strong));
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pv-diag:hover {
+  background: var(--surface-2);
+}
+
+.pv-diag-glyph {
+  flex: none;
+  width: 1em;
+  font-weight: 700;
+  text-align: center;
+  color: var(--hud-sev, var(--text-muted));
+}
+
+.pv-diag.is-error {
+  --hud-sev: var(--danger);
+}
+
+.pv-diag.is-warning {
+  --hud-sev: var(--warn);
+}
+
+.pv-diag.is-info {
+  --hud-sev: var(--text-muted);
+}
+
+.pv-diag-loc {
+  flex: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pv-diag-msg {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pv-groups,
+.pv-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pv-group + .pv-group {
+  margin-top: 12px;
+}
+
+/* Tên đoạn: tag `[ VERSE ]`. */
+.pv-group-name {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pv-group-name::before {
+  content: '[ ';
+  content: '[ ' / '';
+}
+
+.pv-group-name::after {
+  content: ' ]';
+  content: ' ]' / '';
+}
+
+.pv-group-empty {
+  margin: 0;
+  font-size: 13px;
+}
+
+.pv-line {
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Dòng do @repeat chèn: vạch bên trái + nhãn "lặp dòng N" (không làm mờ cả dòng bằng opacity —
+   chip nốt chuột trái trên nền sáng sẽ tụt dưới contrast AA). */
+.pv-line.is-repeat {
+  padding-left: 8px;
+  box-shadow: inset 3px 0 0 var(--control-border);
+}
+
+.pv-line-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+
+.pv-line-jump {
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.pv-line-jump:hover {
+  border-color: var(--accent);
+}
+
+.pv-repeat {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.pv-line-beats {
+  margin-left: auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pv-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.pv-chip-slur {
+  padding: 1px 3px;
+  border: 1px dashed var(--control-border);
+  border-radius: 3px;
+}
+
+/* Chip nốt = tile thu nhỏ: phẳng, góc 3 px, viền trong tối 1 px như tile; màu modifier giữ nguyên
+   (palette.ts). */
+.pv-note {
+  display: inline-block;
+  min-width: 1.7em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--mod-normal);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.22);
+  color: var(--mod-normal-text);
+  font: 700 12px / 18px var(--font-mono);
+  text-align: center;
+}
+
+/* Theme sáng: chip thường (xám trắng) gần trùng nền panel → viền control (≥ 3:1) để thấy khối. */
+:root[data-theme='light'] .pv-note-normal {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.pv-note-left {
+  background: var(--mod-left);
+  color: var(--mod-left-text);
+}
+
+.pv-note-right {
+  background: var(--mod-right);
+  color: var(--mod-right-text);
+}
+
+.pv-note-scroll {
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+}
+
+.pv-rest {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  border: 1px dashed var(--control-border);
+}
+
+.pv-sharp {
+  margin-left: 1px;
+  font-size: 10px;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.pv-slur-join {
+  margin: 0 1px;
+  color: var(--text-muted);
+}
+
+.pv-dur {
+  color: var(--text-muted);
+  font: 11px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Donate modal ────────────────────────────────────────────────────── */
+
+.donate-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.donate-check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  max-width: 280px;
+}
+
+.donate-check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.donate-check .field-hint {
+  flex-basis: 100%;
+  padding-left: 26px;
+}
+
+.donate-limit input {
+  width: 9em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kiểu chữ PC / Mobile: một hàng riêng trên các ô chọn */
+.donate-style {
+  flex: 1 1 100%;
+}
+
+.donate-style select {
+  width: auto;
+  max-width: 100%;
+}
+
+.donate-mobile-note {
+  margin: 0;
+}
+
+.donate-summary p {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.donate-chunks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.donate-chunk {
+  padding: 8px 10px 10px;
+}
+
+.donate-chunk-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.donate-chunk-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.donate-chunk-count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tin nhắn sẽ dán vào game: khối mono tối, vạch accent mảnh bên trái. */
+.donate-chunk-text {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-strong);
+  border-radius: 2px;
+  background: var(--bg);
+  font: 13px / 1.45 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ── Share view ──────────────────────────────────────────────────────── */
+
+/* Khung + ngoặc góc: `.card` của app.css (hover / focus bên trong → ngoặc accent). */
+.share-card {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Tên bài: giữ hoa/thường. */
+.share-card h1 {
+  margin: 0;
+  font-family: var(--font-hud);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+
+.share-card p {
+  margin: 0;
+}
+
+/* Kicker: tag `[ BÀI ĐƯỢC CHIA SẺ ]`. */
+.share-kicker {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.share-kicker::before {
+  content: '[ ';
+  content: '[ ' / '';
+}
+
+.share-kicker::after {
+  content: ' ]';
+  content: ' ]' / '';
+}
+
+/* Chỉ có cảnh báo → vạch hổ phách; có lỗi (danh sách lỗi hiện ra) → vạch danger. */
+.share-diag {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warn);
+  border-radius: 2px;
+  background: var(--surface-2);
+}
+
+.share-diag:has(ul) {
+  border-left-color: var(--danger);
+}
+
+.share-diag ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+.share-diag-ok {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.share-hint {
+  font-size: 13px;
+}
+
+/* "Đã lưu vào thư viện": aria-disabled (vẫn focus được) trông như nút disabled */
+.share-actions .btn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.share-actions .btn[aria-disabled='true']:hover {
+  background: var(--surface-2);
+}
+
+/* Cảnh báo lỗi cú pháp trong Donate: nút không giãn hết bề ngang */
+.donate-errors {
+  align-items: flex-start;
+}
+
+.share-source summary {
+  width: fit-content;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.share-source summary:hover {
+  color: var(--text);
+}
+
+.share-source pre {
+  max-height: 320px;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg);
+  font-size: 13px;
+  white-space: pre;
+}
+
+@media (max-width: 960px) {
+  .editor-split {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+  }
+
+  .harm-editor {
+    height: 60vh;
+    min-height: 320px;
+    flex: none;
+  }
+
+  .editor-preview {
+    overflow: visible;
+  }
+}
+
+/* Màn hẹp: thanh công cụ xuống nhiều hàng, nút Công cụ có thể nằm sát mép phải → danh sách bám
+   theo cả thanh công cụ (rộng bằng thanh, ngay dưới nó) thay vì mép trái của nút. */
+@media (max-width: 760px) {
+  .editor-toolbar {
+    position: relative;
+  }
+
+  .editor-menu {
+    position: static;
+  }
+
+  .editor-menu-list {
+    right: 0;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .share-card {
+    padding: 16px 14px;
+  }
+
+  .share-card h1 {
+    font-size: 26px;
+  }
+}
+
+/* Chế độ tương phản cao: nền gradient (viền + ngoặc vẽ bằng background) bị bỏ → viền thật. */
+@media (forced-colors: active) {
+  .editor-preview,
+  .harm-editor,
+  .editor-menu-list,
+  .donate-chunk {
+    border-color: CanvasText;
+  }
+
+  .editor-label::after,
+  .pv-section > h3::after {
+    background: CanvasText;
+  }
+}

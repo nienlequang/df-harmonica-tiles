@@ -1,0 +1,2239 @@
+/*
+ * Player (route #/play/:id) — kiểu "Tactical HUD" (docs/DESIGN.md): header = thanh trạng thái HUD,
+ * progress chia vạch có khấc đầu section, nút transport vuông viền mảnh (đang bật = nền accent),
+ * banner giữ/chế độ có sọc cảnh báo, game bar = panel tối viền mảnh với keycap vát góc.
+ * Dùng token của app.css; màu modifier = --mod-* (khớp palette.ts) — KHÔNG đổi; accent xanh neon
+ * KHÔNG BAO GIỜ tô keycap / tile (gần màu Nửa Cung), chỉ khung UI.
+ * Desktop: khung cao đúng 100dvh, không cuộn trang (1080p/1440p). Màn hẹp/thấp: cho cuộn.
+ * --lane-left / --lane-right do PlayerEngine đặt theo layout canvas → keycap thẳng hàng lane.
+ */
+
+/*
+ * Token game bar ở :root vì GameBar dùng chung (Player, màn thu #/record…): panel đặc; overlay ghi đè
+ * bằng bản bán trong suốt trên phần tử gốc của nó (overlay.css).
+ */
+:root {
+  --gb-panel: rgb(12 16 19 / 0.92);
+  --gb-cap: #161c22;
+  --gb-cap-border: #3d4752;
+}
+
+:root[data-theme='light'] {
+  --gb-panel: rgb(244 240 228 / 0.94);
+  --gb-cap: #e8e3d3;
+  --gb-cap-border: #7f7862;
+}
+
+.player {
+  --stage-bg: #090b0d;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+:root[data-theme='light'] .player {
+  --stage-bg: #d3cdb9;
+}
+
+/* ── Header: thanh trạng thái HUD ──────────────────────────────────────── */
+
+.player-header {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 16px 6px;
+  /* Vạch accent ngắn ở mép dưới-trái (như thanh app). */
+  background:
+    linear-gradient(var(--accent), var(--accent)) 16px 100% / 56px 2px no-repeat,
+    var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.player-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  min-height: 38px;
+}
+
+.player-header a.btn {
+  text-decoration: none;
+}
+
+.player-back {
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+}
+
+.player-back:hover {
+  color: var(--text);
+}
+
+.player-titles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-width: 0;
+  padding-left: 14px;
+  border-left: 1px solid var(--border-strong);
+}
+
+/* Tên bài giữ nguyên hoa/thường (DESIGN.md Typography), dáng condensed đậm. */
+.player-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: 0.01em;
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-artist {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-stretch: semi-condensed;
+}
+
+.player-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+/* Tag ngoặc vuông HUD: [ 76 BPM ] [ ĐIỆP KHÚC ] — ngoặc là trang trí (không vào tên truy cập). */
+.player-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 1px 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1.4;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.player-chip::before {
+  content: '[';
+  content: '[' / '';
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.player-chip::after {
+  content: ']';
+  content: ']' / '';
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.player-chip.is-override {
+  color: var(--accent);
+}
+
+/* Tên section in hoa (có thể có dấu chồng) trong hộp cắt ellipsis: chừa chỗ phía trên. */
+.player-chip-section {
+  max-width: 28ch;
+  padding-top: 2px;
+  overflow: hidden;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+}
+
+.player-chip-warning {
+  color: var(--warn);
+  cursor: help;
+}
+
+/* Chip cảnh báo @scroll −1 là link tới trình soạn (Công cụ → Tối ưu lại). */
+a.player-chip-warning {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+a.player-chip-warning:hover {
+  text-decoration: underline;
+}
+
+a.player-chip-error {
+  color: var(--danger);
+  text-decoration: none;
+}
+
+a.player-chip-error:hover {
+  text-decoration: underline;
+}
+
+span.player-chip-error {
+  color: var(--danger);
+}
+
+/* Giai điệu mẫu đang bật: huy hiệu đỏ (nhắc streamer — tắt trong Cài đặt → Nâng cao). */
+.player-chip-melody {
+  padding: 1px 8px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger);
+  cursor: help;
+}
+
+/* Ô gọn "[🔊]" chỉ dùng ở header Player trên màn hẹp / thấp (D-417, bên dưới). */
+.melody-badge-icon {
+  display: none;
+}
+
+@media (max-width: 900px), (max-height: 520px) {
+  .player-header .player-chip-melody {
+    padding: 1px 6px;
+  }
+
+  /* Chữ đầy đủ vẫn là tên đọc (sr-only), tooltip giữ lời nhắc. */
+  .player-header .melody-badge-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .player-header .melody-badge-icon {
+    display: inline;
+  }
+}
+
+.player-chip-warning::before,
+.player-chip-warning::after,
+.player-chip-error::before,
+.player-chip-error::after,
+.player-chip-melody::before,
+.player-chip-melody::after {
+  color: inherit;
+}
+
+/* Bài chưa nằm trong Thư viện (bản nháp / bài tạm từ link): chip hổ phách + một nút giữ bài lại. */
+.player-transient {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.player-chip-transient {
+  color: var(--warn);
+  cursor: help;
+}
+
+.player-chip-transient::before,
+.player-chip-transient::after {
+  color: inherit;
+}
+
+.player-transient-action {
+  white-space: nowrap;
+}
+
+/* Góc trên phải: ngôn ngữ + giao diện (PrefButtons, kiểu như thanh điều hướng — app.css). */
+.player-prefs {
+  flex: none;
+  margin-left: auto;
+}
+
+/* ── Seek bar: thanh chia vạch + khấc đầu section ──────────────────────── */
+
+.seekbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Khung chứa thanh + khấc section (khấc định vị theo hành trình của thumb 14 px). */
+.seekbar-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.seekbar-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  /* Lớp trên: khe 2 px mỗi 24 px (màu nền header) → thanh "chia vạch"; lớp dưới: đã phát / còn lại. */
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22px, var(--surface) 22px 24px) center / 100% 6px
+      no-repeat,
+    linear-gradient(
+        to right,
+        var(--accent) 0 calc(7px + (100% - 14px) * var(--seek-frac, 0)),
+        var(--surface-3) calc(7px + (100% - 14px) * var(--seek-frac, 0)) 100%
+      )
+      center / 100% 6px no-repeat;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.seekbar-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Thumb vuông (vạch đọc), viền accent. */
+.seekbar-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent);
+  border-radius: 1px;
+  background: var(--text);
+}
+
+.seekbar-input::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--accent);
+  border-radius: 1px;
+  background: var(--text);
+}
+
+.seekbar-input::-moz-range-track {
+  background: transparent;
+}
+
+.seekbar-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Khấc đầu section: vạch 2 px nhô khỏi thanh trên + dưới (trang trí, aria-hidden). */
+.seekbar-mark {
+  position: absolute;
+  top: 50%;
+  left: calc(7px + (100% - 14px) * var(--mark, 0));
+  width: 2px;
+  height: 14px;
+  margin: -7px 0 0 -1px;
+  background: linear-gradient(
+    var(--text-muted) 0 4px,
+    transparent 4px calc(100% - 4px),
+    var(--text-muted) calc(100% - 4px)
+  );
+}
+
+.seekbar-time {
+  min-width: 11ch;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-align: right;
+}
+
+/* ── Transport: nút vuông viền mảnh ────────────────────────────────────── */
+
+.transport {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 7px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.transport-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.transport .btn {
+  min-height: 34px;
+}
+
+.transport .btn-sm {
+  min-height: 30px;
+}
+
+/* Nút icon vuông (cao = rộng). */
+.transport .btn-icon {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+}
+
+.transport .btn-icon.btn-sm {
+  width: 30px;
+  min-width: 30px;
+}
+
+.transport-play {
+  min-width: 118px;
+}
+
+.transport-section {
+  max-width: 220px;
+  min-height: 34px;
+  padding: 5px 8px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.transport-loop[data-state='a'] {
+  border-color: var(--accent);
+}
+
+.transport-loop-state {
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+.transport-slider {
+  gap: 8px;
+}
+
+.transport-slider-label {
+  display: flex;
+  flex-direction: column;
+  min-width: 70px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: condensed;
+  line-height: 1.25;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.transport-value {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.transport-value.is-override {
+  color: var(--accent);
+}
+
+/* Thanh trượt HUD: rãnh mảnh, thumb vuông. */
+.transport-slider input[type='range'] {
+  width: 130px;
+  height: 20px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(var(--control-border), var(--control-border)) center / 100% 2px
+    no-repeat;
+  cursor: pointer;
+}
+
+.transport-slider input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 18px;
+  border: 1px solid var(--accent);
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.transport-slider input[type='range']::-moz-range-thumb {
+  width: 10px;
+  height: 16px;
+  border: 1px solid var(--accent);
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+.transport-slider input[type='range']::-moz-range-track {
+  background: transparent;
+}
+
+/* Practice: bật/tắt + chế độ (2 nút liền) + nghe giai điệu mẫu. */
+.transport-segmented {
+  display: inline-flex;
+}
+
+.transport-segmented > .btn {
+  border-radius: 0;
+}
+
+.transport-segmented > .btn:first-child {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.transport-segmented > .btn:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.transport-segmented > .btn + .btn {
+  margin-left: -1px;
+}
+
+/* ── Practice HUD (dải điểm dưới thanh điều khiển) ─────────────────────── */
+
+.practice-hud {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 6px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.practice-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin: 0;
+}
+
+/* Ô số HUD: nhãn in hoa nhỏ + số tabular lớn, ngăn bằng vạch mảnh. */
+.practice-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 14px;
+  border-left: 1px solid var(--border-strong);
+}
+
+.practice-stat:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.practice-stat dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.practice-stat dd {
+  margin: 0;
+  min-width: 2ch;
+  /* ≥ 18.66px đậm = chữ lớn (AA 3:1). */
+  font-size: 22px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-stat-combo dd,
+.practice-stat-perfect dd {
+  color: var(--accent);
+}
+
+.practice-stat-good dd {
+  color: var(--text);
+}
+
+.practice-stat-miss dd {
+  color: var(--danger);
+}
+
+.practice-stat-wrong dd {
+  color: var(--warn);
+}
+
+.practice-notes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: min(100%, 280px);
+  font-size: 12px;
+}
+
+.practice-notes p {
+  margin: 0;
+}
+
+.practice-status {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.practice-status.is-waiting {
+  padding-left: 8px;
+  border-left: 3px solid var(--warn);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking);
+}
+
+.practice-note {
+  color: var(--text-muted);
+}
+
+.practice-warning {
+  color: var(--warn);
+}
+
+.practice-warning a {
+  color: inherit;
+  font-weight: 700;
+}
+
+/* Chữ PERFECT / GOOD / MISS nháy ngay trên hit line (82% chiều cao khu tiles). */
+.practice-flash-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 82%;
+  display: flex;
+  justify-content: center;
+  transform: translateY(calc(-100% - 10px));
+  pointer-events: none;
+}
+
+/* Tag HUD vát góc (gradient 45°, không clip-path). */
+.practice-flash {
+  --cut: 8px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 16px;
+  background: linear-gradient(
+    45deg,
+    transparent var(--cut),
+    rgb(9 11 13 / 0.82) var(--cut) calc(100% - var(--cut)),
+    transparent calc(100% - var(--cut))
+  );
+  font-size: clamp(22px, 3vw, 34px);
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  animation: practice-flash 0.7s ease-out forwards;
+}
+
+:root[data-theme='light'] .practice-flash {
+  background: linear-gradient(
+    45deg,
+    transparent var(--cut),
+    rgb(251 249 242 / 0.92) var(--cut) calc(100% - var(--cut)),
+    transparent calc(100% - var(--cut))
+  );
+}
+
+.practice-flash-delta {
+  font-size: 0.45em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.practice-flash-perfect {
+  color: var(--accent);
+}
+
+.practice-flash-good {
+  color: var(--text);
+}
+
+.practice-flash-miss {
+  color: var(--danger);
+}
+
+.practice-flash-wrong {
+  color: var(--warn);
+}
+
+.practice-flash-range {
+  color: var(--text-muted);
+  font-size: 0.7em;
+}
+
+@keyframes practice-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  70% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Giảm chuyển động → chỉ mờ dần. `!important` + shorthand: thắng `* { animation: none !important }` của
+   app.css (selector lớp ưu tiên hơn `*`) — không thì chữ kết quả đứng yên mãi trên hit line. */
+@media (prefers-reduced-motion: reduce) {
+  .practice-flash {
+    animation: practice-flash-fade 0.7s ease-out forwards !important;
+  }
+}
+
+@keyframes practice-flash-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Bảng kết quả cuối bài. */
+.practice-results {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.practice-results-accuracy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 15px;
+}
+
+.practice-results-accuracy strong {
+  color: var(--accent);
+  font-size: 44px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-results-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.practice-results-list > div {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.practice-results-list dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.practice-results-list dd {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  font-variant-numeric: tabular-nums;
+}
+
+.practice-results-list .practice-stat-perfect dd {
+  color: var(--accent);
+}
+
+.practice-results-list .practice-stat-good dd {
+  color: var(--text);
+}
+
+.practice-results-list .practice-stat-miss dd {
+  color: var(--danger);
+}
+
+/* ── Stage (canvas + banner + game bar) ────────────────────────────────── */
+
+/*
+ * ── Thân màn chơi: [cột phím tắt] [khu tiles] [thanh dọc] ───────────────
+ * Màn rộng (≥ 1200 px): 3 cột. Hẹp hơn: ẩn cột phím tắt (nút "?" của thanh điều khiển mở hộp thoại).
+ * Điện thoại: xem cuối file + mobilePad.css.
+ */
+.player-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'main side';
+}
+
+.player-shortcuts {
+  grid-area: left;
+  display: none;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px 16px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 14px;
+  scrollbar-width: thin;
+}
+
+.player-shortcuts .shortcuts {
+  gap: 10px;
+}
+
+.player-shortcuts .shortcuts-row {
+  grid-template-columns: minmax(64px, max-content) 1fr;
+  gap: 10px;
+}
+
+.player-shortcuts .shortcuts-list {
+  gap: 6px;
+}
+
+/* Màn thấp (laptop 1280×720…): cột gọn lại để cả danh sách + link "Hướng dẫn đầy đủ" nằm trong khung. */
+@media (max-height: 820px) {
+  .player-shortcuts {
+    padding-top: 8px;
+    padding-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .player-shortcuts .shortcuts {
+    gap: 6px;
+  }
+
+  .player-shortcuts .shortcuts-group {
+    gap: 5px;
+  }
+
+  .player-shortcuts .shortcuts-group + .shortcuts-group {
+    padding-top: 6px;
+  }
+
+  .player-shortcuts .shortcuts-list {
+    gap: 3px;
+  }
+
+  .player-shortcuts .shortcuts-practice {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+.player-main {
+  grid-area: main;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px 12px;
+}
+
+/* Laptop 1280–1440 px: thanh điều khiển gọn lại để vẫn một hàng (khu tiles cao hơn). */
+@media (min-width: 721px) and (max-width: 1440px) {
+  .transport {
+    gap: 8px 12px;
+  }
+
+  .transport-slider input[type='range'] {
+    width: 92px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .player-body {
+    grid-template-columns: minmax(236px, 300px) minmax(0, 1fr) auto;
+    grid-template-areas: 'left main side';
+  }
+
+  .player-shortcuts {
+    display: block;
+  }
+
+  /* Cột trái đã có đủ phím tắt → bỏ nút "?" trên thanh điều khiển. */
+  .transport-help {
+    display: none;
+  }
+}
+
+/*
+ * ── Thanh dọc bên phải: Kiểu điều khiển · Cửa sổ nổi · OBS · Chia sẻ · Cài đặt ──
+ * Ô vuông viền mảnh (nút .btn của app.css), icon trên + nhãn ngắn in hoa dưới; đang bật = nền accent
+ * (khung UI — không phải tile).
+ */
+.player-sidebar {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 104px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 8px;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  scrollbar-width: none;
+}
+
+.psb-scheme {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.psb-scheme-title {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-stretch: condensed;
+  line-height: 1.2;
+  letter-spacing: var(--tracking);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.psb-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.player-sidebar .btn.psb-btn,
+.player-sidebar .btn.pip-toggle,
+.player-sidebar .btn.psb-seg-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  padding: 7px 4px 6px;
+  font-size: 11px;
+  font-stretch: condensed;
+  line-height: 1.15;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.player-sidebar .btn.psb-seg-btn {
+  min-height: 52px;
+  padding: 6px 2px 5px;
+}
+
+.psb-seg > .btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.psb-seg > .btn + .btn {
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.player-sidebar .player-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.player-sidebar .psb-seg-btn .player-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Cửa sổ nổi (PC): khung tương đối cho dòng giải thích nổi bên trái thanh. */
+.player-sidebar .pip-control {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-sidebar .pip-open-tag {
+  padding: 0 4px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  letter-spacing: var(--tracking);
+}
+
+.player-sidebar .btn.pip-switch {
+  width: 100%;
+  padding: 3px 4px;
+  font-size: 10px;
+  font-stretch: condensed;
+  white-space: normal;
+}
+
+/* Không hỗ trợ / bị chặn: bong bóng chữ bên trái thanh (không đẩy các nút khác). */
+.player-sidebar .pip-note {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 10px);
+  z-index: 5;
+  width: 240px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--glass);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.player-sidebar a.btn {
+  text-decoration: none;
+}
+
+/* ── Đáy: thanh tiến độ trải hết bề ngang ─────────────────────────────── */
+
+.player-footer {
+  flex: none;
+  padding: 6px 16px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.player-stage {
+  --lane-left: 16px;
+  --lane-right: 56px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  /* 1080p: 980px; màn cao hơn (1440p) cho rộng thêm theo chiều cao, tối đa 1240px. */
+  max-width: max(980px, min(1240px, 90vh));
+  display: flex;
+  flex-direction: column;
+}
+
+/* Practice: chuột là modifier → bấm nhanh trên game bar không được bôi đen chữ. */
+.player.is-practice .player-stage {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+ * Khung sân khấu: banner (kiểu Mobile) + hộp canvas chiếm phần còn lại.
+ * Nền = nền canvas (canvasTheme bg); viền mảnh + ngoặc góc HUD (gradient tĩnh, không ảnh).
+ */
+.player-canvas-wrap {
+  --bracket-color: var(--border-strong);
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--stage-bg);
+}
+
+.player-canvas-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--bracket-color), var(--bracket-color)) left top / var(--bracket) 2px,
+    linear-gradient(var(--bracket-color), var(--bracket-color)) left top / 2px var(--bracket),
+    linear-gradient(var(--bracket-color), var(--bracket-color)) right top / var(--bracket) 2px,
+    linear-gradient(var(--bracket-color), var(--bracket-color)) right top / 2px var(--bracket),
+    linear-gradient(var(--bracket-color), var(--bracket-color)) left bottom / var(--bracket) 2px,
+    linear-gradient(var(--bracket-color), var(--bracket-color)) left bottom / 2px var(--bracket),
+    linear-gradient(var(--bracket-color), var(--bracket-color)) right bottom / var(--bracket) 2px,
+    linear-gradient(var(--bracket-color), var(--bracket-color)) right bottom / 2px var(--bracket);
+  background-repeat: no-repeat;
+}
+
+.player-canvas-box {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.player-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.player-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  text-align: center;
+}
+
+.player-empty p {
+  margin: 0;
+}
+
+.player-empty a.btn {
+  text-decoration: none;
+}
+
+/* Đếm ngược trước khi phát: số lớn giữa khu tiles (không bắt chuột). */
+.player-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgb(9 11 13 / 0.6);
+  pointer-events: none;
+}
+
+:root[data-theme='light'] .player-countdown {
+  background: rgb(232 227 211 / 0.72);
+}
+
+.player-countdown-num {
+  color: var(--accent);
+  font-size: clamp(96px, 22vh, 220px);
+  font-weight: 700;
+  font-stretch: condensed;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: player-countdown-pop 1s ease-out;
+}
+
+.player-countdown-hint {
+  padding: 3px 12px;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: semi-condensed;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+@keyframes player-countdown-pop {
+  from {
+    opacity: 0.3;
+    transform: scale(1.25);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-countdown-num {
+    animation: none;
+  }
+}
+
+/* ── Hold banner ───────────────────────────────────────────────────────── */
+
+.hold-banner-slot {
+  flex: none;
+  display: flex;
+  height: 54px;
+  padding: 6px 0;
+}
+
+/*
+ * Banner HUD: nền màu modifier + sọc cảnh báo chéo mờ (--hazard: sọc đen ≤ 20% — chữ trên phần sọc
+ * vẫn ≥ 4.5:1, xem canvasTheme.test / ghi chú contrast), chữ in hoa condensed giãn chữ, vát góc
+ * trên-phải / dưới-trái (clip-path — banner không nhận focus nên không cắt mất focus ring).
+ */
+.hold-banner {
+  --cut: 10px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 16px;
+  border-radius: 0;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+  font-size: clamp(17px, 2.3vw, 26px);
+  font-weight: 700;
+  font-stretch: condensed;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  animation: hold-banner-in 120ms ease-out;
+}
+
+/* Chữ in hoa tiếng Việt có dấu chồng trên mũ (Ẩ, Ế, Ử…): hộp cắt (ellipsis) phải đủ cao. */
+.hold-banner-text {
+  overflow: hidden;
+  padding: 0.1em 0;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.hold-banner-left {
+  background: var(--hazard), var(--mod-left);
+  color: var(--mod-left-text);
+}
+
+.hold-banner-right {
+  background: var(--hazard), var(--mod-right);
+  color: var(--mod-right-text);
+}
+
+.hold-banner-scroll {
+  background: var(--hazard), var(--mod-scroll);
+  color: var(--mod-scroll-text);
+}
+
+.hold-banner-combo {
+  box-shadow: inset 0 -5px 0 var(--mod-scroll);
+}
+
+.hold-banner-badge {
+  flex: none;
+  padding: 0 9px;
+  border: 1px solid var(--mod-scroll-text);
+  border-radius: var(--radius-sm);
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+  font-size: 0.85em;
+  line-height: 1.3;
+}
+
+@keyframes hold-banner-in {
+  from {
+    opacity: 0.4;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Game bar ──────────────────────────────────────────────────────────── */
+
+/*
+ * Game bar: panel tối bán trong suốt viền mảnh (gợi bảng phím trong game, không sao chép) với vạch
+ * trang trí mảnh ở mép trên; keycap vuông vát góc trên-phải / dưới-trái. Phím đang cần = nền màu
+ * modifier (không bao giờ accent).
+ */
+.game-bar {
+  position: relative;
+  flex: none;
+  padding: 8px var(--lane-right) 10px var(--lane-left);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(var(--border-strong), var(--border-strong)) 50% 0 / 64px 2px no-repeat,
+    var(--gb-panel);
+}
+
+.game-bar-keys {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.gb-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 3px;
+}
+
+.gb-degree {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Keycap: vát góc bằng clip-path (kbd không nhận focus). Viền = inset box-shadow (không bị cắt);
+ * phím người chơi đang giữ (practice) = vòng inset dày màu --focus thay cho outline (outline bị
+ * clip-path cắt mất).
+ */
+kbd.gb-cap {
+  --cut: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 56px);
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--cut)) 0,
+    100% var(--cut),
+    100% 100%,
+    var(--cut) 100%,
+    0 calc(100% - var(--cut))
+  );
+  background: var(--gb-cap);
+  box-shadow:
+    inset 0 0 0 1px var(--gb-cap-border),
+    inset 0 -3px 0 rgb(0 0 0 / 0.35);
+  color: var(--text);
+  font-family: var(--font-hud);
+  font-size: clamp(16px, 2.2vw, 24px);
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1;
+  transition:
+    transform 0.06s,
+    background 0.06s,
+    box-shadow 0.06s;
+}
+
+kbd.gb-cap-comma {
+  font-size: clamp(22px, 3vw, 32px);
+}
+
+/* "1̇": chấm vẽ bằng CSS ngay trên chữ số (U+0307 của font hệ thống lệch sang phải). */
+.gb-degree-dot {
+  position: relative;
+  display: inline-block;
+}
+
+.gb-degree-dot::after {
+  content: '';
+  position: absolute;
+  top: -0.12em;
+  left: 50%;
+  width: 0.22em;
+  height: 0.22em;
+  margin-left: -0.11em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.gb-key.is-active .gb-degree {
+  color: var(--text);
+}
+
+/*
+ * Keycap đang cần bấm. Mỗi nốt mới GameBar remount keycap → animation "nhấn" chạy lại: tắt → sáng
+ * trong ~150 ms, nên nốt lặp cùng phím (X X X…) vẫn thấy từng lần bấm.
+ */
+.gb-key.is-active kbd.gb-cap {
+  transform: translateY(2px);
+  animation: gb-press 0.15s ease-out;
+}
+
+@keyframes gb-press {
+  from {
+    transform: translateY(0) scale(0.9);
+    background: var(--gb-cap);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--gb-cap-border);
+  }
+}
+
+@keyframes gb-press-flat {
+  from {
+    background: var(--gb-cap);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--gb-cap-border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-key.is-active kbd.gb-cap {
+    animation-name: gb-press-flat;
+  }
+}
+
+/* Phím sáng màu modifier; glow ngoài vẽ bằng drop-shadow trên cột phím (keycap bị clip-path). */
+.gb-tone-normal kbd.gb-cap {
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.18);
+}
+
+.gb-tone-left kbd.gb-cap {
+  background: var(--mod-left);
+  color: var(--mod-left-text);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.25);
+}
+
+.gb-tone-right kbd.gb-cap {
+  background: var(--mod-right);
+  color: var(--mod-right-text);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.25);
+}
+
+.gb-tone-scroll kbd.gb-cap {
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.25);
+}
+
+.gb-key.gb-tone-normal:not(.gbm-key) {
+  filter: drop-shadow(0 0 9px rgb(230 233 239 / 0.45));
+}
+
+.gb-key.gb-tone-left:not(.gbm-key) {
+  filter: drop-shadow(0 0 9px rgb(37 99 235 / 0.65));
+}
+
+.gb-key.gb-tone-right:not(.gbm-key) {
+  filter: drop-shadow(0 0 9px rgb(249 115 22 / 0.6));
+}
+
+.gb-key.gb-tone-scroll:not(.gbm-key) {
+  filter: drop-shadow(0 0 9px rgb(34 197 94 / 0.6));
+}
+
+/*
+ * Theme sáng: tile thường xám trắng gần trùng keycap chưa sáng → keycap sáng của nốt thường đổi
+ * sang nền đậm chữ trắng (≈ 13:1 so với keycap chưa sáng); bỏ glow (nền sáng).
+ */
+:root[data-theme='light'] .gb-tone-normal kbd.gb-cap {
+  background: #15181d;
+  color: #ffffff;
+}
+
+:root[data-theme='light'] .gb-key.is-active:not(.gbm-key) {
+  filter: none;
+}
+
+/*
+ * Practice: phím người chơi ĐANG GIỮ — vòng inset kép (tối + sáng, thấy được trên mọi màu tile kể cả
+ * xanh Nửa Cung; outline bị clip-path cắt nên không dùng), keycap lún xuống. Đúng phím đang cần thì
+ * có cả hai (nền màu + vòng).
+ */
+.gb-key.is-pressed kbd.gb-cap {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 0 0 2px var(--bg),
+    inset 0 0 0 4px var(--text);
+}
+
+.gb-key.is-pressed .gb-degree {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.gb-mod.is-pressed {
+  border-color: var(--text);
+  box-shadow: 0 0 0 1px var(--text);
+}
+
+.game-bar-mods {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.gb-mod-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Dấu | giữa các modifier: vạch mảnh (ký tự giữ trong DOM, aria-hidden). */
+.gb-sep {
+  color: var(--border-strong);
+}
+
+/* Tag modifier vuông viền mảnh; đang giữ = nền màu modifier. */
+.gb-mod {
+  padding: 2px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-stretch: semi-condensed;
+  white-space: nowrap;
+  transition: background 0.06s;
+}
+
+.gb-mod-name {
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: var(--tracking);
+  text-transform: uppercase;
+}
+
+.gb-mod.is-active .gb-mod-name {
+  color: inherit;
+}
+
+.gb-mod-left.is-active {
+  border-color: var(--mod-left);
+  background: var(--mod-left);
+  color: var(--mod-left-text);
+}
+
+.gb-mod-right.is-active {
+  border-color: var(--mod-right);
+  background: var(--mod-right);
+  color: var(--mod-right-text);
+}
+
+.gb-mod-scroll.is-active {
+  border-color: var(--mod-scroll);
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+}
+
+/*
+ * ── Kiểu điều khiển Mobile ──────────────────────────────────────────────
+ * Banner luôn hiện chế độ đang chọn (+ "SẮP CHẠM" ~1 beat trước mỗi lần chạm). Game bar mô phỏng
+ * bản mobile của game: hàng 4 nút chế độ tròn (nút đang chọn nền sáng), hàng 8 nút số tròn — giữ
+ * dáng tròn, kiểu HUD (viền mảnh, vòng trong tối, chữ condensed).
+ */
+
+.hold-banner-mobile {
+  gap: 10px 16px;
+  font-size: clamp(14px, 1.9vw, 22px);
+  letter-spacing: var(--tracking);
+  animation: none;
+}
+
+/* Ngẩng Tự Nhiên + Nửa Cung tắt: không chế độ nào → panel trung tính, không sọc. */
+.hold-banner-natural {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--text);
+}
+
+/*
+ * "SẮP CHẠM: …": trạng thái chú ý → hổ phách --warn (không dùng accent cạnh màu tile). Tĩnh (không
+ * nhấp nháy độ đục — làm tụt contrast chữ); nút chế độ sắp chạm ở game bar có vòng hổ phách.
+ */
+.hold-banner-next {
+  --cut: 6px;
+  flex: none;
+  padding: 2px 12px;
+  border-radius: 0;
+  background: linear-gradient(
+    45deg,
+    transparent var(--cut),
+    var(--warn) var(--cut) calc(100% - var(--cut)),
+    transparent calc(100% - var(--cut))
+  );
+  color: var(--warn-text);
+  font-size: 0.9em;
+}
+
+.game-bar-mobile {
+  padding-top: 10px;
+}
+
+.gbm-modes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px clamp(10px, 3vw, 28px);
+  margin-bottom: 10px;
+}
+
+.gbm-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: condensed;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.gbm-mode-btn {
+  display: block;
+  width: clamp(26px, 3.4vw, 36px);
+  aspect-ratio: 1;
+  border: 1px solid var(--gb-cap-border);
+  border-radius: 50%;
+  background: var(--gb-cap);
+  box-shadow: inset 0 0 0 3px rgb(0 0 0 / 0.28);
+  transition:
+    background 0.08s,
+    border-color 0.08s,
+    box-shadow 0.08s;
+}
+
+/* Tên nút (người dùng đặt được, ≤ 24 ký tự): tối đa 2 dòng. */
+.gbm-mode-name {
+  display: -webkit-box;
+  max-width: 8em;
+  padding-top: 0.1em;
+  overflow: hidden;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+/* Nút đang chọn: nền sáng theo màu chế độ (như game: nút đang bật sáng). */
+.gbm-mode.is-selected {
+  color: var(--text);
+}
+
+.gbm-mode-left.is-selected .gbm-mode-btn {
+  border-color: var(--mod-left);
+  background: var(--mod-left);
+  box-shadow:
+    inset 0 0 0 3px rgb(0 0 0 / 0.2),
+    0 0 10px rgb(37 99 235 / 0.6);
+}
+
+.gbm-mode-right.is-selected .gbm-mode-btn {
+  border-color: var(--mod-right);
+  background: var(--mod-right);
+  box-shadow:
+    inset 0 0 0 3px rgb(0 0 0 / 0.2),
+    0 0 10px rgb(249 115 22 / 0.6);
+}
+
+.gbm-mode-natural.is-selected .gbm-mode-btn {
+  border-color: var(--mod-normal);
+  background: var(--mod-normal);
+  box-shadow:
+    inset 0 0 0 3px rgb(0 0 0 / 0.12),
+    0 0 10px rgb(230 233 239 / 0.45);
+}
+
+:root[data-theme='light'] .gbm-mode-natural.is-selected .gbm-mode-btn {
+  border-color: #15181d;
+  background: #15181d;
+}
+
+.gbm-mode-scroll.is-selected .gbm-mode-btn {
+  border-color: var(--mod-scroll);
+  background: var(--mod-scroll);
+  box-shadow:
+    inset 0 0 0 3px rgb(0 0 0 / 0.2),
+    0 0 10px rgb(34 197 94 / 0.6);
+}
+
+/*
+ * Nút sắp phải chạm (≤ ~1 beat): vòng hổ phách TĨNH, màu đặc (trạng thái chú ý). Không animation lặp
+ * ngoài canvas (D-239) — vòng nhấp nháy cũ còn là quầng bán trong suốt trên nền chroma (D-240).
+ */
+.gbm-mode.is-cue .gbm-mode-btn {
+  border-color: var(--warn);
+  box-shadow: 0 0 0 3px var(--warn);
+}
+
+.gbm-mode.is-cue .gbm-mode-name {
+  color: var(--warn);
+}
+
+.gbm-mode.is-pressed .gbm-mode-btn {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.gbm-key {
+  padding: 0 2px;
+}
+
+.gbm-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 52px);
+  aspect-ratio: 1;
+  border: 1px solid var(--gb-cap-border);
+  border-radius: 50%;
+  background: var(--gb-cap);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.3);
+  color: var(--text);
+  font-size: clamp(16px, 2.2vw, 24px);
+  font-weight: 700;
+  font-stretch: semi-condensed;
+  line-height: 1;
+  transition:
+    transform 0.06s,
+    background 0.06s,
+    box-shadow 0.06s;
+}
+
+.gbm-key.is-active .gbm-btn {
+  transform: scale(0.94);
+  animation: gbm-press 0.15s ease-out;
+}
+
+@keyframes gbm-press {
+  from {
+    transform: scale(0.82);
+    border-color: var(--gb-cap-border);
+    background: var(--gb-cap);
+    color: var(--text);
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gbm-key.is-active .gbm-btn {
+    animation: none;
+  }
+}
+
+.gb-tone-normal .gbm-btn {
+  border-color: var(--mod-normal);
+  background: var(--mod-normal);
+  color: var(--mod-normal-text);
+  box-shadow: 0 0 14px rgb(230 233 239 / 0.5);
+}
+
+.gb-tone-left .gbm-btn {
+  border-color: var(--mod-left);
+  background: var(--mod-left);
+  color: var(--mod-left-text);
+  box-shadow: 0 0 14px rgb(37 99 235 / 0.65);
+}
+
+.gb-tone-right .gbm-btn {
+  border-color: var(--mod-right);
+  background: var(--mod-right);
+  color: var(--mod-right-text);
+  box-shadow: 0 0 14px rgb(249 115 22 / 0.65);
+}
+
+.gb-tone-scroll .gbm-btn {
+  border-color: var(--mod-scroll);
+  background: var(--mod-scroll);
+  color: var(--mod-scroll-text);
+  box-shadow: 0 0 14px rgb(34 197 94 / 0.65);
+}
+
+:root[data-theme='light'] .gb-tone-normal .gbm-btn {
+  border-color: #15181d;
+  background: #15181d;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgb(21 24 29 / 0.25);
+}
+
+/* Practice: số đang giữ — vòng sáng ngoài (nút tròn không bị clip-path). */
+.gbm-key.is-pressed .gbm-btn {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Số giản phổ: chấm trên/dưới vẽ bằng CSS (dấu kết hợp U+0307 / U+0323 của font hệ thống lệch). */
+.jp {
+  display: inline-flex;
+}
+
+.jp-glyph {
+  position: relative;
+  display: inline-block;
+}
+
+.jp-dots {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08em;
+  transform: translateX(-50%);
+}
+
+.jp-dots-above {
+  bottom: 100%;
+  flex-direction: column-reverse;
+  margin-bottom: 0.04em;
+}
+
+.jp-dots-below {
+  top: 100%;
+  margin-top: 0.04em;
+}
+
+.jp-dot {
+  display: block;
+  width: 0.2em;
+  height: 0.2em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/*
+ * Nút tạm dừng / phát nhỏ trong khu tiles (bố cục kiểu game trên điện thoại — thanh điều khiển đã cuộn
+ * khuất): vuông viền mảnh ở góc trên trái (đáy là bàn nút). Hiện / ẩn theo màn: mobilePad.css.
+ */
+.stage-toggle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: rgb(9 11 13 / 0.82);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
+}
+
+.stage-toggle:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+:root[data-theme='light'] .stage-toggle {
+  background: rgb(244 240 228 / 0.92);
+}
+
+:root[data-theme='light'] .stage-toggle:hover {
+  background: var(--accent-dim);
+}
+
+.stage-toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.stage-toggle .player-icon {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 720px) {
+  /* Banner mobile trên màn hẹp: chế độ + "SẮP CHẠM" xuống 2 dòng thay vì cắt chữ. */
+  .hold-banner-mobile {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 3px;
+    padding: 0 8px;
+    font-size: 13px;
+    line-height: 1.3;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .gbm-mode {
+    font-size: 11px;
+  }
+
+  .gbm-mode-name {
+    max-width: 6.5em;
+  }
+}
+
+/* ── Not found ─────────────────────────────────────────────────────────── */
+
+.player-notfound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 16px;
+}
+
+.player-notfound-card {
+  width: min(480px, 100%);
+}
+
+.player-notfound-card h1,
+.player-notfound-card p {
+  margin: 0;
+}
+
+.player-notfound-card a.btn {
+  text-decoration: none;
+}
+
+/* ── Màn hẹp (mobile dọc) hoặc thấp: cho trang cuộn, canvas cao cố định ──── */
+
+@media (max-width: 720px), (max-height: 620px) {
+  .player {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .player-canvas-wrap {
+    flex: none;
+    height: max(300px, 62vh);
+  }
+
+  .player-title {
+    max-width: 100%;
+  }
+
+  .transport {
+    gap: 8px 12px;
+  }
+
+  .transport-slider input[type='range'] {
+    width: 104px;
+  }
+}
+
+/* Practice trên màn thấp (vd. laptop 1366×768): dải điểm chiếm thêm ~70–90 px → cho trang cuộn
+   thay vì ép khu tiles xuống còn ~120 px. */
+@media (max-height: 800px) {
+  .player.is-practice {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .player.is-practice .player-canvas-wrap {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 720px) {
+  .player-header,
+  .transport,
+  .practice-hud {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /* Header xuống 2 hàng, nút "◂" chỉ còn icon: bỏ vạch accent mép dưới (sẽ nằm dưới khoảng trống). */
+  .player-header {
+    background: var(--surface);
+  }
+
+  .player-main {
+    padding: 8px 8px 12px;
+  }
+
+  .transport-play {
+    min-width: 0;
+  }
+
+  .transport-text,
+  .player-back-text {
+    display: none;
+  }
+
+  .gb-degree {
+    font-size: 13px;
+  }
+
+  .game-bar-mods {
+    font-size: 12px;
+    gap: 4px 6px;
+  }
+
+  .gb-mod-wrap {
+    gap: 6px;
+  }
+
+  /* Hàng modifier xuống dòng trên màn hẹp: bỏ dấu | để không đứng lẻ đầu dòng. */
+  .gb-sep {
+    display: none;
+  }
+
+  .gb-mod {
+    padding: 2px 6px;
+  }
+}
+
+/*
+ * ── Thanh dọc trên điện thoại ──────────────────────────────────────────
+ * Thấp (điện thoại ngang): vẫn là cột bên phải khu tiles nhưng chỉ icon (nhãn vẫn là tên truy cập).
+ * Hẹp (điện thoại dọc): thành một hàng icon phía trên khu tiles — không che lane / bàn nút, không cuộn
+ * ngang ở 375 px. Bàn nút Mobile + canvas dùng chung hình học của hộp canvas nên vẫn thẳng lane.
+ */
+@media (max-height: 520px), (max-width: 720px) {
+  .psb-label,
+  .player-sidebar .pip-toggle-label,
+  .player-sidebar .pip-open-tag,
+  .psb-scheme-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .player-sidebar {
+    width: 60px;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .psb-scheme {
+    gap: 6px;
+    padding-bottom: 6px;
+  }
+
+  .psb-seg {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .psb-seg > .btn + .btn {
+    margin-left: 0;
+  }
+
+  .psb-seg > .btn:first-child,
+  .psb-seg > .btn + .btn {
+    border-radius: var(--radius-sm);
+  }
+
+  .player-sidebar .btn.psb-btn,
+  .player-sidebar .btn.pip-toggle,
+  .player-sidebar .btn.psb-seg-btn {
+    min-height: 44px;
+    padding: 4px;
+  }
+
+  .player-sidebar .btn.pip-switch {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 720px) {
+  .player-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'side'
+      'main';
+  }
+
+  .player-sidebar {
+    flex-direction: row;
+    align-items: stretch;
+    width: auto;
+    overflow: visible;
+    padding: 6px 10px;
+    border-left: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .psb-scheme {
+    flex: 2 1 0;
+    flex-direction: row;
+    padding: 0 6px 0 0;
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .psb-seg {
+    flex: 1;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .psb-seg > .btn + .btn {
+    margin-left: -1px;
+  }
+
+  .psb-seg > .btn:first-child {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+
+  .psb-seg > .btn + .btn {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .player-sidebar > .btn,
+  .player-sidebar > .pip-control {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* Bong bóng "không hỗ trợ" mở xuống dưới hàng nút thay vì sang trái. */
+  .player-sidebar .pip-note {
+    top: calc(100% + 8px);
+    right: auto;
+    left: 0;
+    width: min(240px, calc(100vw - 140px));
+  }
+}
+
+/*
+ * ── Tương phản cao Windows (forced colors) ──────────────────────────────
+ * Trình duyệt ép nền tác giả về Canvas, bỏ gradient và box-shadow → keycap đang cần, nút chế độ đang
+ * chọn, chấm quãng (vẽ bằng nền) và rãnh thanh trượt biến mất. Vẽ lại bằng màu hệ thống (vẫn theo theme
+ * tương phản cao của người dùng). Phần tử nền Highlight có chữ cần forced-color-adjust: none — không thì
+ * Chromium vẽ tấm nền Canvas sau chữ và HighlightText biến mất (như .btn[aria-pressed] ở app.css).
+ */
+@media (forced-colors: active) {
+  kbd.gb-cap {
+    border: 1px solid ButtonText;
+  }
+
+  /* !important: thắng các luật màu theo tone / theme sáng (`:root[data-theme='light'] .gb-tone-normal …`) có độ
+     ưu tiên cao hơn — với forced-color-adjust: none chúng sẽ giữ màu tác giả thay cho màu hệ thống. */
+  .gb-key.is-active kbd.gb-cap,
+  .gbm-key.is-active .gbm-btn,
+  .gbm-mode.is-selected .gbm-mode-btn,
+  .gb-mod.is-active {
+    forced-color-adjust: none;
+    border-color: Highlight !important;
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+
+  .gb-key.is-active kbd.gb-cap *,
+  .gbm-key.is-active .gbm-btn *,
+  .gb-mod.is-active * {
+    color: inherit;
+  }
+
+  /* Chấm quãng (1̇, số giản phổ): nền currentColor bị ép về Canvas → màu hệ thống của chữ. */
+  .gb-degree-dot::after,
+  .jp-dot {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .gbm-key.is-active .jp-dot {
+    background: HighlightText;
+  }
+
+  /* Nút sắp chạm: vòng hổ phách (box-shadow) bị bỏ → outline nét đứt (khác nét liền của nút đang giữ). */
+  .gbm-mode.is-cue .gbm-mode-btn {
+    outline: 3px dashed CanvasText;
+    outline-offset: 2px;
+  }
+
+  /* Thanh vị trí + Tempo / Lookahead: rãnh vẽ bằng gradient → vẽ lại bằng màu hệ thống. */
+  .seekbar-input,
+  .transport-slider input[type='range'] {
+    forced-color-adjust: none;
+  }
+
+  .seekbar-input {
+    background: linear-gradient(
+        to right,
+        Highlight 0 calc(7px + (100% - 14px) * var(--seek-frac, 0)),
+        GrayText calc(7px + (100% - 14px) * var(--seek-frac, 0)) 100%
+      )
+      center / 100% 6px no-repeat;
+  }
+
+  .transport-slider input[type='range'] {
+    background: linear-gradient(ButtonText, ButtonText) center / 100% 2px no-repeat;
+  }
+
+  .seekbar-input::-webkit-slider-thumb,
+  .transport-slider input[type='range']::-webkit-slider-thumb {
+    border-color: ButtonText;
+    background: ButtonText;
+  }
+
+  .seekbar-input::-moz-range-thumb,
+  .transport-slider input[type='range']::-moz-range-thumb {
+    border-color: ButtonText;
+    background: ButtonText;
+  }
+
+  .seekbar-input:focus-visible,
+  .transport-slider input[type='range']:focus-visible {
+    outline-color: Highlight;
+  }
+}
