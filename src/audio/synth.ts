@@ -1,9 +1,11 @@
 /**
- * Synth một nốt (spec mục 5 "Audio"): timbre "harmonica" (2 saw detune ±6 cent → lowpass 2.2 kHz,
- * vibrato 5 Hz nhẹ) hoặc "sine"; ADSR 10/80/0.7/120 ms. Mỗi voice tự dọn node khi 'ended'.
+ * Synth một nốt (spec mục 5 "Audio"): timbre "harmonica" = mẫu thu harmonica thật khi bộ mẫu của context đã tải xong
+ * (harmonicaSamples.ts — góp ý 2026-10-19), chưa có thì synth (2 saw detune ±6 cent → lowpass 2.2 kHz, vibrato 5 Hz
+ * nhẹ); hoặc "sine"; ADSR 10/80/0.7/120 ms. Mỗi voice tự dọn node khi 'ended'.
  */
 import { midiToFrequency } from '../core/keys';
 import type { Timbre } from '../ui/settings';
+import { harmonicaSample } from './harmonicaSamples';
 
 export type { Timbre };
 
@@ -29,6 +31,13 @@ export const HARMONICA = {
 } as const;
 
 export const SINE_PEAK = 0.32;
+/**
+ * Đỉnh envelope khi phát mẫu harmonica thật: mẫu FluidR3 rất nhỏ (đỉnh ~0,1, RMS ~0,018) → ×8 cho to ngang synth cũ
+ * (RMS synth ≈ 0,7 × 0,2), đỉnh sau nhân ~0,8 nên không méo.
+ */
+export const SAMPLE_PEAK = 8;
+/** Nốt dài hơn mẫu: lặp đoạn thân giữa của mẫu (tỉ lệ theo độ dài mẫu). */
+export const SAMPLE_LOOP = { start: 0.45, end: 0.85 } as const;
 
 export interface Voice {
   /** Thời điểm bắt đầu (trục AudioContext). */
@@ -124,7 +133,8 @@ export function scheduleVoice(
 ): Voice {
   const when = Math.max(opts.when, ctx.currentTime);
   const duration = Math.max(MIN_DURATION, Number.isFinite(opts.duration) ? opts.duration : 0);
-  const base = opts.timbre === 'sine' ? SINE_PEAK : HARMONICA.peak;
+  const sample = opts.timbre === 'sine' ? null : harmonicaSample(ctx, opts.midi);
+  const base = opts.timbre === 'sine' ? SINE_PEAK : sample ? SAMPLE_PEAK : HARMONICA.peak;
   const peak = base * Math.max(0, opts.gain ?? 1);
   let points = envelopePoints(when, duration, peak);
   let end = when + duration + ENVELOPE.release;
@@ -144,6 +154,17 @@ export function scheduleVoice(
     osc.frequency.value = freq;
     osc.connect(env);
     sources.push(osc);
+  } else if (sample) {
+    const src = ctx.createBufferSource();
+    src.buffer = sample.buffer;
+    src.playbackRate.value = sample.rate;
+    if ((end - when) * sample.rate > sample.buffer.duration - 0.05) {
+      src.loop = true;
+      src.loopStart = sample.buffer.duration * SAMPLE_LOOP.start;
+      src.loopEnd = sample.buffer.duration * SAMPLE_LOOP.end;
+    }
+    src.connect(env);
+    sources.push(src);
   } else {
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';

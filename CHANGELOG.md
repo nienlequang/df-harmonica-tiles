@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-10-18
+
+### Thay đổi
+
+- Âm thanh: âm sắc **Harmonica** giờ là tiếng harmonica thật (mẫu thu từng nốt C3–D6 của soundfont FluidR3_GM,
+  CC BY 3.0 — NOTICE). Bộ mẫu (~1 MB) chỉ tải khi bạn bật âm thanh; chưa tải xong hoặc offline thì vẫn là tiếng tổng
+  hợp như cũ.
+
 ## [1.0.5] - 2026-10-17
 
 ### Thêm

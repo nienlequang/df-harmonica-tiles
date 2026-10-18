@@ -261,7 +261,8 @@ Hủy / Esc giữ tắt. Khi đang bật, màn chơi hiện huy hiệu đỏ **�
 
 Cũng trong thẻ này: **Tiếng click metronome / đếm vào** (tiếng tick, không dính bản quyền), **Metronome suốt bài**,
 **Âm lượng click**, **Phát tiếng khi bấm phím / nốt** cho chế độ luyện tập (mặc định tắt để tránh trễ), **Âm sắc**
-(Harmonica / Sine) và **Âm lượng synth** — áp cho mọi tiếng synth: giai điệu mẫu, tiếng khi bấm và nút **Nghe thử** ở
+(Harmonica / Sine — **Harmonica** là mẫu thu harmonica thật, soundfont FluidR3_GM, CC BY 3.0 — NOTICE; app chỉ tải
+bộ mẫu ~1 MB khi bạn bật âm thanh, chưa tải xong / offline thì dùng tiếng tổng hợp) và **Âm lượng synth** — áp cho mọi tiếng synth: giai điệu mẫu, tiếng khi bấm và nút **Nghe thử** ở
 Tạo bài từ file; chỉnh ở đây không tự phát tiếng nào. **Đặt lại mặc định** tắt hết âm thanh. **Overlay OBS, trang mini
 và cửa sổ video luôn im lặng.** Nút **Nghe giai điệu mẫu** (khi luyện tập) chỉ hiện khi đã bật Phát giai điệu mẫu.
 

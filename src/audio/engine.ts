@@ -9,6 +9,7 @@
  * cuối `releasePlayback(holder)` (tắt hết tiếng / rời màn chơi) hoặc dispose(). Mặc định không đụng tới.
  */
 import type { Timbre } from '../ui/settings';
+import { loadHarmonicaSamples } from './harmonicaSamples';
 import { PlaybackSession } from './playbackSession';
 import { scheduleVoice } from './synth';
 import type { Voice } from './synth';
@@ -366,6 +367,8 @@ export class AudioEngine {
     }
     this.ctx = ctx;
     primeWaveTables(ctx);
+    // Tiếng harmonica thật: tải bộ mẫu ngay khi có context (chỉ khi người dùng bật âm thanh); xong trước lần Phát.
+    loadHarmonicaSamples(ctx);
     ctx.addEventListener('statechange', this.onStateChange);
     this.emit();
     return ctx;

@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { midiToFrequency } from '../core/keys';
 import { FakeAudioContext, FakeAudioParam, FakeGainNode, asAudioNode } from './fakeAudioContext';
+import { setHarmonicaBankForTest } from './harmonicaSamples';
 import {
   ENVELOPE,
   HARMONICA,
   QUICK_RELEASE,
+  SAMPLE_PEAK,
   SINE_PEAK,
   envelopeLevel,
   envelopePoints,
@@ -267,5 +269,36 @@ describe('FakeAudioParam', () => {
     const p = new FakeAudioParam(0);
     p.setValueAtTime(1, 0).cancelScheduledValues(0).linearRampToValueAtTime(0, 1);
     expect(p.activeEvents()).toEqual([{ type: 'linear', value: 0, time: 1 }]);
+  });
+});
+
+describe('scheduleVoice — harmonica thật (bộ mẫu đã tải)', () => {
+  it('phát mẫu gần nhất với playbackRate đúng cao độ, không oscillator; nốt dài → lặp thân mẫu', () => {
+    const { ctx, destNode } = setup(0);
+    const ac = ctx.asAudioContext();
+    const sample = ctx.createBuffer(1, 44100 * 3, 44100);
+    setHarmonicaBankForTest(ac, new Map([[69, sample as unknown as AudioBuffer]]));
+    scheduleVoice(ac, destNode, { midi: 70, when: 1, duration: 0.5, timbre: 'harmonica' });
+    expect(ctx.oscillators()).toHaveLength(0);
+    const [src] = ctx.bufferSources();
+    expect(src?.buffer).toBe(sample);
+    expect(src?.playbackRate.value).toBeCloseTo(Math.pow(2, 1 / 12), 6);
+    expect(src?.loop).toBe(false);
+    expect(src?.startTime).toBe(1);
+    scheduleVoice(ac, destNode, { midi: 69, when: 2, duration: 4, timbre: 'harmonica' });
+    expect(ctx.bufferSources()[1]?.loop).toBe(true);
+    expect(SAMPLE_PEAK).toBeGreaterThan(1);
+  });
+
+  it('timbre sine vẫn là oscillator kể cả khi có bộ mẫu', () => {
+    const { ctx, destNode } = setup(0);
+    const ac = ctx.asAudioContext();
+    setHarmonicaBankForTest(
+      ac,
+      new Map([[69, ctx.createBuffer(1, 100, 44100) as unknown as AudioBuffer]]),
+    );
+    scheduleVoice(ac, destNode, { midi: 69, when: 0, duration: 0.5, timbre: 'sine' });
+    expect(ctx.bufferSources()).toHaveLength(0);
+    expect(ctx.oscillators()).toHaveLength(1);
   });
 });

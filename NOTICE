@@ -21,6 +21,16 @@ to the musical works are granted by this repository.
 If you are an author or rights holder and want a song removed, please open an
 issue: https://github.com/nienlequang/df-harmonica-tiles/issues
 
+Harmonica sound samples
+-----------------------
+
+The audio files in src/audio/samples/harmonica/*.mp3 are harmonica notes from
+the FluidR3_GM soundfont (Frank Wen), as rendered to mp3 by Benjamin Gleitzman's
+midi-js-soundfonts (https://github.com/gleitz/midi-js-soundfonts), licensed
+under Creative Commons Attribution 3.0 (CC BY 3.0,
+https://creativecommons.org/licenses/by/3.0/). They are not covered by the MIT
+License.
+
 ---
 
 Giấy phép MIT trong LICENSE chỉ áp dụng cho MÃ NGUỒN (code, script build, tài liệu
@@ -29,3 +39,7 @@ của app), KHÔNG áp dụng cho các tác phẩm âm nhạc dùng làm bài m�
 thuộc về tác giả / chủ sở hữu quyền (danh sách ở trên), không cấp phép theo MIT.
 Nếu bạn là tác giả và muốn gỡ bài, hãy liên hệ qua GitHub Issues:
 https://github.com/nienlequang/df-harmonica-tiles/issues
+
+Tiếng harmonica (src/audio/samples/harmonica/*.mp3) là mẫu thu từ soundfont
+FluidR3_GM (Frank Wen), bản mp3 của gleitz/midi-js-soundfonts — giấy phép
+CC BY 3.0, không thuộc giấy phép MIT.

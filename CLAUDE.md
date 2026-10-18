@@ -91,7 +91,9 @@ src/
              phiên "playback" đếm theo holder; `UNLOCK_TIMEOUT_MS` 3 s, 'interrupted' = như suspended), playbackSession
              (iPhone kêu cả khi gạt nút im lặng: `navigator.audioSession.type = 'playback'`, iOS cũ = `<audio>` im lặng
              lặp data: WAV; máy khác không làm gì — D-421), gestureUnlock (`unlockAudioInGesture` cho Cài đặt — chỉ
-             mở khóa, không giữ phiên, D-423), synth harmonica/sine, metronome, scheduler (click đếm vào ở mọi beat nguyên
+             mở khóa, không giữ phiên, D-423), synth harmonica/sine (harmonica = mẫu thu thật `harmonicaSamples.ts` —
+             FluidR3_GM CC BY 3.0, `samples/harmonica/<midi>.mp3` C3–D6, tải khi AudioEngine tạo context, chưa có thì
+             synth; `SAMPLE_PEAK` 8 vì mẫu rất nhỏ), metronome, scheduler (click đếm vào ở mọi beat nguyên
              từ đầu đếm vào tới nốt đầu, nhấn ở đầu ô nhịp — `leadInClickEnd`, D-428); engine dựng sẵn bảng sóng khi tạo
              AudioContext (`primeWaveTables` — constructor, không `createOscillator`, D-430); fakeAudioContext /
              fakePlaybackEnv chỉ cho test.
