@@ -37,9 +37,17 @@
  * Trang mini Android "Khớp nút game" (`lanePadding: 'fit'` + `laneFit`, góp ý 2026-10-16): lane theo tâm 8
  * nút số thật của game (cửa sổ nổi đặt ngay trên bảng nút), hit line sát mép dưới, vòng "CHẠM" rơi trong
  * cột 4 nút chế độ thật và đáp sát trên mép dưới, 4 vòng đích mờ ở đó (không bàn nút — nút thật nằm dưới).
+ *
+ * Thanh bấm lặp (D-447, core/repeatRuns.ts): ≥ 4 nốt ngắn liên tiếp cùng một lần bấm vẽ thành MỘT thân tile dài
+ * (`collectBar` / `drawBarBody`) — cùng màu / viền / nhãn với tile thường của lần bấm đó, vạch mảnh ở đầu từng nốt
+ * bên trong, nhãn phím + số lần bấm còn lại ("×5", chuỗi `player.repeatCount`) đứng sát phía trước hit line, đếm lùi
+ * khi từng nốt đi qua hit line, hết thì ẩn số. Sáng / loé / trạng thái luyện tập vẫn theo từng nốt (đoạn của nốt đó
+ * trên thanh). Mọi bố cục, cả hai hướng, mọi nơi dùng renderer này (màn chơi, Cửa sổ nổi, overlay OBS, trang mini,
+ * video nổi).
  */
 import { KEY_DEGREE, KEY_SOLFEGE_EN, KEY_SOLFEGE_VI, NOTE_KEYS, keyIndex } from '../core/keys';
 import { jianpuLabel } from '../core/mobile';
+import { REPEAT_RUN_MIN, findRepeatRuns, pressesAhead, repeatRunIndex } from '../core/repeatRuns';
 import type { Modifiers, NoteKey, Timeline } from '../core/types';
 import type { Lang, StringKey } from '../i18n/strings';
 import { translate } from '../i18n/strings';
@@ -469,10 +477,54 @@ const F_BR = 14;
 const F_FLAGS = 15;
 /** Độ loé sáng practice (0..1). */
 const F_FL = 16;
-const STRIDE = 17;
+/** Thanh bấm lặp: index nốt CUỐI của thanh (visIdx = nốt đầu); -1 = tile thường. */
+const F_RUN = 17;
+/** Thanh: beat hiện tại của đoạn trừ startBeat nốt đầu thanh (đoạn sáng / loé của từng nốt). */
+const F_REL = 18;
+/** Thanh: số lần bấm còn lại (0 = không vẽ số) + tâm chữ số. */
+const F_CN = 19;
+const F_CX = 20;
+const F_CY = 21;
+/** Thanh: số nốt đầu thanh thuộc ô nhịp đếm vào (vẽ mờ). */
+const F_GN = 22;
+/** Thanh: nốt đang ở hit line (tính từ nốt đầu thanh), -1 = không có. */
+const F_AJ = 23;
+/** Thanh: lớp cỡ chữ số (= số chữ số của số lần bấm lớn nhất của đoạn, index vào rpFonts). */
+const F_CF = 24;
+/**
+ * Thanh: hộp bao khối chữ (nhãn phím, nhãn phụ, ↓/↑, "#", số) theo toạ độ canvas — vạch đầu nốt chừa ra (không gạch
+ * ngang chữ); x0 > x1 = không có chữ.
+ */
+const F_LX0 = 25;
+const F_LY0 = 26;
+const F_LX1 = 27;
+const F_LY1 = 28;
+const STRIDE = 29;
 const FLAG_ACTIVE = 1;
 const FLAG_GHOST = 2;
 const FLAG_COPY = 4;
+
+// ── Thanh bấm lặp (D-447) ──
+/** Cỡ chữ số lần bấm / cỡ nhãn phím (bậc 0); không nhỏ hơn REPEAT_COUNT_MIN_PX. */
+export const REPEAT_COUNT_RATIO = 0.72;
+export const REPEAT_COUNT_MIN_PX = 9;
+/** Vạch ở đầu từng nốt bên trong thanh: độ đục (× độ đục thanh), bề dày (× scale), phần bề ngang chừa mỗi bên. */
+const REPEAT_TICK_ALPHA = 0.55;
+const REPEAT_TICK_WIDTH = 1.5;
+const REPEAT_TICK_INSET = 0.16;
+/** Vạch đi qua khối chữ chỉ còn phần ngoài bề ngang chữ (cách chữ ≥ 2 px); phần ngắn hơn chừng này px thì bỏ. */
+const REPEAT_TICK_MIN = 3;
+/**
+ * Mỗi lần bấm của thanh loé sáng nhẹ ở đoạn của nốt đó khi nó chạm hit line (nốt liền nhau không có khe như tile
+ * rời → vẫn thấy từng lần bấm): độ đục ban đầu, tắt dần trong chừng này beat; giảm chuyển động → không loé.
+ */
+const REPEAT_PULSE_ALPHA = 0.5;
+/** Mỗi lần bấm trong thanh sáng mạnh rồi tắt dần trong phần này của độ dài nốt (re-trigger ở lần bấm kế). */
+const REPEAT_PULSE_SPAN = 0.85;
+/** Độ dài chớp ngắn nhất (beat) — nốt rất ngắn vẫn thấy được chớp. */
+const REPEAT_PULSE_MIN_BEATS = 0.12;
+/** Lớp cỡ chữ số lần bấm của đoạn `n` nốt: số chữ số (1…3; ≥ 100 nốt → 3). */
+const countClass = (n: number): number => (n < 10 ? 1 : n < 100 ? 2 : 3);
 
 const nowMs = (): number =>
   typeof performance !== 'undefined' && typeof performance.now === 'function'
@@ -580,6 +632,30 @@ export class TilesRenderer {
   private nDotB = new Uint8Array(0);
   private maxLenBeats = 0;
 
+  // Thanh bấm lặp (D-447, core/repeatRuns): đoạn theo nốt + hình học / chữ theo layout (prepare).
+  /** Index đoạn chứa nốt, -1 = nốt vẽ tile thường. */
+  private nRep: Int32Array = new Int32Array(0);
+  private rpCount = 0;
+  private rpFirst = new Int32Array(0);
+  private rpLast = new Int32Array(0);
+  /** Độ dài thanh (px) + bậc font nhãn phím theo layout hiện tại. */
+  private rpLen = new Float32Array(0);
+  private rpTier = new Int8Array(0);
+  /** Số nốt của đoạn dài nhất = số lớn nhất có thể vẽ. */
+  private rpMax = 0;
+  /**
+   * Lớp cỡ chữ số của đoạn = số chữ số của số nốt (1…3): đoạn ≤ 9 nốt không bị thu nhỏ theo đoạn dài nhất của bài
+   * ("×12" hẹp lane → chỉ đoạn đó chữ nhỏ); cả thanh một cỡ (số chỉ giảm).
+   */
+  private rpCls = new Uint8Array(0);
+  private rpMaxCls = 1;
+  /** Chữ số lần bấm theo số (index n → "×n"; index 0 = ''). */
+  private rpText: string[] = [''];
+  /** Theo lớp (index 1…rpMaxCls): font, chiều cao dòng; bề rộng "×n" ở font lớp d = rpW[d * (rpMax + 1) + n]. */
+  private rpFonts: string[] = [''];
+  private rpLines: number[] = [14];
+  private rpW = new Float32Array(1);
+
   // Mobile (scheme 'mobile'): các lần chạm (vòng "CHẠM") của kế hoạch chạm.
   private mobile = false;
   private cCount = 0;
@@ -669,6 +745,8 @@ export class TilesRenderer {
   private vis = new Float32Array(64 * STRIDE);
   private readonly tmp: Rect = { x: 0, y: 0, w: 0, h: 0 };
   private readonly tmp2: Rect = { x: 0, y: 0, w: 0, h: 0 };
+  /** Hộp bao khối chữ của thanh đang thu (x0, y0, x1, y1) — collectBar, không cấp phát. */
+  private readonly lbox = new Float64Array(4);
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -763,6 +841,28 @@ export class TilesRenderer {
       this.nPrev[i] = lastIdx[lane];
       lastIdx[lane] = i;
     }
+
+    // Thanh bấm lặp: ≥ 4 nốt ngắn liên tiếp cùng một lần bấm (D-447).
+    const reps = findRepeatRuns(notes);
+    this.rpCount = reps.length;
+    this.nRep = repeatRunIndex(reps, n);
+    this.rpFirst = new Int32Array(reps.length);
+    this.rpLast = new Int32Array(reps.length);
+    this.rpLen = new Float32Array(reps.length);
+    this.rpTier = new Int8Array(reps.length);
+    this.rpCls = new Uint8Array(reps.length);
+    let rpMax = 0;
+    let rpMaxCls = 1;
+    reps.forEach((r, k) => {
+      this.rpFirst[k] = r.firstNote;
+      this.rpLast[k] = r.firstNote + r.noteCount - 1;
+      if (r.noteCount > rpMax) rpMax = r.noteCount;
+      const cls = countClass(r.noteCount);
+      this.rpCls[k] = cls;
+      if (cls > rpMaxCls) rpMaxCls = cls;
+    });
+    this.rpMax = rpMax;
+    this.rpMaxCls = rpMaxCls;
 
     const runs = tl ? tl.holdRuns : [];
     const rn = runs.length;
@@ -1074,6 +1174,7 @@ export class TilesRenderer {
     this.nCount = 0;
     this.rCount = 0;
     this.cCount = 0;
+    this.rpCount = 0;
     this.secStart = [];
     this.secName = [];
   }
@@ -1254,9 +1355,66 @@ export class TilesRenderer {
     for (let i = this.nCount - 1; i >= 0; i--) {
       if (this.nTier[i] >= 0) continue;
       const prev = this.nPrev[i];
-      if (prev < 0 || this.nTier[prev] >= 0) this.nTier[i] = tiny;
+      // Nốt trước cùng lane nằm trong thanh bấm lặp (không vẽ tile riêng) → nốt này mở chuỗi mới.
+      if (prev < 0 || this.nTier[prev] >= 0 || this.nRep[prev] >= 0) this.nTier[i] = tiny;
     }
+    // Thanh bấm lặp: một tile từ nốt đầu tới hết nốt cuối (luật gap với nốt kế cùng lane như tile thường).
+    for (let r = 0; r < this.rpCount; r++) {
+      const f = this.rpFirst[r];
+      const l = this.rpLast[r];
+      const len = tileLength(this.nStart[f], this.nEnd[l], this.nNext[l], L);
+      this.rpLen[r] = len;
+      if (len > maxLen) maxLen = len;
+      this.rpTier[r] = this.tierFor(L, len, this.nLane[f], len < minLen);
+    }
+    if (this.rpCount > 0) this.prepareRepeatCount(ctx, L);
     this.maxLenBeats = maxLen / L.pxPerBeat;
+  }
+
+  /**
+   * Chữ số lần bấm của thanh bấm lặp (D-447): "×n" (`player.repeatCount`) cho n = 1..rpMax, đo sẵn theo lớp cỡ chữ
+   * (`countClass` = số chữ số của đoạn): ≈ REPEAT_COUNT_RATIO × nhãn phím; dọc: số rộng nhất CỦA LỚP lọt bề ngang tile
+   * (đoạn ≤ 9 nốt không bị thu nhỏ theo "×12" của đoạn dài nhất bài); ngang: lọt bề cao làn.
+   */
+  private prepareRepeatCount(ctx: CanvasRenderingContext2D, L: Layout): void {
+    const lang = this.opts.language;
+    const max = this.rpMax;
+    const text: string[] = [''];
+    for (let k = 1; k <= max; k++) text.push(translate(lang, 'player.repeatCount', { n: k }));
+    this.rpText = text;
+    const cross = Math.max(1, L.laneCrossSize - 2 * L.laneInset);
+    const want = Math.round(this.keySize * REPEAT_COUNT_RATIO);
+    const vertical = L.orientation === 'vertical';
+    const probe = canvasFont(800, 20);
+    const classes = this.rpMaxCls;
+    const fonts: string[] = [''];
+    const lines: number[] = [0];
+    const w = new Float32Array((classes + 1) * (max + 1));
+    for (let d = 1; d <= classes; d++) {
+      let size: number;
+      if (vertical) {
+        // Số rộng nhất lớp d (n = 10^(d−1) … min(max, 10^d − 1); chữ số không đều nhau ở font tỉ lệ).
+        let widest = 0;
+        const top = Math.min(max, d >= 3 ? max : 10 ** d - 1);
+        for (let n = d === 1 ? 1 : 10 ** (d - 1); n <= top; n++) {
+          widest = Math.max(widest, this.measure(ctx, probe, text[n]));
+        }
+        const perPx = Math.max(0.01, widest / 20);
+        size = Math.min(want, Math.floor((cross - 4) / perPx));
+      } else {
+        size = Math.min(want, Math.floor(cross * 0.62));
+      }
+      size = Math.max(REPEAT_COUNT_MIN_PX, size);
+      const font = canvasFont(800, size);
+      fonts.push(font);
+      lines.push(Math.round(size * 1.15));
+      // Đoạn lớp d đếm lùi từ số nốt của nó (d chữ số) về 1 → cần bề rộng mọi n < 10^d.
+      const top = Math.min(max, d >= 3 ? max : 10 ** d - 1);
+      for (let n = 1; n <= top; n++) w[d * (max + 1) + n] = this.measure(ctx, font, text[n]);
+    }
+    this.rpFonts = fonts;
+    this.rpLines = lines;
+    this.rpW = w;
   }
 
   /**
@@ -2146,6 +2304,21 @@ export class TilesRenderer {
     for (let i = lowerBound(this.nStart, Math.max(lo, winStart - this.maxLenBeats)); i < n; i++) {
       const s = this.nStart[i];
       if (s >= winEnd || s >= hi) break;
+      const rep = this.nRep[i];
+      if (rep >= 0) {
+        // Thanh bấm lặp: phần của đoạn nằm trong [lo, hi) của đoạn loop đang vẽ (s ≥ lo, s < hi → jf ≤ i ≤ jl).
+        let jf = this.rpFirst[rep];
+        while (this.nStart[jf] < lo) jf++;
+        let jl = this.rpLast[rep];
+        while (jl > i && this.nStart[jl] >= hi) jl--;
+        if (jl - jf + 1 >= REPEAT_RUN_MIN) {
+          // Vẽ một lần ở nốt đầu; vào giữa thanh (i > jf) = thanh đã khuất phía sau (maxLenBeats tính cả thanh).
+          if (i === jf) count = this.collectBar(L, c, hi, ghostEnd, copy, count, rep, jf, jl);
+          i = jl;
+          continue;
+        }
+        // Loop cắt đoạn còn < 4 nốt: các nốt đó vẽ tile thường.
+      }
       const lane = this.nLane[i];
       let lenPx = this.nLen[i];
       let tier = this.nTier[i];
@@ -2327,10 +2500,384 @@ export class TilesRenderer {
       v[o + F_FLAGS] =
         (active ? FLAG_ACTIVE : 0) | (ghost ? FLAG_GHOST : 0) | (copy ? FLAG_COPY : 0);
       v[o + F_FL] = flash > 0 ? flash : 0;
+      v[o + F_RUN] = -1;
+      v[o + F_CN] = 0;
       this.visIdx[count] = i;
       count++;
     }
     return count;
+  }
+
+  /**
+   * Pass 0 cho MỘT thanh bấm lặp (D-447): nốt jf..jl của đoạn `rep` (phần nằm trong [lo, hi) của đoạn loop đang
+   * vẽ, ≥ REPEAT_RUN_MIN nốt) thành một mục `vis` — thân từ đầu nốt jf tới hết nốt cuối của đoạn (như tile dài: luật
+   * gap với nốt kế cùng lane, cắt tại loop end `hi`), độ mờ khi đã qua hit line như tile thường, nốt thuộc ô nhịp
+   * đếm vào (`ghostEnd`) mờ theo từng đoạn nốt. Nhãn: nhãn phím như tile thường (nhãn phụ, ↓/↑, "#", chấm giản phổ)
+   * + số lần bấm còn lại ("×n") ngay sau đó — dọc: dòng dưới cùng của khối nhãn; ngang: cuối hàng nhãn. Khối nhãn
+   * bám mép gần của phần được đếm (nốt ô đếm vào ở đầu thanh — vẽ mờ — không mang chữ), thanh đã chạm hit line thì
+   * đứng ngay phía trước hit line (phần chưa bấm; mọi cột như nhau — góp ý 2026-10-20: dừng nhãn trên hàng vòng chế độ
+   * của Mobile trông như thanh bị chặn) tới khi đuôi thanh đi qua; còn lần bấm thì số không xuống quá hit line. Phần chưa bấm không đủ chỗ
+   * cho cả nhãn phím lẫn số → chỉ số. Ghi thêm hộp bao khối chữ để vạch đầu nốt chừa ra. Trả count mới.
+   */
+  private collectBar(
+    L: Layout,
+    c: number,
+    hi: number,
+    ghostEnd: number,
+    copy: boolean,
+    count: number,
+    rep: number,
+    jf: number,
+    jl: number,
+  ): number {
+    const vertical = L.orientation === 'vertical';
+    const ppb = L.pxPerBeat;
+    const dir = L.timeDir;
+    const gap = L.tileGap;
+    const s = this.nStart[jf];
+    const lane = this.nLane[jf];
+    const minLen = L.minTileLen - 0.5;
+    let lenPx: number;
+    let tier: number;
+    if (jf === this.rpFirst[rep]) {
+      lenPx = this.rpLen[rep];
+      tier = this.rpTier[rep];
+    } else {
+      // Đầu loop cắt giữa đoạn (vòng kế): thanh bắt đầu ở nốt đầu tiên trong loop.
+      const last = this.rpLast[rep];
+      lenPx = tileLength(s, this.nEnd[last], this.nNext[last], L);
+      tier = this.tierFor(L, lenPx, lane, lenPx < minLen);
+    }
+    if (hi !== Infinity) {
+      const maxLen = (hi - s) * ppb - gap;
+      if (lenPx > maxLen) {
+        lenPx = maxLen < 1 ? 1 : maxLen;
+        tier = this.tierFor(L, lenPx, lane, true);
+      }
+    }
+    const farBeat = s + lenPx / ppb;
+    if (farBeat <= c - L.behindBeats) return count;
+    this.ensureVis(count + 1);
+    const truncated = lenPx < minLen;
+    const near = L.hitPos + dir * (s - c) * ppb;
+    const inset = L.laneInset;
+    const cs = Math.max(1, L.laneCrossSize - 2 * inset);
+    const c0 = L.laneCrossStart[lane] + inset;
+    const x = vertical ? c0 : near;
+    const w = vertical ? cs : lenPx;
+    const y = vertical ? near - lenPx : c0;
+    const h = vertical ? lenPx : cs;
+
+    // Đã qua hit line → mờ dần như tile thường; cả thanh thuộc ô nhịp đếm vào → mờ hẳn.
+    let a = 1;
+    if (c > farBeat) {
+      const t = (c - farBeat) / (L.behindBeats > 0 ? L.behindBeats : 1);
+      a = t >= 1 ? 0.12 : 1 - 0.88 * t;
+    }
+    let gn = 0;
+    while (jf + gn <= jl && this.nEnd[jf + gn] <= ghostEnd + 1e-9) gn++;
+    const allGhost = gn > jl - jf;
+    if (allGhost) a *= GHOST_ALPHA;
+
+    // Số lần bấm còn lại: nốt (không thuộc ô đếm vào) chưa qua hit line — nốt đúng ở hit line (dừng ở đầu dòng,
+    // chế độ chờ của luyện tập) vẫn tính (core/repeatRuns `pressesAhead`).
+    const cn = pressesAhead(this.nStart, jf + gn, jl + 1, c, hi);
+    // Nốt đang ở hit line (start ≤ c < end) → thanh sáng (glow) + đoạn của nốt đó phủ sáng: nốt chưa bấm đầu
+    // tiên (đúng ở hit line) hoặc nốt ngay trước nó (đang ngân).
+    let aj = -1;
+    for (let j = jl + 1 - cn; j >= jl - cn && j >= jf + gn; j--) {
+      if (j <= jl && this.nStart[j] <= c && c < this.nEnd[j]) {
+        aj = j - jf;
+        break;
+      }
+    }
+    const active = aj >= 0;
+
+    // Nhãn.
+    const mobile = this.mobile;
+    const hasSub = this.subOn;
+    const subLine = this.subSize * 1.2;
+    const pad = this.pad;
+    const glyphW = this.glyphW;
+    const br = this.badgeR;
+    let hasLabel = tier >= 0;
+    let kSize = hasLabel ? this.tierSize[tier] : 0;
+    let kw = hasLabel ? this.tierKeyW[tier * LANE_COUNT + lane] : 0;
+    let exA = mobile && hasLabel ? dotExtra(kSize, this.nDotA[jf]) : 0;
+    let exB = mobile && hasLabel ? dotExtra(kSize, this.nDotB[jf]) : 0;
+    let drawArrow = !mobile && this.nArrow[jf] !== 0;
+    let rr = this.nScroll[jf] === 1 ? br : 0;
+    if (truncated) {
+      const room = lenPx + gap - 1;
+      if (room < this.subSize) drawArrow = false;
+      if (rr > 0) rr = Math.min(br, Math.max(3, room / 2));
+    }
+    const cls = this.rpCls[rep];
+    const cw = cn > 0 ? this.rpW[cls * (this.rpMax + 1) + cn] : 0;
+    const cl = cn > 0 ? this.rpLines[cls] : 0;
+    // Nốt của ô nhịp đếm vào ở đầu thanh (vẽ mờ, không bấm) không mang nhãn — chữ tối trên nền mờ không đọc được:
+    // khối nhãn bám đầu nốt đầu tiên được đếm (`lead`, trục thời gian) tới khi nốt đó chạm hit line.
+    const lead = gn > 0 && !allGhost ? L.hitPos + dir * (this.nStart[jf + gn] - c) * ppb : near;
+    let kx = NaN;
+    let ky = NaN;
+    let sx = NaN;
+    let sy = NaN;
+    let ax = NaN;
+    let ay = NaN;
+    let bx = NaN;
+    let by = NaN;
+    let cx = NaN;
+    let cy = NaN;
+    if (vertical) {
+      // Phần thanh mang nhãn: đuôi (y) → `lead`.
+      const nearL = Math.max(y, Math.min(y + h, lead));
+      const hL = nearL - y;
+      const floor = Math.min(tileLabelFloor(L), L.hitPos);
+      // Còn lần bấm: chỉ phần CHƯA BẤM còn thấy (trên đáy) là chỗ cho chữ — không đủ cho cả nhãn phím lẫn số thì bỏ
+      // nhãn phím trước (làn đã cho biết phím), số vẫn đứng trên hit line.
+      const room = cn > 0 ? Math.min(nearL, floor) - y : hL;
+      const keyH = kSize + exA + exB;
+      // Không đủ cao cho hai dòng mà ô đủ rộng (thanh ngắn ở cửa sổ thấp — trang mini "Khớp nút game"): nhãn phím
+      // + số trên CÙNG một dòng ("1̇ ×5"); hẹp nữa mới bỏ nhãn phím.
+      let inline = false;
+      let rowW = 0;
+      let inlineFloor = floor;
+      if (cn > 0 && hasLabel && room < keyH + cl + 2 * pad) {
+        const side = Math.max(2, pad - 1);
+        rowW = (drawArrow ? glyphW + pad : 0) + kw + (rr > 0 ? pad + 2 * rr : 0) + pad + cw;
+        const need = Math.max(keyH, cl) + 2 * pad;
+        if (rowW + 2 * side <= w) {
+          if (room >= need) inline = true;
+          else if (floor < L.hitPos - 1 && Math.min(nearL, L.hitPos - 1) - y >= need) {
+            // Bàn nút 'pad': sàn của tile thường dừng trên nhãn chế độ — thà để dòng "phím ×n" xuống sát hit line
+            // còn hơn mất nhãn phím.
+            inline = true;
+            inlineFloor = L.hitPos - 1;
+          }
+        }
+        if (!inline) {
+          hasLabel = false;
+          tier = -1;
+          kSize = 0;
+          kw = 0;
+          exA = 0;
+          exB = 0;
+          rr = 0;
+        }
+      }
+      if (inline) {
+        const lineH = Math.max(keyH, cl);
+        const cc = Math.min(hL / 2, lineH / 2 + pad);
+        const bottom = Math.min(nearL, Math.max(inlineFloor, y + 2 * cc));
+        let base = bottom - cc + lineH / 2;
+        if (base > L.hitPos - 1) base = L.hitPos - 1;
+        const mid = base - lineH / 2;
+        let px = x + (w - rowW) / 2;
+        if (drawArrow) {
+          ax = px + glyphW / 2;
+          ay = mid;
+          px += glyphW + pad;
+        }
+        kx = px + kw / 2;
+        ky = mid - keyH / 2 + exA + kSize / 2;
+        px += kw;
+        if (rr > 0) {
+          bx = px + pad + rr;
+          by = mid;
+          px += pad + 2 * rr;
+        }
+        px += pad;
+        cx = px + cw / 2;
+        cy = mid;
+      }
+      if (!inline) {
+        const stack =
+          hasSub && hasLabel && !truncated && room >= kSize + exA + exB + subLine + cl + 2;
+        const block = kSize + exA + exB + (stack ? subLine : 0) + cl;
+        const cc = Math.min(hL / 2, block / 2 + pad);
+        // Thanh đã chạm hit line: khối nhãn đứng ngay trên đáy (phần chưa bấm), như nhãn tile dài bám phần còn thấy;
+        // đuôi thanh tới gần thì đi xuống theo đuôi.
+        const bottom = Math.min(nearL, Math.max(floor, y + 2 * cc));
+        let base = bottom - cc + block / 2;
+        // Còn lần bấm mà phần chưa bấm đã ngắn hơn dòng số: số không xuống quá hit line (không bị hit line gạch, không
+        // bị mép canvas cắt — 'fit' có hit line sát đáy), thà vượt đuôi thanh một chút.
+        if (cn > 0 && base > L.hitPos - 1) base = L.hitPos - 1;
+        kx = x + w / 2;
+        ky = base - cl - (stack ? subLine : 0) - exB - kSize / 2;
+        if (cn > 0) {
+          cx = kx;
+          cy = base - cl / 2;
+        }
+        if (stack) {
+          sx = kx;
+          sy = base - cl - subLine / 2;
+        }
+        if (hasLabel) {
+          const side = Math.max(2, pad - 1);
+          if ((w - this.laneKeyW[lane]) / 2 >= Math.max(glyphW, 2 * br) + side) {
+            if (drawArrow) {
+              ax = x + side + glyphW / 2;
+              ay = ky;
+            }
+            if (rr > 0) {
+              bx = x + w - side - rr;
+              by = ky;
+            }
+            if (hasSub && !stack && !truncated) {
+              const sw = this.laneSubW[lane];
+              const keyR = kx + kw / 2;
+              const keyL = kx - kw / 2;
+              const rightLimit = rr > 0 ? bx - rr - pad : x + w - side;
+              const leftLimit = drawArrow ? ax + glyphW / 2 + pad : x + side;
+              if (rightLimit - keyR - pad >= sw) {
+                sx = keyR + pad + sw / 2;
+                sy = ky;
+              } else if (keyL - pad - leftLimit >= sw) {
+                sx = keyL - pad - sw / 2;
+                sy = ky;
+              }
+            }
+          } else {
+            const above = ky - kSize * 0.5;
+            if (drawArrow) {
+              ax = x + 1 + glyphW / 2;
+              ay = Math.max(y + this.subSize * 0.6, above - this.subSize * 0.3);
+            }
+            if (rr > 0) {
+              bx = x + w - rr * 0.7;
+              by = Math.max(y + rr * 0.7, above - rr * 0.3);
+            }
+          }
+        }
+      }
+    } else {
+      // Ngang (thời gian chạy sang phải): phần mang nhãn từ `lead` tới đuôi.
+      const x0 = Math.max(x, Math.min(x + w, lead));
+      const wL = x + w - x0;
+      const mid = y + h / 2;
+      if (truncated) {
+        // Thanh ngắn (luật gap / loop cắt sát): còn lần bấm → chỉ số ở giữa (như dọc khi chật); hết → nhãn phím ở
+        // giữa như tile ngắn.
+        if (cn > 0) {
+          tier = -1;
+          rr = 0;
+          cx = x + w / 2;
+          cy = mid;
+        } else {
+          kx = x + w / 2;
+          ky = mid;
+          if (rr > 0) {
+            bx = kx;
+            by = y + rr + 1;
+          }
+        }
+      } else {
+        // Còn lần bấm: chỗ cho chữ = phần chưa bấm (sau hit line) — như dọc.
+        const room = cn > 0 ? x + w - Math.max(x0, L.hitPos) : wL;
+        const cgap = cn > 0 ? pad + cw : 0;
+        let arrowW = drawArrow ? glyphW + pad : 0;
+        let blockW = kw + arrowW + (rr > 0 ? pad + 2 * rr : 0);
+        if (cn > 0 && blockW + cgap + 2 * pad > room) {
+          // Không đủ chỗ cho cả hàng nhãn lẫn số: chỉ số.
+          hasLabel = false;
+          tier = -1;
+          rr = 0;
+          arrowW = 0;
+          blockW = 0;
+        }
+        const sw = this.laneSubW[lane];
+        const showSub = hasSub && hasLabel && room >= blockW + pad + sw + 2 * pad + cgap;
+        const total = (hasLabel ? blockW + (showSub ? pad + sw : 0) : 0) + (hasLabel ? cgap : cw);
+        const fits = total + 2 * pad <= wL;
+        let px = fits ? x0 + pad : x0 + (wL - total) / 2;
+        // Thanh đã chạm hit line: hàng nhãn đứng ngay sau hit line (phần chưa bấm) tới khi đuôi thanh đi qua.
+        if (fits && px < L.hitPos + pad) px = Math.min(L.hitPos + pad, x + w - total - pad);
+        // Còn lần bấm: hàng chữ không lùi quá hit line, thà vượt đuôi thanh một chút.
+        if (cn > 0 && px < L.hitPos + 1) px = L.hitPos + 1;
+        if (hasLabel) {
+          if (drawArrow) {
+            ax = px + glyphW / 2;
+            ay = mid;
+          }
+          px += arrowW;
+          kx = px + kw / 2;
+          ky = mid;
+          px += kw;
+          if (rr > 0) {
+            bx = px + pad + rr;
+            by = mid;
+            px += pad + 2 * rr;
+          }
+          if (showSub) {
+            sx = px + pad + sw / 2;
+            sy = mid;
+            px += pad + sw;
+          }
+          px += pad;
+        }
+        if (cn > 0) {
+          cx = px + cw / 2;
+          cy = mid;
+        }
+      }
+    }
+
+    // Hộp bao khối chữ — vạch đầu nốt (drawBarBody) chừa ra, không gạch ngang chữ khi thanh trôi qua nhãn đứng yên.
+    const lb = this.lbox;
+    lb[0] = Infinity;
+    lb[1] = Infinity;
+    lb[2] = -Infinity;
+    lb[3] = -Infinity;
+    if (tier >= 0) this.growLabelBox(kx, ky, kw / 2, kSize / 2 + Math.max(exA, exB));
+    this.growLabelBox(sx, sy, this.laneSubW[lane] / 2, this.subSize * 0.75);
+    this.growLabelBox(ax, ay, glyphW / 2, this.subSize * 0.6);
+    if (rr > 0) this.growLabelBox(bx, by, rr, rr);
+    if (cn > 0) this.growLabelBox(cx, cy, cw / 2, cl / 2);
+
+    const o = count * STRIDE;
+    const v = this.vis;
+    v[o + F_X] = x;
+    v[o + F_Y] = y;
+    v[o + F_W] = w;
+    v[o + F_H] = h;
+    v[o + F_A] = a;
+    v[o + F_KX] = kx;
+    v[o + F_KY] = ky;
+    v[o + F_SX] = sx;
+    v[o + F_SY] = sy;
+    v[o + F_AX] = ax;
+    v[o + F_AY] = ay;
+    v[o + F_BX] = bx;
+    v[o + F_BY] = by;
+    v[o + F_T] = tier;
+    v[o + F_BR] = rr;
+    v[o + F_FLAGS] =
+      (active ? FLAG_ACTIVE : 0) | (allGhost ? FLAG_GHOST : 0) | (copy ? FLAG_COPY : 0);
+    v[o + F_FL] = 0;
+    v[o + F_RUN] = jl;
+    v[o + F_REL] = c - s;
+    v[o + F_CN] = cn;
+    v[o + F_CX] = cx;
+    v[o + F_CY] = cy;
+    v[o + F_GN] = gn;
+    v[o + F_AJ] = aj;
+    v[o + F_CF] = cls;
+    v[o + F_LX0] = lb[0];
+    v[o + F_LY0] = lb[1];
+    v[o + F_LX1] = lb[2];
+    v[o + F_LY1] = lb[3];
+    this.visIdx[count] = jf;
+    return count + 1;
+  }
+
+  /** Nới hộp `lbox` cho một chữ tâm (cx, cy), nửa rộng `hw`, nửa cao `hh`; tâm NaN = chữ không vẽ. */
+  private growLabelBox(cx: number, cy: number, hw: number, hh: number): void {
+    if (Number.isNaN(cx) || Number.isNaN(cy)) return;
+    const b = this.lbox;
+    if (cx - hw < b[0]) b[0] = cx - hw;
+    if (cy - hh < b[1]) b[1] = cy - hh;
+    if (cx + hw > b[2]) b[2] = cx + hw;
+    if (cy + hh > b[3]) b[3] = cy + hh;
   }
 
   /** Pass 1–3 trên các tile đã thu (mọi đoạn loop): thân tile, nhãn phím theo bậc, nhãn phụ/badge. */
@@ -2374,6 +2921,10 @@ export class TilesRenderer {
       if (tier >= 0) {
         if (this.nLane[i] === this.commaLane) commaMask |= 1 << tier;
         else keyMask |= 1 << tier;
+      }
+      if (v[o + F_RUN] >= 0) {
+        this.drawBarBody(ctx, L, k, states, pill, radiusBase, pulse, bodyOpacity);
+        continue;
       }
       const ck = this.nColor[i];
       const flags = v[o + F_FLAGS];
@@ -2445,6 +2996,204 @@ export class TilesRenderer {
     if (!pill) this.drawTileDetails(ctx, count, Math.max(1, Math.round(2 * s)), bodyOpacity);
     this.keyTierMask = keyMask;
     this.commaTierMask = commaMask;
+  }
+
+  /**
+   * Độ đục tương đối của đoạn nốt `j` trên thanh bấm lặp (thân thanh = 1): nốt thuộc ô nhịp đếm vào khi chỉ một phần
+   * thanh thuộc đó (`gn` nốt đầu) mờ như tile đếm vào; luyện tập — trúng / trượt mờ như tile trúng / trượt.
+   */
+  private barSegMul(
+    j: number,
+    jf: number,
+    gn: number,
+    ghostAll: boolean,
+    states: Uint8Array | null,
+  ): number {
+    if (j - jf < gn) return ghostAll ? 1 : GHOST_ALPHA;
+    const st = states !== null && j < states.length ? states[j] : 0;
+    if (st === NoteState.perfect || st === NoteState.good) return 0.45;
+    if (st === NoteState.miss) return 0.4;
+    return 1;
+  }
+
+  /**
+   * Pass 1 của một thanh bấm lặp (mục `k` của `vis`, D-447): MỘT hình như tile thường của lần bấm đó (màu, bo góc /
+   * viên thuốc, độ đục `tileOpacity`, glow khi có nốt đang ở hit line), ở độ đục thấp nhất trong các đoạn nốt; rồi
+   * trong lòng thanh, từng đoạn nốt (đầu nốt → đầu nốt kế): tô thêm tới độ đục riêng của nó (ô đếm vào / trạng thái
+   * luyện tập), phủ sáng khi nốt đó ở hit line (+ loé nhẹ lúc chạm), loé + viền màu chấm điểm khi trúng / trượt, và
+   * vạch mảnh ở đầu từng nốt bên trong; cuối cùng viền ngoài (chờ bấm nhấp nháy, đang sáng, hoặc viền thường).
+   */
+  private drawBarBody(
+    ctx: CanvasRenderingContext2D,
+    L: Layout,
+    k: number,
+    states: Uint8Array | null,
+    pill: boolean,
+    radiusBase: number,
+    pulse: number,
+    bodyOpacity: number,
+  ): void {
+    const v = this.vis;
+    const o = k * STRIDE;
+    const p = this.pal;
+    const s = L.scale;
+    const jf = this.visIdx[k];
+    const jl = v[o + F_RUN];
+    const x = v[o + F_X];
+    const y = v[o + F_Y];
+    const w = v[o + F_W];
+    const h = v[o + F_H];
+    const a = v[o + F_A];
+    const flags = v[o + F_FLAGS];
+    const active = (flags & FLAG_ACTIVE) !== 0;
+    const ghostAll = (flags & FLAG_GHOST) !== 0;
+    const st = ghostAll || (flags & FLAG_COPY) !== 0 ? null : states;
+    const gn = v[o + F_GN];
+    const rel = v[o + F_REL];
+    const aj = v[o + F_AJ];
+    const ck = this.nColor[jf];
+    const vertical = L.orientation === 'vertical';
+    const dir = L.timeDir;
+    const ppb = L.pxPerBeat;
+    // Trục thời gian: mép gần (đầu nốt đầu) / mép xa của thanh; trục cross: bề ngang thanh.
+    const near = vertical ? y + h : x;
+    const far = vertical ? y : x + w;
+    const crossStart = vertical ? x : y;
+    const crossSize = vertical ? w : h;
+    const s0 = this.nStart[jf];
+    const op = a * bodyOpacity;
+
+    let mMin = 1;
+    let waiting = false;
+    for (let j = jf; j <= jl; j++) {
+      const m = this.barSegMul(j, jf, gn, ghostAll, st);
+      if (m < mMin) mMin = m;
+      if (st !== null && j - jf >= gn && j < st.length && st[j] === NoteState.waiting)
+        waiting = true;
+    }
+    const radius = pill ? Math.min(w, h) / 2 : Math.min(radiusBase, w / 4, h / 4);
+    const base = op * mMin;
+    // Mỗi lần bấm sáng như một tile đơn đang chạm: sáng mạnh ở đầu nốt rồi tắt dần trước lần bấm kế → người chơi thấy
+    // đủ số lần bấm (giảm chuyển động: sáng đều, không nhấp nháy).
+    let env = 0;
+    if (active) {
+      if (this.reduceMotion) env = 1;
+      else {
+        const ja = jf + aj;
+        const since = rel - (this.nStart[ja] - s0);
+        const span = Math.max(
+          REPEAT_PULSE_MIN_BEATS,
+          (this.nEnd[ja] - this.nStart[ja]) * REPEAT_PULSE_SPAN,
+        );
+        env = since < 0 ? 0 : Math.max(0, 1 - since / span);
+      }
+    }
+    ctx.beginPath();
+    this.pathRoundRect(ctx, x, y, w, h, radius);
+    if (active && p.glow) {
+      ctx.shadowColor = MOD_COLORS[COLOR_KEYS[ck]].fill;
+      ctx.shadowBlur = 18 * s * (0.2 + 0.8 * env);
+    }
+    this.paintFill(ctx, ck, base);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.save();
+    ctx.clip();
+    for (let j = jf; j <= jl; j++) {
+      const off = this.nStart[j] - s0;
+      const t0 = near + dir * off * ppb;
+      const t1 = j < jl ? near + dir * (this.nStart[j + 1] - s0) * ppb : far;
+      const r = mapSpan(L, crossStart, crossSize, t0, t1, this.tmp);
+      const m = this.barSegMul(j, jf, gn, ghostAll, st);
+      if (m > mMin + 1e-6) {
+        // Chồng cùng màu lên thân: bảng màu đặc (chroma) → tô thẳng màu đích; bán trong suốt → alpha bù cho đủ.
+        const target = op * m;
+        this.paintFill(ctx, ck, this.lut || base >= 1 ? target : (target - base) / (1 - base));
+        ctx.fillRect(r.x, r.y, r.w, r.h);
+      }
+      if (j - jf === aj) {
+        ctx.globalAlpha = (this.lut ? 1 : op * m) * (0.35 + 0.65 * env);
+        ctx.fillStyle = ACTIVE_FILL;
+        ctx.fillRect(r.x, r.y, r.w, r.h);
+        if (!this.reduceMotion && env > 0) {
+          ctx.globalAlpha = REPEAT_PULSE_ALPHA * env * a;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(r.x, r.y, r.w, r.h);
+        }
+      }
+      const sj = st !== null && j - jf >= gn && j < st.length ? st[j] : 0;
+      if (sj === NoteState.perfect || sj === NoteState.good) {
+        // Loé sáng quanh lúc trúng — chỉ đoạn của nốt đó.
+        const flash = 1 - Math.abs(rel - off) / 0.5;
+        if (flash > 0) {
+          ctx.globalAlpha = flash * 0.6;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(r.x, r.y, r.w, r.h);
+        }
+      }
+      if (sj === NoteState.perfect || sj === NoteState.good || sj === NoteState.miss) {
+        ctx.globalAlpha = Math.min(1, a * m * 2.2);
+        ctx.strokeStyle =
+          sj === NoteState.perfect ? p.perfect : sj === NoteState.good ? p.good : p.miss;
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(r.x + 1.25, r.y + 1.25, Math.max(0, r.w - 2.5), Math.max(0, r.h - 2.5));
+      }
+    }
+    if (jl > jf) {
+      // Vạch mảnh ở đầu từng nốt bên trong thanh: nhịp bấm vẫn đọc được. Nhãn đứng yên trên hit line còn thanh trôi qua
+      // → vạch đi qua khối chữ chỉ còn phần ngoài bề ngang chữ (cách chữ 2 px; ngắn quá thì bỏ), không gạch ngang chữ.
+      const ti = Math.max(2, Math.round(crossSize * REPEAT_TICK_INSET));
+      const c0 = crossStart + ti;
+      const c1 = crossStart + crossSize - ti;
+      const lt0 = (vertical ? v[o + F_LY0] : v[o + F_LX0]) - 2;
+      const lt1 = (vertical ? v[o + F_LY1] : v[o + F_LX1]) + 2;
+      const lc0 = (vertical ? v[o + F_LX0] : v[o + F_LY0]) - 2;
+      const lc1 = (vertical ? v[o + F_LX1] : v[o + F_LY1]) + 2;
+      this.inkStroke(ctx, MOD_COLORS[COLOR_KEYS[ck]].text, REPEAT_TICK_ALPHA * a);
+      ctx.lineWidth = Math.max(1, REPEAT_TICK_WIDTH * s);
+      ctx.beginPath();
+      for (let j = jf + 1; j <= jl; j++) {
+        const t = near + dir * (this.nStart[j] - s0) * ppb;
+        if (t > lt0 && t < lt1) {
+          if (lc0 - c0 >= REPEAT_TICK_MIN) this.lineAcross(ctx, L, t, c0, Math.min(c1, lc0));
+          if (c1 - lc1 >= REPEAT_TICK_MIN) this.lineAcross(ctx, L, t, Math.max(c0, lc1), c1);
+        } else {
+          this.lineAcross(ctx, L, t, c0, c1);
+        }
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Viền ngoài: chờ bấm (luyện tập) nhấp nháy như tile thường, đang sáng, hoặc viền màu của lần bấm.
+    ctx.beginPath();
+    this.pathRoundRect(ctx, x, y, w, h, radius);
+    let stroke = '';
+    let lw = 1;
+    let strokeAlpha = a;
+    if (waiting) {
+      stroke = p.waiting;
+      lw = 2 + 2 * pulse;
+      strokeAlpha = 0.6 + 0.4 * pulse;
+      if (p.glow) {
+        ctx.shadowColor = p.waiting;
+        ctx.shadowBlur = (8 + 12 * pulse) * s;
+      }
+    } else if (active) {
+      stroke = p.activeStroke;
+      lw = 1 + 1.5 * env;
+      strokeAlpha = a * (0.5 + 0.5 * env);
+    }
+    if (stroke) {
+      ctx.globalAlpha = strokeAlpha;
+      ctx.strokeStyle = stroke;
+    } else {
+      this.paintStroke(ctx, STROKE_COLOR + ck, a);
+    }
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 
   /** Pass 2 + 3 của tile đang thấy (sau drawTileBodies): nhãn phím, chấm giản phổ, nhãn phụ, ↓/↑, "#". */
@@ -2520,6 +3269,25 @@ export class TilesRenderer {
           ctx.fillText('#', bx, by + 0.5);
         }
       }
+    }
+
+    // Pass 4: số lần bấm còn lại của thanh bấm lặp ("×5"), màu chữ của tile, font theo lớp cỡ chữ của đoạn.
+    let font = -1;
+    for (let k = 0; k < count; k++) {
+      const o = k * STRIDE;
+      const n = v[o + F_CN];
+      if (!(n > 0) || v[o + F_RUN] < 0) continue;
+      const text = this.rpText[n];
+      const cls = v[o + F_CF];
+      const f = this.rpFonts[cls];
+      if (text === undefined || f === undefined) continue;
+      if (cls !== font) {
+        ctx.font = f;
+        font = cls;
+      }
+      ctx.globalAlpha = v[o + F_A];
+      ctx.fillStyle = MOD_COLORS[COLOR_KEYS[this.nColor[this.visIdx[k]]]].text;
+      ctx.fillText(text, v[o + F_CX], v[o + F_CY]);
     }
     ctx.globalAlpha = 1;
   }

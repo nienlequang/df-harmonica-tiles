@@ -85,7 +85,8 @@ src/
              parser (+ span nguồn; tiền tố lời cũ `lời: ` được nhận rồi bỏ — `LEGACY_LYRIC_SPLIT_RE`), serializer
              (không bao giờ ghi lời), timeline, stats, sourceEdit (sửa văn bản theo span), optimizer + melodyBuild
              (Melody ↔ Song; cost model PC hoặc Mobile), mobile (kế hoạch chạm chế độ, số giản phổ), mobileText
-             (donate kiểu mobile), camam (cảm âm), tapTiming, donate (chia tin k/n), share (lz-string).
+             (donate kiểu mobile), camam (cảm âm), tapTiming, donate (chia tin k/n), share (lz-string),
+             repeatRuns (đoạn bấm lặp ≥ 4 nốt ≤ 0,5 beat cùng một lần bấm + số lần bấm còn lại — D-447).
              Test kỹ nhất ở đây.
   audio/     Web Audio: engine (AudioContext lazy; `unlock({ playback })` / `holdPlayback` / `releasePlayback` —
              phiên "playback" đếm theo holder; `UNLOCK_TIMEOUT_MS` 3 s, 'interrupted' = như suspended), playbackSession
@@ -105,7 +106,11 @@ src/
              chat → ô "Dán kết quả của AI vào đây" → Tên bài + Lưu = `addSong` thẳng / Mở trong Editor = bản nháp;
              link "hoặc tự gõ từ đầu" = bản nháp trống), PasteSummary (dòng kết quả, chỗ không đọc được, select
              "Tông"; dùng chung với ô dán của Editor), ai.css.
-  player/    transport + clock, canvas renderer, PlayerView (route `#/` và `#/play/:id`: header "◂ Thư viện" + tên
+  player/    transport + clock, canvas renderer (thanh bấm lặp — D-447: đoạn của core/repeatRuns vẽ thành MỘT tile dài
+             `collectBar` / `drawBarBody`, vạch ở đầu từng nốt, nhãn phím + `player.repeatCount` "×n" đứng ngay trên hit
+             line, đếm lùi, hết thì ẩn; sáng / luyện tập theo đoạn của từng nốt; mọi bố cục / hướng / overlay / trang
+             mini / video — tiếng, game bar, vòng "CHẠM" vẫn theo từng nốt), PlayerView (route `#/` và
+             `#/play/:id`: header "◂ Thư viện" + tên
              + chip + TransientNotice (bản nháp / bài tạm: chip + nút giữ bài lại, D-335) + PrefButtons;
              TransportBar; thân 3 cột = ShortcutsHelp (trái, ≥ 1200 px; hẹp hơn = nút "?") · khu tiles ·
              PlayerSideBar (thanh dọc phải: Kiểu điều khiển PC | Mobile, Cửa sổ nổi — Mobile hoặc điện thoại không

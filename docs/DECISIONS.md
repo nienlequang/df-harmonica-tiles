@@ -3046,3 +3046,65 @@ một commit mới từ cây hiện tại (lịch sử riêng không đưa lên)
   `SOURCE_ISSUES_URL` = `${SOURCE_REPO_URL}/issues`, tab mới, `rel="noopener"`, chữ ẩn "(mở tab mới)") ở cuối trang
   Hướng dẫn (sau dòng "Dev notes · Mã nguồn") và dưới link "Mã nguồn (GitHub)" của trang Dev notes; chuỗi `dev.takedown` /
   `dev.takedownLink` (vi + en).
+
+## Thanh bấm lặp (góp ý của chủ dự án, 2026-10-20)
+
+- **D-447 — Đoạn bấm lặp một phím = một thanh dài có số lần bấm còn lại:** góp ý "bấm phím liên tục 1 phím hơn 3 lần,
+  độ dài 0,5 đổ xuống" → một loại ô mới kiểu thanh dài ghi số lần cần bấm còn lại, bấm hết thì đổi sang ô thường.
+  - **Luật (thuần, `src/core/repeatRuns.ts`):** đoạn = dãy LIÊN TIẾP lớn nhất trong `timeline.notes` gồm ≥
+    `REPEAT_RUN_MIN` = 4 nốt, mỗi nốt `endBeat − startBeat` ≤ `REPEAT_NOTE_MAX_BEATS` = 0,5, cùng phím + quãng + Nửa
+    Cung (→ cùng modifier, cùng chế độ Mobile), `slur === null`, khoảng nghỉ giữa hai nốt kề ≤ `REPEAT_GAP_MAX_BEATS` =
+    0,25 (sai số `REPEAT_EPS` 1e-6 — chùm ba `*1/3` vẫn khớp). Nốt khác chen giữa, nốt dài hơn, nốt luyến, nghỉ dài hơn
+    đều cắt đoạn; đoạn được phép vắt qua xuống dòng / sang đoạn bài (như hold run, D-021). `findRepeatRuns`,
+    `repeatRunIndex` (nốt → đoạn), `repeatRemaining` / `pressesAhead` (số lần bấm còn lại, tìm nhị phân, không cấp phát).
+  - **Số còn lại** = số nốt của đoạn có startBeat > playhead, sai số nghiêng về "chưa bấm": nốt ĐÚNG ở hit line vẫn tính
+    (dừng ở đầu dòng hiện `×5` chứ không `×4`; chế độ **Chờ** của luyện tập giữ transport đúng ở đầu nốt đang chờ → nốt
+    đó vẫn tính, không cần trường hợp riêng); ngay sau lần bấm đầu = n − 1; sau lần bấm cuối = 0 → ẩn số. Nốt thuộc ô
+    nhịp đếm vào (không bấm) không tính; Loop không tính nốt từ loop end.
+  - **Vẽ (renderer.ts, `collectBar` + `drawBarBody`, chỉ là cách vẽ):** mục `vis` riêng (visIdx = nốt đầu, `F_RUN` =
+    nốt cuối) — MỘT thân từ đầu nốt đầu tới hết nốt cuối, độ dài như tile dài (`tileLength`, luật gap với nốt kế cùng
+    lane, cắt tại loop end), cùng màu / viền / bo góc / viên thuốc ('pad') / `tileOpacity` / chi tiết HUD / mờ dần sau
+    hit line / glow như tile thường. Trong lòng thanh (một `clip` cho mỗi thanh đang thấy): đoạn của từng nốt (đầu nốt →
+    đầu nốt kế) — thân tô ở độ đục THẤP NHẤT trong các đoạn (đoạn đếm vào 0,22, luyện tập trúng 0,45 / trượt 0,4) rồi
+    đoạn đậm hơn tô thêm cùng màu (alpha bù `(đích − nền) / (1 − nền)`; nền chroma: màu đặc đích) — để glow (shadow của
+    thân) vẫn một hình; mỗi lần bấm sáng như một tile đơn đang chạm (góp ý 2026-10-20 "hiệu ứng sáng như phím bấm một
+    lần, cho đủ số lần nhấn"): bao `env` = 1 ở đầu nốt đang ở hit line, giảm tuyến tính về 0 trong
+    `REPEAT_PULSE_SPAN` 0,85 độ dài nốt (≥ `REPEAT_PULSE_MIN_BEATS` 0,12 beat), bật lại ở nốt kế — glow của thân
+    `18·s·(0,2 + 0,8·env)`, đoạn của nốt đó phủ `ACTIVE_FILL` (độ đục × `0,35 + 0,65·env`) + trắng
+    `REPEAT_PULSE_ALPHA` 0,5 × env, viền sáng dày `1 + 1,5·env` (nốt liền nhau không còn khe 2 px giữa các ô → nhịp sáng /
+    tắt cho thấy từng lần bấm; giảm chuyển động: env = 1, sáng đều, không loé); loé + viền màu chấm điểm theo từng nốt; vạch mảnh (`REPEAT_TICK_*`, màu chữ của tile) ở đầu
+    từng nốt bên trong. Viền ngoài: chờ bấm nhấp nháy / đang sáng / viền thường.
+  - **Nhãn:** nhãn phím y như tile thường (bậc font, ↓ / ↑ / `#`, nhãn phụ, chấm giản phổ) + chữ `player.repeatCount`
+    (`×{n}`, dấu nhân U+00D7, vi + en) — dọc: dòng dưới cùng của khối nhãn (sau nhãn phụ); ngang: cuối hàng nhãn. Khối
+    nhãn bám mép gần của thanh như tile dài nhưng "sàn" là hit line (`min(tileLabelFloor, hitPos)` — dọc; ngang: ngay
+    sau hit line) thay vì mép canvas: số đứng ngay chỗ người chơi nhìn, đuôi thanh tới thì đi theo đuôi. Sau review:
+    - chỗ cho chữ khi còn lần bấm = phần CHƯA BẤM còn thấy (đuôi → sàn), không phải cả thanh: không đủ cho nhãn phím +
+      số → bỏ nhãn phím trước (làn đã cho biết phím), chỉ số; còn lần bấm thì đáy dòng số không xuống quá hit line (nốt
+      cuối ngắn hơn dòng số → thà vượt đuôi thanh vài px) — không bị hit line gạch, không bị mép canvas cắt ở 'fit';
+    - nốt ô nhịp đếm vào ở đầu thanh (vẽ mờ `GHOST_ALPHA`) không mang chữ (chữ tối trên nền mờ): khối nhãn bám đầu nốt
+      đầu tiên được đếm tới khi nốt đó chạm hit line;
+    - ~~kiểu Mobile, sàn = ngay trên hàng vòng chế độ~~ — BỎ theo góp ý 2026-10-20 ("đi qua ô tròn chỉnh pitch / thăng
+      thì giống bị chặn lại, không mượt"): khối chữ dừng trên hàng vòng rồi mới tụt theo đuôi trông như thanh bị kẹt.
+      sàn giờ là `min(tileLabelFloor, hitPos)` chung cho mọi cột (bỏ `barLabelFloor`) — số trôi theo đầu thanh vào trong hàng
+      vòng (vòng chỉ là viền mảnh không tô, chữ đè lên vẫn đọc được) rồi nằm sát hit line như cột không có vòng;
+    - vạch đầu nốt đi qua hộp bao khối chữ (`F_LX0` … `F_LY1`, ghi ở `collectBar`) chỉ còn hai mẩu ngoài bề ngang chữ
+      (cách 2 px, mẩu < `REPEAT_TICK_MIN` 3 px bỏ) — không gạch ngang chữ khi thanh trôi qua nhãn đứng yên;
+    - ngang, thanh ngắn hơn ô tối thiểu (luật gap / loop cắt sát) còn lần bấm → chỉ số ở giữa thanh (trước: số bị bỏ,
+      toạ độ NaN).
+
+    Cỡ chữ số = `REPEAT_COUNT_RATIO` 0,72 × nhãn phím, dọc kẹp cho số rộng nhất lọt bề ngang tile — THEO LỚP số chữ số
+    của đoạn (`countClass` 1…3; trước: theo "×max" của đoạn dài nhất bài → mọi thanh trên điện thoại chữ ~10 px chỉ vì
+    một đoạn 12 nốt), cả thanh một cỡ (số chỉ giảm); ngang kẹp theo bề cao làn; sàn `REPEAT_COUNT_MIN_PX` 9. Chữ
+    "×1…×max" + bề rộng theo lớp đo sẵn ở `prepare()` (đổi ngôn ngữ / layout mới đo lại) — hot loop không measureText,
+    không cấp phát (không closure; hộp chữ dùng scratch `lbox`).
+
+  - **Loop / đếm vào:** loop end cắt đoạn còn < 4 nốt → các nốt đó vẽ tile thường; vòng kế (đầu loop cắt giữa đoạn) dùng
+    phần đoạn từ loop start nếu còn ≥ 4 nốt. Một phần thanh thuộc ô đếm vào → đoạn đó mờ, không sáng, không tính số; cả
+    thanh thuộc đó → mờ cả thanh, không số. `maxLenBeats` tính cả thanh để cull nhị phân không bỏ sót thanh dài; luật
+    "chuỗi quá sát chỉ nốt đầu có nhãn" coi nốt ngay sau một thanh là đầu chuỗi mới.
+  - **Không đổi:** âm thanh, chấm điểm luyện tập, game bar / keycap, vòng `CHẠM`, banner giữ, ribbon vẫn theo từng nốt;
+    mọi nơi dùng `TilesRenderer` (màn chơi, Cửa sổ nổi, overlay OBS, trang mini, video nổi) có thanh, cả hai hướng, mọi
+    `lanePadding` + `framePad`. Bài mẫu có thanh: _TAKEDISKRUSH!_ (C × 5 ở beat 72 và 88), _Sao Mình Chưa Nắm Tay Nhau_
+    (`,` × 4 ở beat 45,75 và 61,75); Quốc ca và bài thứ ba không có. Test cũ "nốt 0.25 beat lặp…" (renderer.test.ts)
+    đổi 4 → 3 nốt mỗi phím để vẫn kiểm luật nhãn gọn của tile thường; test mới: `src/core/repeatRuns.test.ts`,
+    `src/player/renderer.repeat.test.ts` (dòng `.harm` tự viết).

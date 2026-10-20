@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-10-20
+
+### Thêm
+
+- **Thanh bấm lặp** (D-447): đoạn bấm cùng một phím từ 4 lần liên tiếp trở lên với nốt ngắn (mỗi nốt ≤ 0,5 beat, nghỉ
+  giữa hai nốt ≤ 0,25 beat, cùng quãng / Nửa Cung, không luyến) giờ là **một thanh dài** trong làn của phím đó thay cho
+  nhiều ô ngắn sát nhau. Thanh ghi nhãn phím + **số lần bấm còn lại** (`×5`) ngay trên vạch sáng, đếm lùi mỗi khi một
+  nốt đi qua vạch sáng, bấm hết thì số biến mất; vạch mảnh ở đầu từng nốt giữ nhịp, **mỗi lần bấm thanh loé sáng** như
+  một ô thường rồi tắt dần trước lần bấm kế (đủ số lần, máy bật giảm chuyển động thì sáng đều), số trôi mượt qua hàng
+  vòng chế độ của Mobile như mọi cột. Có ở màn chơi (PC + Mobile), Cửa sổ nổi, overlay OBS, trang mini và video nổi; tiếng, luyện tập (trúng / trượt
+  hiện trên đoạn của từng nốt), game bar, vòng `CHẠM` vẫn theo từng nốt.
+
 ## [1.0.6] - 2026-10-18
 
 ### Thay đổi

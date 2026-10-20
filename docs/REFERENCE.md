@@ -180,6 +180,28 @@ lưu** (kèm **Lưu vào thư viện**). Chip cảnh báo / lỗi bấm vào là
 tập vẫn hiện, phím tắt vẫn chạy). Góc trên phải khu tiles khi đó có **Phát** / **Tạm dừng** nhỏ và **Hiện thanh trên**.
 App nhớ lựa chọn này theo máy (localStorage `dfht-player-top-collapsed`).
 
+**Thanh bấm lặp** (D-447): một đoạn bấm **cùng một phím từ 4 lần liên tiếp trở lên** — mỗi nốt dài **≤ 0,5 beat**,
+nghỉ giữa hai nốt **≤ 0,25 beat**, cùng quãng và Nửa Cung (cùng chuột giữ / cùng chế độ Mobile), không nốt nào thuộc
+luyến — vẽ thành **một thanh dài** trong làn của phím đó thay cho nhiều ô ngắn sát nhau.
+
+- Thanh cùng màu, viền, độ đục với ô thường của lần bấm đó; **vạch mảnh ở đầu từng nốt** bên trong để vẫn thấy nhịp
+  (vạch không cắt ngang chữ: đi qua nhãn thì chỉ còn hai mẩu hai bên chữ, hoặc ẩn khi ô hẹp).
+- Nhãn phím như ô thường (↓ / ↑ / `#`, nhãn phụ, số giản phổ có chấm ở kiểu Mobile) kèm **số lần bấm còn lại** `×5`
+  (dọc: dòng dưới nhãn phím; dải ngang: sau nhãn phím cùng hàng). Khi thanh đã chạm vạch sáng, nhãn đứng **ngay trên
+  vạch sáng** (phần chưa bấm) và số **đếm lùi** mỗi khi một nốt đi qua vạch sáng; đang dừng đúng ở đầu một nốt (đầu
+  dòng, chế độ **Chờ** của luyện tập) thì nốt đó vẫn tính là chưa bấm. Bấm hết thì số biến mất, thanh hết là ô thường
+  tiếp tục. Phần chưa bấm (phía trên vạch sáng) không còn đủ chỗ cho cả hai thì chỉ còn số — còn lần bấm thì số không
+  bao giờ xuống dưới vạch sáng. Đoạn đầu thanh thuộc ô nhịp **đếm vào** (vẽ mờ) không mang chữ: nhãn nằm trên phần được
+  đếm. Kiểu Mobile, thanh đi qua hàng nút / vòng chế độ (bàn nút, trang mini **Khớp nút game**): nhãn đứng phía trên
+  hàng đó, đuôi thanh xuống tới đó thì theo đuôi. Cỡ chữ số theo từng thanh (thanh dưới 10 lần bấm không bị thu nhỏ
+  theo thanh dài nhất bài).
+- Mỗi lần bấm: thanh loé sáng như một ô thường đang chạm (quầng sáng + đoạn của nốt đó sáng lên) rồi tắt dần trước lần
+  bấm kế — đủ số lần bấm (máy bật giảm chuyển động thì sáng đều, không loé). Số trôi qua hàng vòng chế độ của Mobile như
+  mọi cột. Luyện tập: trúng / trượt của từng nốt hiện trên đoạn của nốt đó (mờ đi + viền màu chấm điểm).
+- Chỉ là cách vẽ: tiếng, chấm điểm luyện tập, game bar, vòng `CHẠM`, banner giữ vẫn theo từng nốt. Có ở màn chơi (PC và
+  Mobile), Cửa sổ nổi, overlay OBS (mọi kiểu, cả dải ngang), trang mini và video nổi. Đúng 3 lần, có nốt dài hơn 0,5
+  beat, khác quãng / Nửa Cung hay nghỉ dài hơn 0,25 beat → các ô rời như cũ; Loop cắt đoạn còn dưới 4 nốt cũng vậy.
+
 **Đếm ngược và đếm vào** (D-354):
 
 - **Đếm ngược** (Cài đặt → **Phát bài** → **Đếm ngược trước khi phát**, 0–10 giây, mặc định **3 giây**): bấm Phát rồi

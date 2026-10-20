@@ -831,13 +831,14 @@ describe('TilesRenderer — nhãn phím (ui-3, ui-4, renderer-perf-3/4)', () => 
   });
 
   it('nốt 0.25 beat lặp ở lookahead 12: nhãn, badge # và mũi tên không chồng lên nhau', () => {
+    // 3 lần mỗi phím: từ 4 lần trở lên là MỘT thanh bấm lặp (D-447, test ở mục "thanh bấm lặp").
     const notes: TimelineNote[] = [];
     let idx = 0;
-    for (let k = 0; k < 4; k++) notes.push(mkNote(idx++, 'X', 1 + k * 0.25, 1.25 + k * 0.25));
-    for (let k = 0; k < 4; k++) {
+    for (let k = 0; k < 3; k++) notes.push(mkNote(idx++, 'X', 1 + k * 0.25, 1.25 + k * 0.25));
+    for (let k = 0; k < 3; k++) {
       notes.push(mkNote(idx++, 'B', 2.5 + k * 0.25, 2.75 + k * 0.25, 0, true));
     }
-    for (let k = 0; k < 4; k++) {
+    for (let k = 0; k < 3; k++) {
       notes.push(mkNote(idx++, 'N', 4 + k * 0.25, 4.25 + k * 0.25, -1));
     }
     const tl = mkTimeline(notes);
@@ -864,7 +865,7 @@ describe('TilesRenderer — nhãn phím (ui-3, ui-4, renderer-perf-3/4)', () => 
       .filter((c) => c.name === 'arc')
       .map((c) => ({ y: Number(c.args[1]), r: Number(c.args[2]) }))
       .sort((a, b) => a.y - b.y);
-    expect(arcs).toHaveLength(4);
+    expect(arcs).toHaveLength(3);
     for (let k = 1; k < arcs.length; k++) {
       expect(arcs[k].y - arcs[k - 1].y).toBeGreaterThanOrEqual(arcs[k].r + arcs[k - 1].r - 0.01);
     }

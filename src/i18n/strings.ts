@@ -308,6 +308,8 @@ const vi = {
   'player.sharedChip': 'Bài tạm từ link — chưa lưu',
   'player.sharedChipHint': 'Bài mở từ link chia sẻ chưa nằm trong Thư viện (tải lại trang là mất).',
   'player.canvas': 'Khu tiles rơi của bài "{title}"',
+  /** Thanh bấm lặp trên canvas (D-447): số lần bấm còn lại, vẽ sau nhãn phím. */
+  'player.repeatCount': '×{n}',
   'player.transport': 'Điều khiển phát',
   'player.play': 'Phát',
   'player.pause': 'Tạm dừng',
@@ -1821,6 +1823,7 @@ const en: Record<StringKey, string> = {
   'player.sharedChipHint':
     'A song opened from a share link is not in the Library yet (a page reload loses it).',
   'player.canvas': 'Falling tiles for "{title}"',
+  'player.repeatCount': '×{n}',
   'player.transport': 'Playback controls',
   'player.play': 'Play',
   'player.pause': 'Pause',
