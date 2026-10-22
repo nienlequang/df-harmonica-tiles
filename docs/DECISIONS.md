@@ -3108,3 +3108,108 @@ một commit mới từ cây hiện tại (lịch sử riêng không đưa lên)
     (`,` × 4 ở beat 45,75 và 61,75); Quốc ca và bài thứ ba không có. Test cũ "nốt 0.25 beat lặp…" (renderer.test.ts)
     đổi 4 → 3 nốt mỗi phím để vẫn kiểm luật nhãn gọn của tile thường; test mới: `src/core/repeatRuns.test.ts`,
     `src/player/renderer.repeat.test.ts` (dòng `.harm` tự viết).
+
+## Trang mini: bố cục "dưới nút" cho điện thoại Samsung (góp ý của chủ dự án, 2026-10-21)
+
+- **D-448 — Bố cục "Khớp nút game · dưới nút" (bản nháp local, chưa thử trên máy thật):**
+  - **Bối cảnh:** thử thật trên điện thoại Samsung — cửa sổ pop-up có chiều cao tối thiểu (~220 dp ≈ 55–60 % chiều cao
+    màn ngang) nên không đặt gọn trong phần trên bảng nút được (mép dưới "Khớp nút game" phải ở ≤ `GAME_MODE_TOP_H`
+    0,361 chiều cao màn — D-414), nhưng Samsung cho kéo pop-up xuống QUÁ mép dưới màn hình (phần dưới ra ngoài màn).
+    → bố cục thứ ba: cửa sổ ngay DƯỚI hàng nút số, ô đi lên từ mép dưới màn hình tới vạch chạm ở mép trên cửa sổ; 8 làn
+    thẳng 8 nút số như 'fit'; 4 vòng `CHẠM` giữ cột nút chế độ (lật, đáp ngay dưới vạch chạm — chủ dự án chấp nhận vòng
+    nằm dưới hàng nút số dù nút chế độ thật ở trên). Khe giữa hàng nút số và vạch chạm (thanh của cửa sổ pop-up; vài máy
+    thu gọn thanh) là bình thường.
+  - **Id / lưu:** `MiniLayout` thêm `'below'` (thứ tự nút [Khớp nút | Dưới nút | Thu nhỏ]), cùng khóa `dfht-mini-layout`
+    (bản cũ đọc `'below'` → không hợp lệ → mặc định, không lỗi); `isFitLayout` = 'game' | 'below'. Mặc định KHÔNG đổi,
+    không đoán hãng (UA rút gọn của Chrome ghi model là "K") — người dùng điện thoại Samsung chọn "Dưới nút" một lần.
+    Dùng chung `laneFit` + số căn chỉnh (`dfht-mini-calibration`) với "Khớp nút game"; số mới `edgeShift` (thiếu → 0).
+  - **Renderer `flipY` (option, không phải khóa layout):** chỉ khi bố cục 'fit' dọc, cả khung vẽ bằng
+    `setTransform(dpr, 0, 0, −dpr, 0, devH)` — layout.ts (hình học, cull, timing, fade, đếm vào, luyện tập, giữ, thanh
+    D-447) không đổi, trên màn là ảnh gương của 'fit'. Chữ đứng thẳng: khối nhãn tile dời NGUYÊN KHỐI tới ảnh gương của
+    hộp bao theo trục dọc gồm mọi phần (nhãn phím + chấm giản phổ, nhãn phụ, ↓ / ↑, `#` — không chỉ quanh `bottom − cc`:
+    ở làn hẹp `#` / mũi tên nằm ngoài khối giữa, xoay quanh tâm khối thì chúng thò ra ngoài ô, qua vạch chạm) rồi vẽ bằng
+    transform thẳng; thanh bấm lặp dời quanh đúng chiều cao chữ (chấm tính đúng phía), hộp chữ lưu ở toạ độ CHƯA lật để
+    khe của vạch đầu nốt (vẽ dưới transform lật) trùng chữ đã dời — nhãn phím gần vạch chạm, `×n` dưới; chữ `CHẠM` vẽ
+    thẳng ở y lật. Vạch / nhãn section tắt khi lật (trang mini vốn tắt). Giữ (mỹ thuật): dải sáng của tile nằm ở mép SAU
+    (dưới); tile dài rời mép trên thì nhãn đi theo (chấm quãng trên ra trước), nhãn bám mép trên khi đang giữ vẫn trọn.
+    Tắt `flipY` → luồng lệnh vẽ y hệt trước. Trang mini luôn gửi rõ `flipY` (`MINI_RENDERER_OPTIONS.flipY = false`,
+    'below' → true) vì option renderer gộp vào option cũ. Bỏ: `flow: 'up'` thật trong layout (~16 chỗ renderer giả định
+    "dọc = rơi xuống" — rủi ro hồi quy lớn); CSS `scaleY(−1)` (chữ / chấm giản phổ lộn ngược).
+  - **Phần thấy:** trang không biết phần nào của cửa sổ còn trên màn (`window.screenY` không tin được trong cửa sổ nổi) →
+    `belowVisibleOf(scale, chromeH, innerH, calib)` = (1 − `GAME_NOTE_BOTTOM_H`) × `refH` − `FLOAT_BAR_GUESS` −
+    `chromeH` + `edgeShift`, kẹp [`BELOW_VISIBLE_MIN`, `innerH`] (`GAME_NOTE_BOTTOM_H` = 426,5 / 633 = đáy hàng nút số của ảnh game;
+    `BELOW_VISIBLE_MIN` = 80 px = cỡ thấp nhất bảng lúc dừng / Căn chỉnh đã dựng + kiểm, D-401 — review: 60 px cắt mất
+    hàng nút của bảng); màn 780 × 360 → 93 px, 915 × 412 → 110 px. Không biết cỡ màn (máy tính, màn không đọc được) →
+    cả trang + `edgeShift`, nên tầm "Đáy · Dời" là −600…+400 px (cửa sổ pop-up để cao 250–400 px mà chỉ thấy ~90 px).
+    Khi đang ở "dưới nút", MiniView kẹp thêm số đó vào tầm còn có tác dụng `belowEdgeRange(scale, chromeH, innerH)` (số
+    lớn nhất còn cho `BELOW_VISIBLE_MIN` … số nhỏ nhất đã cho cả trang, tính cả làm tròn — mỗi bước đổi 1 px; số lưu
+    ngoài tầm thì lần bấm đầu đưa về mép tầm rồi mới dời) (review: ngoài tầm đó con số vẫn chạy mà trang đứng yên — vd.
+    780 × 360 đoán 93 px, cũ xuống tới −600 px phải bấm + ~587 lần mới thấy đổi); thanh trượt dùng cùng tầm.
+    MiniView đặt `data-mini-layout="below"` + `--mini-visible-h` trên `:root` (`data-mini-short` khi ≤ 240 px), `.mini`
+    cao đúng phần đó → canvas = phần thấy: ô hiện ra từ đáy phần thấy, phần đó chứa đúng Lookahead phách của màn chơi
+    (không thêm ô Lookahead / độ dài làn ở trang mini — Lookahead chỉ ở thanh điều khiển Player). Phần cửa sổ dưới phần
+    thấy: nền trang + một dòng `mini.below.rest` "kéo cửa sổ xuống…" (portal vào body) — tự ra ngoài màn khi đặt đúng.
+    Dòng đó CHỈ lúc dừng (review: số đoán nhỏ quá — máy thu gọn thanh cửa sổ, thanh địa chỉ ở đáy — thì nó lộ một dải
+    ở đáy màn suốt lúc chơi và bảo người chơi đã đặt đúng kéo tiếp xuống, lệch vạch chạm) và câu nhắc nói cả cách sửa
+    trường hợp đó: "Cửa sổ đã đúng chỗ mà vẫn thấy dòng này: Căn chỉnh → 'Đáy · Dời' +".
+  - **DOM:** vạch dẫn lật (`MiniAlignGuides flip`: mép sáng ở đỉnh, vòng ngay dưới, không nhãn số); bảng Căn chỉnh ngay
+    dưới hàng vòng (`--mini-align-top`), kẹp cho trọn trong phần thấy (phần thấy thấp → được chồng lên hàng vòng);
+    số "Đáy · Dời" (`EDGE_CONTROL`, cuối danh sách, px, focus 'edge' = vạch đứt `.mini-edge-mark` ở đáy phần thấy); lời
+    nhắc riêng theo đúng tỉ lệ thật / Mobile / PC (`mini.align.helpBelow*`, 4 biến thể — review); chỉ báo chỉ có
+    "Rộng" (`MiniFitStatus showHeight={false}`, tooltip `mini.fit.numbersWidth`); nhãn làn + banner PC ở đáy (phía ô
+    đi vào); số đếm ngược theo `cqmin` của khung; hộp thoại (portal vào body) chỉ trong phần thấy, gọn như cửa sổ thấp
+    khi ≤ 240 px (luật `@media (max-height: 240px)` của app.css xét cả cửa sổ — lặp lại dưới `:root[data-mini-short]`).
+    Mọi luật theo CHIỀU CAO của mini.css thành `@container mini (…)` (`.mini { container: mini / size }`) để bảng lúc
+    dừng / Căn chỉnh xếp theo phần thấy; 'game' / 'compact' như cũ vì `.mini` = cả cửa sổ — NHƯNG cần Chrome / WebView
+    105+ / Samsung Internet 20+: trình duyệt cũ hơn mất cả 14 luật cửa sổ thấp ở MỌI bố cục (hồi quy chấp nhận cho bản
+    nháp). Luật theo bề ngang giữ `@media`.
+  - **Hướng dẫn theo loại máy (`MINI_HELP_DEVICES`, đầu hộp thoại ⓘ; mở từ Căn chỉnh thì ngay sau đoạn nút chọn — giữ
+    D-416):** điện thoại Samsung → "dưới nút"; máy tính bảng Samsung / OPPO, đa số máy gập (vd.
+    Galaxy Z Fold khi mở ra) → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO,
+    Honor, Huawei → vẫn mở bằng cửa sổ nổi của máy nhưng cảnh báo không kéo giãn được cho thẳng hàng nút số → "Thu nhỏ"
+    đặt "ở giữa hoặc sát một bên màn hình" — đúng lời chủ dự án (review: bản trước tự hiểu "giữa" là giữa MÉP TRÊN, vì
+    bảng nút kèn chiếm dải giữa màn — y ≈ 33–70 %, x ≈ 15–85 % ảnh game — nên cửa sổ ~300 × 300 ở giữa màn che nút kèn —
+    chữ giờ theo đúng lời; chủ dự án muốn "giữa mép trên" thì đổi lại chữ). Lưu ý cũ theo hãng giữ nguyên (thêm một câu
+    cuối mỗi hãng); mục kéo / đổi cỡ "Xiaomi / HyperOS" bỏ (trái lời khuyên mới — câu "Vạch · Giãn" chuyển sang "Điện
+    thoại hãng khác"), thêm "Máy tính bảng / máy gập". "Cao quá" của "Khớp nút game" có tooltip nhắc Samsung dùng "dưới
+    nút". `mini.helpIntro` / `mini.layout.compactHint` / launcher không còn "góc trên"; `mini.launcherIntro` tách câu ngắn
+    (review: bỏ "—," lồng trong câu dài). Không nhắc riêng Galaxy Z Flip (máy gập — chủ dự án chỉ nói "đa số máy gập →
+    Khớp nút game").
+  - **Rủi ro / chưa kiểm:** chưa thử trên máy Samsung thật; thanh địa chỉ ở ĐỈNH cửa sổ pop-up ăn mất phần thấy (~56 px:
+    màn 360 dp còn ~37 px → kẹp 80, ô vào từ dưới mép màn) — thanh ở ĐÁY thì `chromeH` làm số đoán nhỏ quá; thanh trên +
+    dưới (> 25 % màn) → `chromeH` = 0; số đoán giả định mép trên cửa sổ ngay dưới hàng nút số + thanh ~24 px — mọi sai
+    lệch chỉnh bằng "Đáy · Dời" (từ 2026-10-22: "Đáy ◂ ▸" ở hàng trên — sửa đổi cuối mục); phần thấy ~93 px rất chật (hàng vòng ~39 px + bảng Căn chỉnh một hàng ~37 px, hộp
+    thoại cuộn); ba nút bố cục: cửa sổ hẹp hơn 560 px (mọi chiều cao) dùng chữ ngắn [Khớp nút | Dưới nút | Thu nhỏ]
+    (review: chữ dài ≈ 356 px vi / ≈ 503 px en tràn mép ở 300 × 300 vi và 360 × 360 en — "Compact" ra hẳn ngoài màn;
+    e2e `panel ▶ w×h` thêm 300 × 300 vi + en, 360 × 360 en, cả "game" và "compact" — chưa chạy), e2e "không chồng" ở
+    cửa sổ 546–640 px có thể đỏ — chưa chạy; e2e không có spec cho
+    'below'; video nổi từ trang mini vẫn là bố cục bàn nút.
+  - **Sửa đổi 2026-10-22 — khoảng trống đáy ở hàng trên (góp ý của chủ dự án sau khi thử trên điện thoại Samsung thật:
+    "app cần có khả năng tạo một khoảng trống dưới đáy để thứ hiển thị trên màn hình là toàn bộ nội dung app … nút chỉnh
+    ở hàng trên trước khi vào bài, bấm trái phải thì khoảng trống tăng giảm"):** bỏ số "Đáy · Dời" khỏi Căn chỉnh
+    (`EDGE_CONTROL`, focus 'edge', `alignControlsFor(…, below)`, tầm riêng của thanh trượt — xóa; Căn chỉnh của "dưới
+    nút" có đúng các số của "Khớp nút game"). Thay bằng `MiniBelowGap` ở `.mini-top` của panel lúc dừng, ngay trước tên
+    bài (sau ◂ về + huy hiệu — bên trái chỉ có thứ bề ngang cố định, nên bấm ◂ / ▸ liên tục làm phần thấy qua các
+    ngưỡng cao 220 / 130 px — hàng trên đổi bề ngang, nút "Đổi sang Mobile" vào cùng hàng — thì nút KHÔNG xê dịch; review:
+    để sau tên bài thì chạm kế tiếp rơi trúng "Đổi sang Mobile" / giữ bị ngắt vì nút chạy khỏi ngón tay): nhãn **Đáy** · ◂ (`mini.gap.less` "Giảm khoảng trống đáy") · số px · ▸ (`mini.gap.more` "Tăng khoảng trống
+    đáy"), tooltip `mini.gap.hint`; chỉ khi 'below' + đang dừng (panel ẩn khi chạy / Căn chỉnh). **Một nguồn:**
+    khoảng trống = `innerH` − phần thấy (`belowGapOf`), vẫn đổi qua `edgeShift` của số căn chỉnh (lưu như cũ): ▸ =
+    `edgeShift` − `BELOW_GAP_STEP_PX` 8 px, ◂ = + 8 (`stepBelowGap`), kẹp vào `belowEdgeRange` (mỗi chạm trong tầm đều đổi
+    trang; số lưu ngoài tầm tính như đã kẹp — lần bấm đầu đã đổi trang); số đoán vẫn là mặc định. Giữ để lặp dùng
+    chung `useHoldRepeat` của Căn chỉnh (bước nhanh `BELOW_GAP_FAST_PX` 24 px; `onStep` trả `false` → thôi lặp). Hết tầm
+    → nút đó `aria-disabled` (không `disabled`: nút đang giữ / đang focus không mất pointerup / focus), `canStepBelowGap`.
+    Giá trị là `<output>` (TalkBack đọc số mới). Vạch đứt `.mini-edge-mark` giờ hiện suốt lúc dừng ở 'below' (cả Căn
+    chỉnh), không còn kiểu "đang chỉnh". "Đặt lại mặc định" của Căn chỉnh GIỮ `edgeShift` (số đó không còn thuộc bảng
+    này — đặt lại vạch không được làm trang đổi cao). Lời nhắc `mini.below.rest`, `mini.align.helpBelow*`,
+    `mini.help.fit.controls`, `mini.help.device.samsungPhone` chỉ sang "Đáy ◂ ▸" ở hàng trên. Ở 'below', MỌI bề
+    ngang: tên bài `flex-basis: 0` (co "…" trước, không đẩy nút xuống dòng), `.mini-top` được xuống dòng trong chính nó
+    (hàng chật — kiểu PC ở cửa sổ thấp: nút "Đổi sang Mobile" cùng hàng; cửa sổ ≥ 560 px còn huy hiệu — thì chỉ báo / ⓘ
+    xuống dòng, "Đáy ◂ ▸" vẫn ở dòng đầu), số px của chỉ báo (`.mini-fit-numbers`, ≥ 221 px cao) không hiện — có ở
+    tooltip (review: số đó vào hàng đúng lúc bấm ◂ qua 221 px, đẩy ⓘ ra ngoài mép cửa sổ 600 px). Bản đầu chỉ cho xuống
+    dòng < 560 px nên ở 560–~585 px kiểu PC, en (màn 915 × 412) tên bài còn 0 px và ⓘ nằm dưới "Đổi sang Mobile" — review
+    bắt được. Cửa sổ < 560 px: bỏ thêm huy hiệu "Thử nghiệm" (~80–90 px; hộp thoại mở trang mini đã ghi "thử nghiệm").
+    Kiểm bằng Edge headless 300 × 150 … 960 × 300, vi / en, Mobile / PC. Còn lại: phần thấy ~93 px mà cửa sổ < 420 px (chỉ
+    báo "Rộng" xuống dòng — đã có trước) thì hàng ▶ / bố cục rơi xuống dưới phần thấy; MỚI: kiểu PC, phần thấy ~93 px, ở
+    cửa sổ ~420–540 px và ~560–585 px — hàng trên xuống 2 dòng (cùng hàng với "Đổi sang Mobile") nên hàng ▶ bị cắt một
+    phần (chấp nhận: không control nào đè nhau, ⓘ vẫn chạm được; cửa sổ đặt đúng trên điện thoại Samsung rộng ≥ ~570 px,
+    và kiểu PC nên "Đổi sang Mobile").

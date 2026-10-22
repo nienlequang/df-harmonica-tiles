@@ -134,7 +134,12 @@ src/
              `lanePadding: 'fit'` + `laneFit` (layout.ts `fitGeometry` — lane theo tâm 8 nút số thật của game, hit line
              = mép dưới, vòng đáp sát mép dưới ở cột nút chế độ thật + 4 vòng đích mờ; số đo `GAME_MODE_COLUMNS` /
              `DEFAULT_LANE_FIT`, D-396, D-397; `laneFit.stepPx` / `shiftPx` = đúng tỉ lệ thật: bước cột px CSS, hàng
-             nút căn giữa khung + dời, bỏ qua first / last — renderer tính lại theo cỡ canvas, D-405); overlay OBS
+             nút căn giữa khung + dời, bỏ qua first / last — renderer tính lại theo cỡ canvas, D-405); trang mini
+             "Khớp nút game · dưới nút" = 'fit' + renderer `flipY` (lật dọc cả khung bằng `setTransform(dpr, 0, 0,
+             −dpr, 0, devH)` — ô đi lên, hit line + vòng ở mép trên; chỉ khi `L.fit`; khối nhãn tile / thanh dời nguyên
+             khối tới ảnh gương trong collectTiles / collectBar rồi vẽ đứng thẳng, chữ CHẠM ở y lật, vạch / nhãn
+             section tắt; layout.ts không đổi; option không phải khóa layout — người gọi gửi rõ `flipY: false` khi rời
+             bố cục đó vì option được gộp — D-448); overlay OBS
              truyền `modeTargets: 'outline'` (mặc
              định 'pad') → không bàn nút, renderer tự vẽ 4 vòng đích mờ ở hàng nút chế độ (lane dọc) hoặc sau hit line
              (dải ngang) — D-375. Canvas KHÔNG vẽ số đếm vào (D-354; số to chỉ có ở đếm ngược, phần DOM). Đếm ngược
@@ -242,10 +247,21 @@ src/
              Video theo Cài đặt → Đếm vào (`GuideVideoOptions.countIn`); bộ vẽ video có lớp vòng CHẠM riêng dán lên bàn
              nút nó tự vẽ (D-374). Máy Apple: không có "Trực tiếp" (Safari không mở PiP của luồng canvas), chỉ dựng
              sẵn — chạy cả qua `http://` trên iPhone (D-385).
-  mini/      trang mini cho cửa sổ nổi Android (route `#/mini/:id`, Phase 4m, thử nghiệm): MiniView (hai bố cục nhớ
+  mini/      trang mini cho cửa sổ nổi Android (route `#/mini/:id`, Phase 4m, thử nghiệm): MiniView (ba bố cục nhớ
              theo máy; chưa chọn → theo kiểu điều khiển: Mobile = "Khớp nút game" (lane 'fit' ngay trên bảng nút
              thật, không bàn nút / banner chế độ riêng — D-403, Căn chỉnh lúc dừng), PC = "Thu nhỏ" (làn + bàn nút /
-             game bar thu nhỏ) — D-395, D-402; kiểu PC: panel lúc dừng có "Đổi sang Mobile"; panel lúc dừng gói
+             game bar thu nhỏ) — D-395, D-402; "Khớp nút game · dưới nút" (`'below'`, D-448 — điện thoại Samsung: cửa
+             sổ pop-up đặt DƯỚI hàng nút số, phần dưới ra ngoài màn; `isFitLayout` = game | below, chung `laneFit` +
+             số căn chỉnh, renderer `flipY`; trang thu về phần THẤY `belowVisibleOf` → `:root[data-mini-layout]` +
+             `--mini-visible-h` (`data-mini-short` ≤ 240 px — hộp thoại portal cũng trong phần đó; mini.css lặp luật
+             hộp thoại thấp của app.css), `--mini-align-top` = bảng Căn chỉnh ngay dưới hàng vòng, kẹp trong phần
+             thấy, `.mini-edge-mark` vạch đứt ở đáy (lúc dừng, cả Căn chỉnh), `.mini-below-rest` dòng nhắc dưới phần thấy
+             (portal, chỉ lúc dừng); khoảng trống đáy = "Đáy ◂ ▸" (`MiniBelowGap`) ở `.mini-top` của panel lúc dừng, TRƯỚC
+             tên bài (sau ◂ + huy hiệu: không xê dịch khi bấm qua ngưỡng cao) — KHÔNG ở Căn chỉnh (góp ý 2026-10-22);
+             'below' mọi bề ngang: `.mini-top` xuống dòng, tên `flex-basis: 0` co "…", ẩn `.mini-fit-numbers`; < 560 px
+             bỏ thêm huy hiệu; mini.css:
+             mọi luật theo CHIỀU CAO là `@container mini (…)` — `.mini { container: mini / size }`, Chrome 105+);
+             kiểu PC: panel lúc dừng có "Đổi sang Mobile"; panel lúc dừng gói
              2 hàng ở cửa sổ ≤ 130 px cao, không control nào chồng nhau — D-401; OverlayEngine → luôn im lặng; nút "◂" — aria "Về màn chơi" — về `#/play/<id>`, CHỈ hiện khi
              đang dừng theo `isMiniStopped()`, D-362; đếm ngược / đếm vào theo Cài đặt → Phát bài, đếm ngược tối
              thiểu 3 s, `?delay=` đè — D-367, D-381), miniControl (đếm ngược / tạm dừng; `parseMiniDelay` 0..10,
@@ -262,7 +278,14 @@ src/
              `data-scale="true"`; `needsFitWindowNotice` / `dismissFitWindowNotice` = nhắc một lần "kéo rộng thêm ¼ nút"
              cho máy đã mở trang mini ở bản 1.0.0 (`dfht-mini-song` có, không `dfht-mini-calibration`, chưa dấu
              `dfht-mini-fit8`; chỉ hiện ở "Khớp nút game" không đúng tỉ lệ thật — `MiniFitNotice` của MiniCalibrate.tsx ở
-             chỗ chỉ báo; chạm = hướng dẫn `fit` + ghi dấu — D-441)),
+             chỗ chỉ báo; chạm = hướng dẫn `fit` + ghi dấu — D-441); "dưới nút" (D-448): `GAME_NOTE_BOTTOM_H` (đáy hàng
+             nút số 426,5 / 633), `belowVisibleOf(scale, chromeH, innerH, calib)` = (1 − GAME_NOTE_BOTTOM_H) × refH −
+             FLOAT_BAR_GUESS − chromeH + `edgeShift` (px, −600…+400), kẹp [`BELOW_VISIBLE_MIN` 80, trang];
+             không biết cỡ màn → cả trang; `belowEdgeRange` = tầm `edgeShift` còn đổi phần thấy;
+             khoảng trống đáy `belowGapOf(innerH, visibleH)` = trang − phần thấy, nút "Đáy ◂ ▸" = `stepBelowGap(c, dir,
+             range, px)` (▸ +1 = khoảng trống lớn hơn = `edgeShift` − `BELOW_GAP_STEP_PX` 8, giữ `BELOW_GAP_FAST_PX` 24,
+             kẹp `belowEdgeRange`) + `canStepBelowGap` (hết tầm → nút `aria-disabled`); một nguồn = `edgeShift`, "Đặt lại
+             mặc định" của Căn chỉnh giữ nó),
              MiniCalibrate.tsx (`MiniFitStatus` = chip "Rộng" / "Cao", `SCALE_ALIGN_CONTROLS` [Vạch · Dời | Vạch · Giãn
              | Vòng · Dời | Vòng · Giãn] khi đúng tỉ lệ thật — nút chọn hai dòng `group` + `short`, `alignFocusOf` →
              `MiniAlignGuides focus` tô sáng 8 vạch / 4 vòng đang chỉnh, tên vòng tới Ø `GUIDE_NAME_MIN_D` — D-416; nhãn
@@ -270,8 +293,15 @@ src/
              MỘT số mỗi lúc: nút chọn [Vạch · Nút 1 | Vạch · Nút 1̇ | Vòng · Dời | Vòng · Giãn] + − / + giữ để lặp
              (`useHoldRepeat`) + thanh trượt khi đủ rộng,
              cửa sổ ≤ 220 px cao một hàng ~36 px — D-398, D-399; `ShortLong` = chữ dài / ngắn của nút, chữ ngắn nằm
-             trong `aria-label`; không đặt tên MiniAlign.tsx: trùng miniAlign.ts trên Windows),
-             wakeLock, MiniHelp (hướng dẫn theo hãng; `section="fit"` = kéo / đổi cỡ cửa sổ khớp nút game), MiniLauncher + MiniLauncher.css (nút Cửa sổ nổi của Player trên
+             trong `aria-label`; không đặt tên MiniAlign.tsx: trùng miniAlign.ts trên Windows; "dưới nút" — D-448:
+             `MiniAlignGuides flip` (lật: mép sáng ở đỉnh, vòng ngay dưới, không nhãn số), `alignControlsFor(scheme,
+             scaled)` như "Khớp nút game" (không có số đáy), lời nhắc `mini.align.helpBelow*`, `MiniFitStatus
+             showHeight={false}` = chỉ chip "Rộng"; "Cao quá" có tooltip nhắc Samsung dùng "dưới nút"; `MiniBelowGap`
+             = "Đáy ◂ px ▸" của panel lúc dừng — `useHoldRepeat` dùng chung, `onStep` trả `false` thì thôi lặp),
+             wakeLock, MiniHelp (hướng dẫn theo hãng; `MINI_HELP_DEVICES` "Bố cục nên dùng theo máy" — điện thoại
+             Samsung → dưới nút, máy tính bảng Samsung / OPPO + đa số máy gập → Khớp nút game, điện thoại hãng Trung Quốc
+             → Thu nhỏ, đứng đầu hộp thoại / ngay sau đoạn nút chọn ở `section="fit"`, class `mini-help-device*` riêng —
+             D-448; `section="fit"` = kéo / đổi cỡ cửa sổ khớp nút game), MiniLauncher + MiniLauncher.css (nút Cửa sổ nổi của Player trên
              điện thoại, prop `songId` = bài đang mở: hỏi "Apple / Android" trước — PhoneChooser, chân hộp thoại
              PhoneKindLine "Đổi loại điện thoại" —, Android → hộp thoại "Cửa sổ mini / video nổi (thử nghiệm)" + "Mở
              trang mini", Apple → MiniLauncherVideo; không `songId` = ô chọn bài, không hỏi — D-383),
@@ -338,8 +368,8 @@ e2e/         Playwright: smoke.spec.ts (Phase 1; mọi bài mẫu), library-a11y
              640×80 vi + en — panel lúc dừng / tạm dừng / Căn chỉnh từng số: không control nào ra ngoài / chồng / bị
              che, bảng không che vòng / mép dưới, hộp ⓘ đọc được; cùng các cỡ đó, máy đã mở trang mini ở bản 1.0.0
              (`dfht-mini-song` đặt sẵn): chip nhắc "kéo rộng" không ra ngoài / chồng, chạm → hướng dẫn, hết chip — D-441;
-             300×150 / 300×200 / 360×200 / 480×100 cả hai bố
-             cục; kiểu PC → "Thu nhỏ" + "Đổi sang Mobile" → khớp nút game; đúng tỉ lệ thật — option `screen` của
+             300×150 / 300×200 / 360×200 / 480×100 + 300×300 vi / en + 360×360 en (ba nút bố cục chữ ngắn ở cửa sổ
+             < 560 px — D-448) cả hai bố cục; kiểu PC → "Thu nhỏ" + "Đổi sang Mobile" → khớp nút game; đúng tỉ lệ thật — option `screen` của
              Playwright = màn điện thoại ngang + UA Android (`ANDROID_UA`), viewport = cửa sổ nổi: bước cột theo chiều
              cao màn, vạch / vòng / canvas trùng nút của ảnh game, chỉ báo Rộng / Cao, kéo giãn bằng CDP
              `Emulation.setDeviceMetricsOverride` giữ cỡ màn (`setViewportSize` đặt màn = viewport), Vạch · Dời / Giãn
@@ -465,8 +495,8 @@ riêng (D-354, D-367); Cửa sổ nổi / trang mini / video nổi đếm ngư�
 ngược (ô đứng yên ở khung bắt đầu của đếm vào — không nhảy lùi khi chạy, D-377; bấm Phát / hủy thì trượt mượt tới /
 khỏi khung đó, không nhảy — D-389), đếm vào không có số ở bất cứ đâu.
 Lookahead chỉ ở thanh điều khiển của Player. Kiểu Mobile: không thêm lại gutter / nhãn "CHẠM: <tên chế độ>" — vòng
-"CHẠM" phải đáp vào một nút chế độ thật (bàn nút) hoặc vòng đích mờ của overlay / trang mini "Khớp nút game" (D-366,
-D-373, D-375, D-396); overlay OBS
+"CHẠM" phải đáp vào một nút chế độ thật (bàn nút) hoặc vòng đích mờ của overlay / trang mini "Khớp nút game" (cả "dưới
+nút" — lật, đáp ở mép trên; D-366, D-373, D-375, D-396, D-448); overlay OBS
 không vẽ lại bàn nút đầy đủ. Nút "Cửa sổ nổi" trên điện thoại luôn hỏi Apple / Android trước (lựa chọn đã lưu thắng,
 UA chỉ chọn sẵn — D-383); máy Apple không có "Trực tiếp" (D-385).
 

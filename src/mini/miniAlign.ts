@@ -15,8 +15,16 @@
  * ngoài cùng cách mép cửa sổ ~0,155 bước — không sát viền. Chiều cao: cửa sổ nên chạy từ mép trên màn hình xuống tới mép
  * trên bảng nút, không che hàng nút chế độ (GAME_PANEL_TOP_H … GAME_MODE_TOP_H, D-414) — chỉ báo "Cao".
  *
+ * "Khớp nút game · dưới nút" (D-448, điện thoại Samsung — cửa sổ pop-up không thu thấp được tới mức nằm gọn trên bảng
+ * nút, nhưng kéo xuống quá mép dưới màn hình được): cửa sổ đặt NGAY DƯỚI hàng nút số, phần dưới ra ngoài màn hình; cùng
+ * 'fit' + `laneFit` + số căn chỉnh với "Khớp nút game", renderer `flipY` (ô đi lên, hit line + vòng ở mép trên). Trang
+ * không biết phần nào của nó còn trên màn: `belowVisibleOf` đoán phần thấy theo cỡ màn (đáy hàng nút số
+ * GAME_NOTE_BOTTOM_H → đáy màn), chỉnh tay bằng `edgeShift` — nút "Đáy ◂ ▸" ở hàng trên của bảng lúc dừng tăng / giảm
+ * KHOẢNG TRỐNG ĐÁY (= trang − phần thấy, `belowGapOf` / `stepBelowGap`); MiniView thu trang về đúng phần đó.
+ *
  * Nhớ theo máy ở localStorage (đọc / ghi bọc try — chế độ riêng tư, bộ nhớ đầy → chỉ nhớ trong phiên này):
- * bố cục (`Khớp nút game` | `Thu nhỏ` = trang mini cũ có bàn nút riêng) và số căn chỉnh. Không React.
+ * bố cục (`Khớp nút game` | `Khớp nút game · dưới nút` | `Thu nhỏ` = trang mini cũ có bàn nút riêng) và số căn
+ * chỉnh (dùng chung hai bố cục khớp nút). Không React.
  *
  * Nút − / + đi theo PX CSS của khung (D-400): 1 px mỗi chạm, giữ nút thì lặp và nhanh dần lên NUDGE_FAST_PX —
  * cửa sổ nổi thật chỉ rộng ~550–650 px nên bước theo phần bề ngang (0,001 ≈ 0,6 px) quá nhỏ để chạm.
@@ -33,9 +41,18 @@ import { isTouchDevice } from '../player/padPrefs';
 import type { ControlScheme } from '../ui/settings';
 import { MINI_SONG_STORAGE_KEY } from './miniControl';
 
-/** 'game' = khớp nút game (lane theo nút thật, không bàn nút riêng); 'compact' = thu nhỏ (bàn nút riêng). */
-export type MiniLayout = 'game' | 'compact';
-export const MINI_LAYOUTS: readonly MiniLayout[] = ['game', 'compact'];
+/**
+ * 'game' = khớp nút game (cửa sổ TRÊN bảng nút, lane theo nút thật, không bàn nút riêng); 'below' = khớp nút game ·
+ * dưới nút (cửa sổ DƯỚI hàng nút số, canvas lật — D-448); 'compact' = thu nhỏ (bàn nút riêng).
+ */
+export type MiniLayout = 'game' | 'below' | 'compact';
+/** Thứ tự nút chọn bố cục: [Khớp nút | Dưới nút | Thu nhỏ]. */
+export const MINI_LAYOUTS: readonly MiniLayout[] = ['game', 'below', 'compact'];
+
+/** Bố cục khớp nút thật của game ('fit' + `laneFit` + Căn chỉnh): "Khớp nút game" và "dưới nút". */
+export function isFitLayout(layout: MiniLayout): boolean {
+  return layout === 'game' || layout === 'below';
+}
 
 /**
  * Bố cục khi máy chưa chọn (D-402): kiểu Mobile → "Khớp nút game" (bố cục dành cho bản mobile của game);
@@ -70,6 +87,16 @@ export const GAME_NOTE_STEP_H = GAME_NOTE_STEP_W * GAME_REF_ASPECT;
 export const GAME_PANEL_TOP_H = 0.327;
 /** Đỉnh 4 nút chế độ (tâm 266 − Ø 75 / 2) / chiều cao màn: 228,5 / 633 ≈ 0,361 (D-414). */
 export const GAME_MODE_TOP_H = 0.361;
+/**
+ * Đáy hàng nút số (tâm 383,5 + Ø 86 / 2 = 426,5) / chiều cao màn của ảnh game 1371 × 633 ≈ 0,674 (D-448): mép trên
+ * cửa sổ "dưới nút" đặt ở đây (bảng nút bám đáy màn → phần thấy = (1 − số này) × refH trừ thanh cửa sổ).
+ */
+export const GAME_NOTE_BOTTOM_H = 426.5 / 633;
+/**
+ * Phần thấy tối thiểu của "dưới nút" (px CSS, D-448): cỡ thấp nhất bảng lúc dừng / Căn chỉnh đã dựng + kiểm (cửa sổ
+ * 80 px, D-401) — trang không bao giờ thu nhỏ hơn (khoảng trống đáy đã lớn nhất: nút ▸ của "Đáy ◂ ▸" tắt).
+ */
+export const BELOW_VISIBLE_MIN = 80;
 /**
  * Bề ngang hàng nút số (mép ngoài nút 1 → mép ngoài nút 1̇) theo bước cột: 7 bước + Ø nút ≈ 0,70 bề ngang màn — cũng là
  * hai vạch khung bảng nút của game. Cửa sổ cần rộng hơn: FIT_WINDOW_STEPS (8 bước — ô ngoài cùng không sát mép).
@@ -213,6 +240,11 @@ export interface MiniCalibration {
   modeShift: number;
   /** Giãn hàng nút chế độ quanh Ngẩng Tự Nhiên (1 = như số đo). */
   modeSpacing: number;
+  /**
+   * "Dưới nút" (D-448): dời đáy phần thấy của trang (px CSS, + = xuống = khoảng trống đáy nhỏ lại) so với số đoán
+   * `belowVisibleOf` — nút "Đáy ◂ ▸" ở hàng trên của bảng lúc dừng (không nằm trong Căn chỉnh). Bố cục khác không dùng.
+   */
+  edgeShift: number;
 }
 
 export type CalibrationField = keyof MiniCalibration;
@@ -223,6 +255,7 @@ export const CALIBRATION_FIELDS: readonly CalibrationField[] = [
   'stepScale',
   'modeShift',
   'modeSpacing',
+  'edgeShift',
 ];
 
 export interface CalibrationRange {
@@ -237,7 +270,8 @@ export interface CalibrationRange {
 /**
  * Tầm chỉnh. Nút 1 / 1̇ được ra ngoài khung một chút (cửa sổ không giãn được tới mép ngoài hàng nút — vài
  * máy chỉ có cỡ cố định); `last − first` ≥ MIN_CALIBRATION_SPAN. "Vạch · Giãn" 0,5…2 (cửa sổ nhỏ của vài hãng thu nhỏ
- * cả trang).
+ * cả trang). `edgeShift` ("Đáy ◂ ▸") −600…+400 px: khi trang không biết cỡ màn, số đoán là CẢ trang (cửa sổ pop-up để cao
+ * 250–400 px mà chỉ thấy ~90 px) — khoảng trống đáy phải lớn được gần hết trang.
  */
 export const CALIBRATION_RANGES: Readonly<Record<CalibrationField, CalibrationRange>> =
   Object.freeze({
@@ -247,6 +281,7 @@ export const CALIBRATION_RANGES: Readonly<Record<CalibrationField, CalibrationRa
     stepScale: { min: 0.5, max: 2, step: 0.0001, sliderStep: 0.002 },
     modeShift: { min: -1, max: 1, step: 0.001, sliderStep: 0.01 },
     modeSpacing: { min: 0.7, max: 1.3, step: 0.001, sliderStep: 0.01 },
+    edgeShift: { min: -600, max: 400, step: 1, sliderStep: 1 },
   });
 
 export const MIN_CALIBRATION_SPAN = 0.3;
@@ -270,6 +305,7 @@ export const DEFAULT_CALIBRATION: Readonly<MiniCalibration> = Object.freeze({
   stepScale: 1,
   modeShift: 0,
   modeSpacing: 1,
+  edgeShift: 0,
 });
 
 /** Nút chế độ làm tâm khi giãn hàng (Ngẩng Tự Nhiên — giữa nhóm ba nút quãng). */
@@ -306,6 +342,7 @@ export function sanitizeCalibration(v: unknown): MiniCalibration {
     stepScale: pick('stepScale'),
     modeShift: pick('modeShift'),
     modeSpacing: pick('modeSpacing'),
+    edgeShift: pick('edgeShift'),
   };
   if (out.last - out.first < MIN_CALIBRATION_SPAN - 1e-9) {
     out.first = DEFAULT_CALIBRATION.first;
@@ -341,7 +378,7 @@ export function stepPxOf(c: MiniCalibration, widthPx: number, scale: TrueScale |
 /**
  * Đổi của `field` ứng với 1 px CSS trong khung rộng `widthPx`: Nút 1 / 1̇ = 1 / bề ngang; dời ngang = 1 px;
  * "Vạch · Giãn" = nút ngoài cùng (cách tâm hàng 3,5 bước) dời 1 px; dời hàng chế độ = 1 / bước cột; giãn = vòng xa nhất
- * (Nửa Cung) dời 1 px. Khung chưa đo được → FALLBACK_WIDTH.
+ * (Nửa Cung) dời 1 px; `edgeShift` = 1 px. Khung chưa đo được → FALLBACK_WIDTH.
  */
 export function calibrationPerPx(
   c: MiniCalibration,
@@ -351,7 +388,7 @@ export function calibrationPerPx(
 ): number {
   const w = Number.isFinite(widthPx) && widthPx > 0 ? widthPx : FALLBACK_WIDTH;
   if (field === 'first' || field === 'last') return 1 / w;
-  if (field === 'shift') return 1;
+  if (field === 'shift' || field === 'edgeShift') return 1;
   if (field === 'stepScale') {
     const base = scale ? scale.step : w / FIT_WINDOW_STEPS;
     return 1 / (ROW_REACH * base);
@@ -475,6 +512,120 @@ export function fitStatusOf(
   };
 }
 
+/**
+ * Phần thấy (px CSS) của bố cục "dưới nút" (D-448): mép trên cửa sổ ngay dưới hàng nút số, bảng nút bám đáy màn →
+ * thấy được (1 − GAME_NOTE_BOTTOM_H) × refH − thanh cửa sổ nổi (FLOAT_BAR_GUESS — trang không đo được) − phần trình
+ * duyệt ở đỉnh trang (`chromeH`, giả định thanh địa chỉ ở trên như D-414), + `edgeShift` ("Đáy ◂ ▸"); kẹp
+ * [BELOW_VISIBLE_MIN, pageH]. Không biết cỡ màn (`scale` null — máy tính, màn không đọc được) → cả trang + edgeShift.
+ * `pageH` ≤ 0 / không hữu hạn → 0 (chưa đo được — MiniView giữ trang nguyên cỡ).
+ */
+export function belowVisibleOf(
+  scale: TrueScale | null,
+  chromeH: number,
+  pageH: number,
+  c: MiniCalibration,
+): number {
+  const page = Number.isFinite(pageH) && pageH > 0 ? pageH : 0;
+  if (page === 0) return 0;
+  const auto = belowAutoOf(scale, chromeH, page);
+  const shift = Number.isFinite(c.edgeShift) ? c.edgeShift : 0;
+  return Math.round(Math.min(page, Math.max(BELOW_VISIBLE_MIN, auto + shift)));
+}
+
+/** Số đoán phần thấy của "dưới nút" khi `edgeShift` = 0 (chưa kẹp) — `page` > 0 đã kiểm. */
+function belowAutoOf(scale: TrueScale | null, chromeH: number, page: number): number {
+  const chrome = Number.isFinite(chromeH) && chromeH > 0 ? chromeH : 0;
+  return scale ? (1 - GAME_NOTE_BOTTOM_H) * scale.refH - FLOAT_BAR_GUESS - chrome : page;
+}
+
+/** Tầm của một số căn chỉnh (px CSS). */
+export interface EdgeShiftRange {
+  min: number;
+  max: number;
+}
+
+/**
+ * Tầm `edgeShift` còn có tác dụng (review D-448): ngoài tầm này `belowVisibleOf` đã kẹp ở BELOW_VISIBLE_MIN / cả
+ * trang, nên nút ◂ / ▸ chỉ đổi con số mà trang không đổi. Tính cả làm tròn của `belowVisibleOf`: đầu
+ * dưới = số LỚN nhất còn cho BELOW_VISIBLE_MIN (đoán + số < BELOW_VISIBLE_MIN + 0,5), đầu trên = số NHỎ nhất đã cho cả
+ * trang — mỗi bước trong tầm đổi phần thấy 1 px; giao tầm cố định (CALIBRATION_RANGES). Trang thấp hơn
+ * BELOW_VISIBLE_MIN (không số nào có tác dụng) → một điểm (cả trang). `pageH` chưa đo được → null (chỉ tầm cố định).
+ */
+export function belowEdgeRange(
+  scale: TrueScale | null,
+  chromeH: number,
+  pageH: number,
+): EdgeShiftRange | null {
+  const page = Number.isFinite(pageH) && pageH > 0 ? pageH : 0;
+  if (page === 0) return null;
+  const auto = belowAutoOf(scale, chromeH, page);
+  const fixed = CALIBRATION_RANGES.edgeShift;
+  // `+ 0`: không để −0 (Math.ceil(−0,5)) lọt vào số lưu.
+  const clamp = (v: number): number => Math.min(fixed.max, Math.max(fixed.min, v)) + 0;
+  const max = clamp(Math.ceil(Math.min(page, Math.round(page) - 0.5) - auto));
+  const min = Math.min(max, clamp(Math.ceil(BELOW_VISIBLE_MIN + 0.5 - auto) - 1));
+  return { min, max };
+}
+
+// ---------------------------------------------------------------------------
+// Khoảng trống đáy của "dưới nút" — nút "Đáy ◂ ▸" ở hàng trên của bảng lúc dừng (góp ý 2026-10-22)
+// ---------------------------------------------------------------------------
+
+/** Một chạm ◂ / ▸ đổi khoảng trống đáy chừng này px CSS. */
+export const BELOW_GAP_STEP_PX = 8;
+/** Giữ nút ◂ / ▸ một lúc: mỗi lần lặp đổi chừng này px (như NUDGE_FAST_PX của Căn chỉnh). */
+export const BELOW_GAP_FAST_PX = 24;
+
+/**
+ * Khoảng trống đáy (px CSS) = cao trang − phần thấy (`belowVisibleOf`): phần cửa sổ ra ngoài mép dưới màn hình, trang để
+ * trống. Chưa đo được (`pageH` / `visibleH` ≤ 0 / không hữu hạn) → 0.
+ */
+export function belowGapOf(pageH: number, visibleH: number): number {
+  if (!(Number.isFinite(pageH) && pageH > 0 && Number.isFinite(visibleH) && visibleH > 0)) return 0;
+  return Math.max(0, Math.round(pageH - visibleH));
+}
+
+/** Tầm `edgeShift` của ◂ / ▸: tầm còn tác dụng (`belowEdgeRange`) hoặc tầm cố định khi chưa đo được trang. */
+function gapRangeOf(range: EdgeShiftRange | null): EdgeShiftRange {
+  const fixed = CALIBRATION_RANGES.edgeShift;
+  return range ?? { min: fixed.min, max: fixed.max };
+}
+
+/**
+ * Còn đổi được khoảng trống đáy theo `dir` không: +1 = ▸ lớn hơn (`edgeShift` giảm — tới khi phần thấy còn
+ * BELOW_VISIBLE_MIN), −1 = ◂ nhỏ hơn (`edgeShift` tăng — tới khi phần thấy = cả trang). Số lưu ngoài tầm tính như đã kẹp
+ * (như `stepBelowGap`). Hết tầm → nút đó tắt.
+ */
+export function canStepBelowGap(
+  c: MiniCalibration,
+  range: EdgeShiftRange | null,
+  dir: -1 | 1,
+): boolean {
+  const r = gapRangeOf(range);
+  const v = Math.min(r.max, Math.max(r.min, c.edgeShift));
+  return dir > 0 ? v > r.min : v < r.max;
+}
+
+/**
+ * Một chạm ◂ / ▸ của "Đáy ◂ ▸": khoảng trống đáy lớn hơn (`dir` +1) / nhỏ hơn (−1) `px` px — `edgeShift` −/+ `px`, kẹp
+ * vào tầm còn tác dụng (`belowEdgeRange`; null → tầm cố định) nên mỗi chạm trong tầm đều đổi phần thấy; số lưu ngoài
+ * tầm được đưa về mép tầm trước (lần bấm đầu đã đổi trang). Hết tầm → trả đúng object cũ.
+ */
+export function stepBelowGap(
+  c: MiniCalibration,
+  dir: -1 | 1,
+  range: EdgeShiftRange | null,
+  px: number = BELOW_GAP_STEP_PX,
+): MiniCalibration {
+  if (!canStepBelowGap(c, range, dir)) return c;
+  const r = gapRangeOf(range);
+  const size = Math.max(CALIBRATION_RANGES.edgeShift.step, Math.abs(px));
+  const base = Math.min(r.max, Math.max(r.min, c.edgeShift));
+  const next = setCalibrationField(c, 'edgeShift', base - dir * size);
+  const v = Math.min(r.max, Math.max(r.min, next.edgeShift));
+  return v === c.edgeShift ? c : { ...next, edgeShift: v };
+}
+
 // ---------------------------------------------------------------------------
 // Lưu theo máy
 // ---------------------------------------------------------------------------
@@ -483,8 +634,9 @@ export function fitStatusOf(
 let layoutFallback: MiniLayout | undefined;
 let calibrationFallback: MiniCalibration | undefined;
 
+/** Giá trị lưu hợp lệ (bản cũ đọc 'below' → không hợp lệ → mặc định — không lỗi). */
 function isMiniLayout(v: unknown): v is MiniLayout {
-  return v === 'game' || v === 'compact';
+  return v === 'game' || v === 'below' || v === 'compact';
 }
 
 /** Bố cục đã chọn trên máy này; chưa chọn → `defaultMiniLayout(scheme)`. */

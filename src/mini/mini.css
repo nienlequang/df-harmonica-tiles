@@ -3,9 +3,15 @@
  * ~300×300: làn chiếm phần còn lại, bàn nút sát đáy, chữ ≥ 9 px đậm. Token màu của app.css; accent xanh
  * neon chỉ cho khung UI (nút ▶, focus) — không bao giờ tô ô / nút phím; hổ phách cho huy hiệu "Thử
  * nghiệm" + ghi chú. Không animation lặp; không cuộn / zoom bằng chạm (touch-action).
+ *
+ * Luật theo CHIỀU CAO cửa sổ là `@container mini (…)` (không phải `@media`, D-448): bố cục "dưới nút" thu `.mini` về
+ * phần THẤY của cửa sổ (cửa sổ pop-up cao ~250–400 px, chỉ ~90 px trên màn) — bảng lúc dừng / Căn chỉnh phải xếp
+ * theo phần thấy. Hai bố cục kia `.mini` = cả cửa sổ nên như `@media` cũ (Chrome / WebView 105+). Luật theo bề ngang
+ * giữ `@media` (`.mini` luôn rộng bằng cửa sổ).
  */
 
 .mini {
+  container: mini / size;
   position: fixed;
   inset: 0;
   display: flex;
@@ -470,7 +476,22 @@
   line-height: 1.45;
 }
 
+/* Hộp thoại Android: 3 nhóm máy (LauncherIntro). */
+.mini-launch-devices {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.45;
+}
+
+.mini-launch-models {
+  color: var(--text-muted);
+}
+
 .mini-help-vendors,
+.mini-help-devices,
 .mini-help-tips {
   display: flex;
   flex-direction: column;
@@ -479,7 +500,8 @@
   padding: 0;
 }
 
-.mini-help-vendors {
+.mini-help-vendors,
+.mini-help-devices {
   list-style: none;
 }
 
@@ -487,12 +509,21 @@
   padding-left: 18px;
 }
 
-.mini-help-vendor {
+.mini-help-vendor,
+.mini-help-device {
   padding-left: 8px;
   border-left: 2px solid var(--border-strong);
 }
 
+/* "Bố cục nên dùng theo máy" (D-448): như danh sách theo hãng; khối riêng giữ khoảng cách với đoạn kế. */
+.mini-help-device-part {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .mini-help-vendor-title,
+.mini-help-device-title,
 .mini-help-tips-title,
 .mini-video-mode-title {
   margin: 0 0 2px;
@@ -582,6 +613,209 @@
   top: 20px;
 }
 
+/* ── Bố cục "Khớp nút game · dưới nút" (data-layout='below', D-448) ─────────────────── */
+/* Cửa sổ pop-up (điện thoại Samsung) đặt NGAY DƯỚI hàng nút số, phần dưới ra ngoài màn hình: trang chỉ dùng phần
+   thấy (`--mini-visible-h` trên :root, MiniView `belowVisibleOf`), canvas lật dọc (renderer `flipY`) — hit line +
+   vòng ở mép trên, ô đi lên. Nhãn làn / banner PC sang phía ô đi vào (đáy). */
+
+.mini[data-layout='below'] {
+  bottom: auto;
+  height: var(--mini-visible-h, 100%);
+}
+
+.mini[data-layout='below'] .mini-fit-labels {
+  inset: auto 0 0;
+}
+
+.mini[data-layout='below'] .mini-fit-label {
+  top: auto;
+  bottom: 3px;
+}
+
+.mini[data-layout='below'] .mini-banner {
+  top: auto;
+  bottom: 20px;
+}
+
+/* Bảng Căn chỉnh ngay dưới hàng vòng (MiniView `--mini-align-top`, luôn trọn trong phần thấy). */
+.mini[data-layout='below'] .mini-align {
+  top: var(--mini-align-top, 0px);
+  border-top: 1px solid var(--border-strong);
+  border-bottom: 0;
+}
+
+/* Đếm ngược theo phần thấy (cq = khung .mini; trình duyệt cũ giữ cỡ theo cửa sổ). */
+.mini[data-layout='below'] .mini-countdown-num {
+  font-size: clamp(40px, 32cqmin, 160px);
+}
+
+.mini[data-layout='below'] .mini-countdown-hint {
+  font-size: clamp(12px, 5cqmin, 22px);
+}
+
+/* Lúc dừng (cả Căn chỉnh): vạch đứt ở đáy phần thấy = chỗ nội dung trang hết — "Đáy ◂ ▸" ở hàng trên đưa nó tới sát
+   mép dưới màn hình. Accent chỉ cho vạch dẫn (khung UI). */
+.mini-edge-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 10px, transparent 10px 16px);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* "Đáy ◂ 120 px ▸" — khoảng trống đáy, ở hàng trên của panel lúc dừng (góp ý 2026-10-22). Gọn để hàng trên vẫn một
+   dòng ở cửa sổ ~300 px (tên bài co "…" trước); nút 30 px chạm được, giữ để lặp (không cuộn / không menu khi giữ). */
+.mini-gap {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.mini-gap-label {
+  padding: 0 3px 0 0;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking);
+  text-shadow: 0 0 3px var(--bg);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mini-gap-btn {
+  flex: none;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  background: var(--glass);
+  font-size: 14px;
+  line-height: 1;
+  touch-action: none;
+}
+
+/* Hết tầm: tắt bằng aria-disabled (nút đang giữ / focus không mất sự kiện) — trông như :disabled của app.css. */
+.mini-gap-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mini-gap-btn[aria-disabled='true']:hover {
+  background: var(--glass);
+  border-color: var(--control-border);
+}
+
+.mini-gap-value {
+  min-width: 3.9em;
+  padding: 3px 2px;
+  background: var(--glass);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* "Dưới nút", MỌI bề ngang: hàng trên [◂ huy hiệu Đáy ◂ 120 px ▸ tên… chỉ báo ⓘ] — tên bài co "…" trước chứ không đẩy
+   nút xuống dòng (`flex-basis: 0`); hàng chật hơn nội dung (kiểu PC ở cửa sổ thấp: nút "Đổi sang Mobile" cùng hàng; cửa
+   sổ ≥ 560 px còn huy hiệu) → chỉ báo / ⓘ xuống dòng TRONG hàng đó, không tràn đè nút "Đổi sang Mobile" hay ra ngoài
+   mép cửa sổ. "Đáy ◂ ▸" luôn ở dòng đầu, ngay sau ◂ + huy hiệu. Số px của chỉ báo (≥ 221 px cao) không hiện — có ở
+   tooltip; thêm nó vào hàng sẽ đẩy hàng xuống dòng đúng lúc bấm ◂ qua ngưỡng. */
+.mini-panel[data-layout='below'] .mini-top {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+.mini-panel[data-layout='below'] .mini-title {
+  flex-basis: 0;
+}
+
+.mini-panel[data-layout='below'] .mini-fit-numbers {
+  display: none;
+}
+
+/* Cửa sổ hẹp (< 560 px — cửa sổ đúng chỗ trên điện thoại Samsung rộng ≥ ~570 px): bỏ huy hiệu "Thử nghiệm" (≈ 80–90 px;
+   hộp thoại mở trang mini đã ghi "thử nghiệm") để hàng trên giữ một dòng ở cửa sổ ~300 px. */
+@media (max-width: 559px) {
+  .mini-panel[data-layout='below'] .mini-badge {
+    display: none;
+  }
+}
+
+/* Phần cửa sổ dưới phần thấy (chỉ thấy khi cửa sổ chưa kéo xuống quá mép màn): nền trang + một dòng nhắc. */
+.mini-below-rest {
+  position: fixed;
+  top: var(--mini-visible-h, 100%);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10px 12px;
+  border-top: 1px dashed var(--border-strong);
+  background: var(--bg);
+  color: var(--text-muted);
+  font-family: var(--font-hud);
+}
+
+.mini-below-rest-text {
+  max-width: 520px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Hộp thoại (portal vào body) chỉ trong phần thấy; phần thấy thấp (≤ 240 px — MiniView `data-mini-short`) → gọn như
+   `@media (max-height: 240px)` của app.css (luật đó xét cả cửa sổ, ở đây cửa sổ cao hơn hẳn phần thấy). */
+:root[data-mini-layout='below'] .modal-backdrop {
+  bottom: auto;
+  height: var(--mini-visible-h, 100%);
+}
+
+:root[data-mini-layout='below'] .modal {
+  max-height: calc(var(--mini-visible-h, 100vh) - 32px);
+}
+
+:root[data-mini-short] .modal-backdrop {
+  padding: 0;
+}
+
+:root[data-mini-short] .modal {
+  width: 100%;
+  height: 100%;
+  max-height: var(--mini-visible-h, 100vh);
+}
+
+:root[data-mini-short] .modal-header {
+  padding: 2px 4px 2px 10px;
+}
+
+:root[data-mini-short] .modal-header h2 {
+  font-size: 14px;
+}
+
+:root[data-mini-short] .modal-header > .btn-icon {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+}
+
+:root[data-mini-short] .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 8px 12px;
+}
+
+:root[data-mini-short] .modal-footer {
+  padding: 4px 12px;
+}
+
 /* Hàng chọn bố cục + "Căn chỉnh" trong panel. */
 .mini-layout-row {
   display: flex;
@@ -617,6 +851,19 @@
   margin-left: -1px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+/* Cửa sổ hẹp (< 560 px) ở MỌI chiều cao: ba nút bố cục dùng chữ ngắn — chữ dài cả hàng ≈ 356 px vi / ≈ 503 px en,
+   tràn ra ngoài mép ở cửa sổ "Thu nhỏ" ~300 × 300 / 360 × 360 (review D-448). Chữ ngắn ≈ 215 px vi; `aria-label`
+   vẫn là tên đầy đủ. */
+@media (max-width: 559px) {
+  .mini-seg .mini-long {
+    display: none;
+  }
+
+  .mini-seg .mini-short {
+    display: inline;
+  }
 }
 
 .mini-align-btn {
@@ -950,7 +1197,7 @@
 
 /* Cửa sổ thấp (đặt sát trên bảng nút của màn ngang điện thoại): một hàng, không tiêu đề / lời nhắc / tên
    (tên đầy đủ là nhãn của thanh trượt và nút − / +; ⓘ có hướng dẫn). */
-@media (max-height: 220px) {
+@container mini (max-height: 220px) {
   .mini-align {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: 'pick ctl actions';
@@ -1014,7 +1261,7 @@
 }
 
 /* Thấp và không đủ rộng cho thanh trượt: chỉ − giá trị + (giữ để lặp). */
-@media (max-height: 220px) and (max-width: 619px) {
+@container mini (max-height: 220px) and (max-width: 619px) {
   .mini-align-range {
     display: none;
   }
@@ -1025,7 +1272,7 @@
 }
 
 /* Thấp và hẹp (< 470 px): hai hàng — chọn + nút, rồi − giá trị +; < 380 px: ba hàng. */
-@media (max-height: 220px) and (max-width: 469px) {
+@container mini (max-height: 220px) and (max-width: 469px) {
   .mini-align {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
@@ -1034,7 +1281,7 @@
   }
 }
 
-@media (max-height: 220px) and (max-width: 379px) {
+@container mini (max-height: 220px) and (max-width: 379px) {
   .mini-align {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
@@ -1082,7 +1329,7 @@
 }
 
 /* Cửa sổ thấp: lưới — hàng tiêu đề (+ nút đổi kiểu), ▶ giữa, bố cục + video ở đáy; hẹp thì mỗi thứ một hàng. */
-@media (max-height: 220px) {
+@container mini (max-height: 220px) {
   /* Hàng cao theo nội dung, dư chỗ thì giãn đều (không hàng nào co lại cho control chồng lên nhau). */
   .mini-panel {
     display: grid;
@@ -1145,7 +1392,7 @@
   }
 }
 
-@media (max-height: 220px) and (max-width: 479px) {
+@container mini (max-height: 220px) and (max-width: 479px) {
   .mini-panel {
     grid-template-rows: auto auto auto auto;
     grid-template-areas:
@@ -1181,7 +1428,7 @@
 }
 
 /* Dưới ~180 px: bỏ dòng "Tạm dừng" / "Hết bài" (chữ trên nút ▶ đã nói: Chạy tiếp / Chơi lại). */
-@media (max-height: 180px) {
+@container mini (max-height: 180px) {
   .mini-state {
     display: none;
   }
@@ -1189,7 +1436,7 @@
 
 /* Cửa sổ rất thấp (~80–130 px — chiều cao thật khi đặt ngay trên bảng nút kèn): 2 hàng [◂ tên … ⓘ] và
    [▶ | bố cục | Căn chỉnh | Video nổi]; chữ ngắn, nút 30 px. */
-@media (max-height: 130px) {
+@container mini (max-height: 130px) {
   /* Flex xuống dòng (không lưới: cột "auto" của lưới bị nút đổi kiểu / tên bài nới rộng làm hàng dưới tràn). Hàng
      1 = .mini-top (co, tên bài cắt "…") + nút đổi kiểu; `::before` rộng 100 % ép xuống dòng; hàng 2 = ▶, bố cục,
      video (đẩy sang phải). Thiếu chỗ thì xuống thêm dòng — không bao giờ đè nhau. */
@@ -1278,7 +1525,7 @@
 }
 
 /* Rất thấp mà hẹp (không phải cửa sổ đặt trên bảng nút — bảng nút rộng ≥ ~450 px): xuống dòng tự nhiên từ đầu. */
-@media (max-height: 130px) and (max-width: 479px) {
+@container mini (max-height: 130px) and (max-width: 479px) {
   .mini-panel {
     align-content: flex-start;
     row-gap: 4px;
@@ -1345,7 +1592,7 @@
 }
 
 /* Chỉ ở panel ▶ (bảng Căn chỉnh vốn đã chật — số có ở tooltip). */
-@media (min-height: 221px) {
+@container mini (min-height: 221px) {
   .mini-panel .mini-fit-numbers {
     display: inline;
   }
@@ -1413,7 +1660,7 @@
 
 /* Cửa sổ thấp: hàng chỉ báo gọn 13 px (chữ 11 px, không viền) để bảng không xuống tới hàng vòng (~45–70 px từ
    đỉnh). */
-@media (max-height: 220px) {
+@container mini (max-height: 220px) {
   .mini-align[data-status] {
     grid-template-areas:
       'pick ctl actions'
@@ -1437,7 +1684,7 @@
 
 /* Rất thấp (~80–95 px): chữ vẫn 11 px (D-416), hàng 11 px, nút vẫn 30 px (chạm được), sát đỉnh — bảng cao ~43 px,
    vẫn trên đỉnh hàng vòng (Ø trần 0,42 × cao). */
-@media (max-height: 95px) {
+@container mini (max-height: 95px) {
   .mini-align[data-status] {
     row-gap: 0;
     padding-top: 0;
@@ -1454,7 +1701,7 @@
   }
 }
 
-@media (max-height: 220px) and (max-width: 469px) {
+@container mini (max-height: 220px) and (max-width: 469px) {
   .mini-align[data-status] {
     grid-template-areas:
       'pick actions'
@@ -1463,7 +1710,7 @@
   }
 }
 
-@media (max-height: 220px) and (max-width: 379px) {
+@container mini (max-height: 220px) and (max-width: 379px) {
   .mini-align[data-status] {
     grid-template-areas:
       'pick'
@@ -1487,6 +1734,11 @@
   }
 
   .mini-guides[data-focus='lines'] .mini-guide {
+    background: Highlight;
+  }
+
+  .mini-edge-mark {
+    forced-color-adjust: none;
     background: Highlight;
   }
 }

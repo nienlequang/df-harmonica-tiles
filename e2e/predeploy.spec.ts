@@ -514,7 +514,7 @@ test.describe('B. trang mini "Khớp nút game" 960×300', () => {
     // Kiểu PC chưa chọn bố cục → "Thu nhỏ" có game bar (D-402) + nút "Đổi sang Mobile"; chọn "Khớp nút game".
     await expect(mini).toHaveAttribute('data-layout', 'compact');
     await expect(page.getByRole('button', { name: 'Đổi sang Mobile' })).toBeVisible();
-    await page.getByRole('button', { name: 'Khớp nút game' }).tap();
+    await page.getByRole('button', { name: 'Khớp nút game', exact: true }).tap();
     await expect(mini).toHaveAttribute('data-layout', 'game');
     await page.getByRole('button', { name: 'Căn chỉnh' }).tap();
     await expect(

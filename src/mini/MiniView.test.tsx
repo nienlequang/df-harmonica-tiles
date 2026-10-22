@@ -327,7 +327,14 @@ describe('MiniView', () => {
       expect(o.lanePadding).toBe('fit');
       expect(o.laneFit).toBeNull();
       expect(o.hitLinePos).toBe(MINI_RENDERER_OPTIONS.hitLinePos);
+      // "Dưới nút" (D-448): cùng 'fit', canvas lật; hai bố cục kia luôn gửi rõ flipY false (option renderer gộp).
+      const b = miniRendererOptions(scheme, 'below', null);
+      expect(b.lanePadding).toBe('fit');
+      expect(b.flipY).toBe(true);
+      expect(o.flipY).toBe(false);
+      expect(miniRendererOptions(scheme, 'compact').flipY).toBe(false);
     }
+    expect(MINI_RENDERER_OPTIONS.flipY).toBe(false);
   });
 
   it('formatBytes', () => {

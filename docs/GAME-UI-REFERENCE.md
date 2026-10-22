@@ -250,6 +250,8 @@ chỉnh trừ khi cần").
 | Bề ngang cần = 8 làn (v1.0.1)                  | `8 s` (`FIT_WINDOW_STEPS`; ≈ 0,73 W ảnh)          | 1000,6 px      | ≈ 651 px      | ≈ 569 px      |
 | Mép trên bảng nút (vạch mảnh)                  | `0,327 H` khi `R = H` (`GAME_PANEL_TOP_H`)        | 207 px         | ≈ 135 px      | ≈ 118 px      |
 | Đỉnh hàng nút chế độ (tâm 0,420 R − Ø 0,059 R) | `0,361 H` khi `R = H` (`GAME_MODE_TOP_H`)         | 228,5 px       | ≈ 149 px      | ≈ 130 px      |
+| Đáy hàng nút số (tâm 383,5 + Ø 86 / 2, D-448)  | `0,674 H` khi `R = H` (`GAME_NOTE_BOTTOM_H`)      | 426,5 px       | ≈ 278 px      | ≈ 243 px      |
+| Phần thấy "dưới nút" (trừ thanh cửa sổ ~24 px) | `(1 − 0,674) R − 24` (`belowVisibleOf`)           | 182,5 px       | ≈ 110 px      | ≈ 93 px       |
 | "Cao: vừa" (trang + thanh trình duyệt)         | xem dưới                                          | 165 … 211 px   | 95 … 129 px   | 78 … 110 px   |
 
 - **Dùng cỡ màn khi (D-412):** máy **Android cảm ứng** (UA hoặc `userAgentData.platform` là Android, kèm điểm chạm /

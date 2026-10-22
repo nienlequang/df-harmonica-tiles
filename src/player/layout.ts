@@ -26,7 +26,8 @@ export type Orientation = 'vertical' | 'horizontal';
  * nút 1 và nút 1̇, có thể tràn mép khung), không gutter / lề nhãn / bàn nút, hit line sát mép dưới
  * (hitLinePos bị bỏ qua), vòng "CHẠM" rơi trong cột của 4 nút chế độ thật và đáp sát mép dưới
  * (`fitGeometry`, `cueTargets`); `laneFit.stepPx` = đúng tỉ lệ thật (bước cột theo px của màn, hàng nút căn
- * giữa khung). Chỉ áp cho hướng dọc (ngang → như 'none').
+ * giữa khung). Chỉ áp cho hướng dọc (ngang → như 'none'). Trang mini "Khớp nút game · dưới nút" (D-448, cửa sổ
+ * DƯỚI hàng nút số) dùng 'fit' + renderer `flipY`: hình học ở đây không đổi, renderer lật dọc cả canvas.
  */
 export type LanePadding = 'normal' | 'none' | 'pad' | 'fit';
 
@@ -602,7 +603,8 @@ export const CUE_TARGET_GAP = 1;
  * Mobile đều dùng 'pad'): đặt như hàng nút chế độ của game so với 8 lane — tâm ở ranh giới cột 3|4 … 6|7
  * (PAD_MODE_COLUMNS), Ø như bàn nút cùng bề rộng cột — tâm ngay sau hit line (phía đã qua, `targets`).
  * Khớp nút game thật ('fit', trang mini Android): tâm ở cột của 4 nút chế độ thật (`fitGeometry`), vòng
- * đáp SÁT TRÊN hit line ở mép dưới (nút thật nằm ngay dưới cửa sổ) — renderer vẽ 4 vòng mờ làm đích.
+ * đáp SÁT TRÊN hit line ở mép dưới (nút thật nằm ngay dưới cửa sổ) — renderer vẽ 4 vòng mờ làm đích. Renderer
+ * `flipY` ("dưới nút", D-448) lật cả khung: cùng số này, trên màn vòng đi lên và đáp SÁT DƯỚI hit line ở mép trên.
  */
 export function cueTargets(L: Layout, padButtons = true): CueTargets {
   const p = L.pad;

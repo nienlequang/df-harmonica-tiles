@@ -549,10 +549,9 @@ for (const [w, h] of [
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         w,
       );
-      await expect(page.getByRole('button', { name: 'Khớp nút game' })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
+      await expect(
+        page.getByRole('button', { name: 'Khớp nút game', exact: true }),
+      ).toHaveAttribute('aria-pressed', 'true');
       // 4 vòng đích mờ của renderer sát trên mép dưới, ở cột 4 nút chế độ thật: nét có màu ở đỉnh vòng.
       const ring = await page.locator('canvas.mini-canvas').evaluate((el, xs) => {
         const c = el as HTMLCanvasElement;
@@ -872,7 +871,7 @@ test.describe('cửa sổ thật 546×90, kiểu PC (mặc định của Cài đ
     await expect(toMobile).toBeVisible();
     expect(await controlIssues(page)).toEqual([]);
     // Khớp nút game ở kiểu PC: vẫn có nút đổi kiểu, panel vẫn không chồng.
-    await page.getByRole('button', { name: 'Khớp nút game' }).tap();
+    await page.getByRole('button', { name: 'Khớp nút game', exact: true }).tap();
     await expect(mini).toHaveAttribute('data-layout', 'game');
     expect(await controlIssues(page)).toEqual([]);
     // Bỏ lựa chọn đã lưu → đổi sang Mobile thì bố cục theo kiểu mới (khớp nút game).
@@ -888,14 +887,19 @@ test.describe('cửa sổ thật 546×90, kiểu PC (mặc định của Cài đ
   });
 });
 
-// Cửa sổ thấp mà hẹp (góc màn hình, cả hai bố cục): các hàng của panel không chồng lên nhau.
-for (const [w, h] of [
-  [300, 150],
-  [300, 200],
-  [360, 200],
-  [480, 100],
+// Cửa sổ thấp mà hẹp (góc màn hình, cả hai bố cục): các hàng của panel không chồng lên nhau. Cửa sổ hẹp mà cao
+// (300 × 300 / 360 × 360 — "Thu nhỏ" của điện thoại hãng Trung Quốc, D-448), cả en (chữ dài nhất): ba nút bố cục
+// không ra ngoài mép.
+for (const [w, h, lang] of [
+  [300, 150, 'vi'],
+  [300, 200, 'vi'],
+  [360, 200, 'vi'],
+  [480, 100, 'vi'],
+  [300, 300, 'vi'],
+  [300, 300, 'en'],
+  [360, 360, 'en'],
 ] as const) {
-  test.describe(`panel ▶ ${w}×${h}`, () => {
+  test.describe(`panel ▶ ${w}×${h} ${lang}`, () => {
     test.use({ viewport: { width: w, height: h } });
 
     for (const layout of ['game', 'compact'] as const) {
@@ -903,13 +907,13 @@ for (const [w, h] of [
         page,
       }) => {
         const errors = collectErrors(page);
-        await fitScheme(page, 'mobile', 'vi', layout);
+        await fitScheme(page, 'mobile', lang, layout);
         await page.goto(`/#/mini/${SEED}?delay=0`);
         const mini = page.locator('.mini');
         await expect(mini).toHaveAttribute('data-layout', layout);
         await expect(mini).toHaveAttribute('data-phase', 'ready');
         expect(await controlIssues(page)).toEqual([]);
-        await page.getByRole('button', { name: 'Bắt đầu' }).tap();
+        await page.getByRole('button', { name: lang === 'vi' ? 'Bắt đầu' : 'Start' }).tap();
         await expect(mini).toHaveAttribute('data-phase', 'playing');
         await page.waitForTimeout(300);
         await page.locator('.mini-tap').tap();

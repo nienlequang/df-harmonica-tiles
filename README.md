@@ -295,8 +295,11 @@ tiêu đề (giới hạn của trình duyệt).
   theo Cài đặt → **Phát bài** (đếm ngược ít nhất 3 giây). Chuyển trình duyệt thành **cửa sổ nổi / pop-up** của
   Android (cách theo hãng: nút ⓘ **Hướng dẫn mở cửa sổ nổi**). Kiểu **Mobile** mặc định là **Khớp nút game**: đặt cửa
   sổ **ngay trên bảng nút kèn** (cửa sổ nổi che mất phần bên dưới), 8 làn rơi thẳng 8 nút số, vòng `CHẠM` đáp ở mép
-  dưới ngay trên nút chế độ phải chạm — cách căn ở dưới. **Thu nhỏ** = trang gọn có bàn nút riêng (~300 × 300, đặt ở
-  góc màn hình); app nhớ lựa chọn. Trang mini còn ở kiểu **PC** thì bấm **Đổi sang Mobile**. Chạm cửa sổ mini = tạm dừng. Lúc đang dừng, nút **◂** ở góc trên trái đưa bạn về màn chơi.
+  dưới ngay trên nút chế độ phải chạm — cách căn ở dưới. Điện thoại Samsung: chọn **Khớp nút game · dưới nút** — kéo
+  cửa sổ pop-up xuống quá mép dưới màn hình cho mép trên nằm ngay dưới hàng nút số (ô đi lên, vòng `CHẠM` ở mép trên
+  cửa sổ). **Thu nhỏ** = trang gọn có bàn nút riêng (~300 × 300, đặt ở giữa hoặc sát một bên màn hình) — dùng cho
+  điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (cửa sổ nổi không kéo giãn được
+  cho thẳng hàng nút số); app nhớ lựa chọn. Nút ⓘ có mục **Bố cục nên dùng theo máy**. Trang mini còn ở kiểu **PC** thì bấm **Đổi sang Mobile**. Chạm cửa sổ mini = tạm dừng. Lúc đang dừng, nút **◂** ở góc trên trái đưa bạn về màn chơi.
 - **Cửa sổ video nổi (thử nghiệm)** (trong trang mini): ô rơi thành video Picture-in-Picture luôn nằm trên mọi app.
   **Trực tiếp** mở nhanh nhưng có thể đứng hình khi trình duyệt xuống nền; **Dựng sẵn** (chờ dựng tới 100 %) chạy cả
   khi trình duyệt xuống nền.
@@ -317,6 +320,13 @@ khoảng cách nút thật — thường bạn chỉ cần kéo cửa sổ:
    Giãn** (4 vòng) — thứ đang chọn sáng lên — rồi chạm **−** / **+** (giữ thì chạy nhanh). Chỉ báo ghi **Lệch tâm —
    kéo cửa sổ sang …** thì kéo cửa sổ rồi đặt **Vạch · Dời** về 0. Lệch quá thì **Đặt lại mặc định**.
 4. **Xong** → **Bắt đầu** → chạm vào game.
+
+**Điện thoại Samsung** (cửa sổ pop-up không thu thấp được tới mức nằm gọn trên bảng nút): chọn **Khớp nút game · dưới
+nút**, kéo cửa sổ xuống quá mép dưới màn hình cho **mép trên nằm ngay dưới hàng nút số** (phần dưới ra ngoài màn
+hình), giãn tới khi chỉ báo ghi **Rộng: vừa**, rồi **Căn chỉnh** như bước 3. Trang để trống phần cửa sổ ra ngoài màn
+hình; chưa thấy trọn bảng nút và làn thì chỉnh **Đáy ◂ ▸** ở hàng trên cùng (lúc dừng): **▸** = khoảng trống ở đáy
+lớn hơn, **◂** = nhỏ hơn — vạch đứt ở đáy trang phải sát mép dưới màn hình (không thấy vạch thì bấm **▸**). Khe nhỏ
+giữa hàng nút số và vạch chạm là bình thường.
 
 Không thấy chỉ báo **Rộng** / **Cao** (máy không cho biết cỡ màn hình): kéo hai mép cửa sổ ra ngoài nút 1 và nút
 1̇ chừng 1/4 nút mỗi bên (ô ngoài cùng không sát mép), rồi chỉnh **Vạch · Nút 1** / **Vạch · Nút 1̇** trong **Căn

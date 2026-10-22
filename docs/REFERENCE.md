@@ -194,7 +194,8 @@ luyến — vẽ thành **một thanh dài** trong làn của phím đó thay ch
   bao giờ xuống dưới vạch sáng. Đoạn đầu thanh thuộc ô nhịp **đếm vào** (vẽ mờ) không mang chữ: nhãn nằm trên phần được
   đếm. Kiểu Mobile, thanh đi qua hàng nút / vòng chế độ (bàn nút, trang mini **Khớp nút game**): nhãn đứng phía trên
   hàng đó, đuôi thanh xuống tới đó thì theo đuôi. Cỡ chữ số theo từng thanh (thanh dưới 10 lần bấm không bị thu nhỏ
-  theo thanh dài nhất bài).
+  theo thanh dài nhất bài). Trang mini **Khớp nút game · dưới nút** vẽ lật dọc: thanh đi lên, nhãn đứng ngay **dưới**
+  vạch sáng (nhãn phím trên, `×n` dưới).
 - Mỗi lần bấm: thanh loé sáng như một ô thường đang chạm (quầng sáng + đoạn của nốt đó sáng lên) rồi tắt dần trước lần
   bấm kế — đủ số lần bấm (máy bật giảm chuyển động thì sáng đều, không loé). Số trôi qua hàng vòng chế độ của Mobile như
   mọi cột. Luyện tập: trúng / trượt của từng nốt hiện trên đoạn của nốt đó (mờ đi + viền màu chấm điểm).
@@ -245,7 +246,8 @@ luyến — vẽ thành **một thanh dài** trong làn của phím đó thay ch
   được đúng lúc phải chạm (D-390). Vòng vẽ trên một lớp trong suốt nằm **trên** bàn nút (không bị nút che lúc đáp).
   Phần đếm vào có vòng mờ hơn. Trang mini **Thu nhỏ** và **Cửa sổ nổi** ở kiểu Mobile dùng cùng bàn nút kiểu game ở
   đáy nên vòng đáp đúng nút như ở màn chơi; trang mini **Khớp nút game** không có bàn nút — vòng đáp ở mép dưới cửa
-  sổ, ngay trên nút chế độ thật của game (4 vòng mờ đánh dấu chỗ đáp, D-396); không còn dải / nhãn `CHẠM: <tên chế độ>` cạnh làn ở bất cứ đâu (D-366). Tên nút chế độ in trong hình tròn chỉ
+  sổ, ngay trên nút chế độ thật của game (4 vòng mờ đánh dấu chỗ đáp, D-396); **Khớp nút game · dưới nút** (điện
+  thoại Samsung) lật dọc: vòng đi lên và đáp ngay dưới vạch chạm ở mép trên cửa sổ, cùng cột nút chế độ (D-448); không còn dải / nhãn `CHẠM: <tên chế độ>` cạnh làn ở bất cứ đâu (D-366). Tên nút chế độ in trong hình tròn chỉ
   xuống dòng ở dấu cách — từ dài (tiếng Anh `SEMITONE`) thu nhỏ chữ cho lọt một dòng.
 - **Overlay OBS kiểu Mobile** (cả cửa sổ **Xem trước**, D-375): **không vẽ bàn nút** (trên stream nút thật của game
   nằm ngay bên dưới) — làn vẫn thẳng 8 nút, vạch sáng ở đỉnh hàng nút số, chỉ có **4 vòng mờ** (viền mảnh màu chế độ,
@@ -617,16 +619,26 @@ trình duyệt: không phải tải hay cài gì.
 - **Apple** → thẳng tới video nổi của bài đang mở — xem [Video nổi trên iPhone / iPad](#video-nổi-trên-iphone--ipad).
 
 Trang **mini** (`#/mini/<bài>`) chỉ có làn ô rơi (theo **Kiểu điều khiển**), **không có âm thanh** và giữ màn hình
-sáng trong lúc chạy. Không có thanh điều hướng của app. Hai bố cục, chọn ở bảng lúc dừng và nhớ trên máy (D-395);
-máy chưa chọn thì theo **Kiểu điều khiển** — Mobile → **Khớp nút game**, PC → **Thu nhỏ** (D-402):
+sáng trong lúc chạy. Không có thanh điều hướng của app. Ba bố cục, chọn ở bảng lúc dừng và nhớ trên máy (D-395);
+máy chưa chọn thì theo **Kiểu điều khiển** — Mobile → **Khớp nút game**, PC → **Thu nhỏ** (D-402) — nên dùng bố cục nào
+tùy máy: xem **Bố cục nên dùng theo máy** bên dưới:
 
 - **Khớp nút game**: cửa sổ nổi của Android che mất phần bên dưới nên đặt nó **ngay trên bảng nút kèn** của game — 8 làn
   rơi thẳng 8 nút số thật, vạch chạm là **mép dưới cửa sổ**, vòng `CHẠM` rơi trong cột của nút chế độ thật và đáp ở mép
   dưới (4 vòng mờ đánh dấu chỗ đáp), ngay trên nút phải chạm. Không có bàn nút riêng, không banner chế độ (kiểu Mobile —
   vòng + nút thật của game đã cho biết chế độ, D-403); nhãn làn nhỏ ở đỉnh. Cần **Căn chỉnh** một lần (bên dưới).
   Cửa sổ đặt trên bảng nút chỉ cao ~80–150 px: bảng lúc dừng gói thành 2 hàng (D-401).
-- **Thu nhỏ**: trang mini cũ — làn + bàn nút kiểu game thu nhỏ, đọc được trong cửa sổ khoảng 300 × 300, đặt ở góc
-  màn hình.
+- **Khớp nút game · dưới nút** (D-448, thử nghiệm — cho **điện thoại Samsung**: cửa sổ pop-up có chiều cao tối thiểu
+  ~220 dp nên không nằm gọn trên bảng nút được, nhưng kéo xuống quá mép dưới màn hình được): đặt cửa sổ **ngay dưới hàng
+  nút số**, phần dưới ra ngoài màn hình. Ô **đi lên** từ mép dưới màn hình; vạch chạm là **mép trên cửa sổ**, vòng
+  `CHẠM` đáp ngay dưới nó ở cột nút chế độ (4 vòng mờ). 8 làn và số **Căn chỉnh** dùng chung với **Khớp nút game**.
+  Trang đoán phần cửa sổ còn trên màn theo cỡ màn hình (đáy hàng nút số ≈ 0,674 chiều cao màn → đáy màn, trừ thanh cửa
+  sổ ~24 px) và chỉ dùng phần đó, để trống phần ra ngoài màn — lệch thì chỉnh **Đáy ◂ ▸** ở hàng trên của bảng lúc dừng
+  (bên dưới); thấy trước bao nhiêu phách = **Lookahead** ở
+  màn chơi. Khe nhỏ giữa hàng nút số và vạch chạm (thanh của cửa sổ pop-up) là bình thường. Chỉ có chỉ báo **Rộng**
+  (không có **Cao**).
+- **Thu nhỏ**: trang mini cũ — làn + bàn nút kiểu game thu nhỏ, đọc được trong cửa sổ khoảng 300 × 300, đặt ở giữa mép
+  trên (phía trên bảng nút kèn) hoặc sát mép trái / phải màn hình — bố cục cho điện thoại hãng Trung Quốc.
 
 Ở kiểu **PC** (mặc định của Cài đặt), bảng lúc dừng có **Chơi bản điện thoại?** + nút **Đổi sang Mobile** (ghi Kiểu điều
 khiển như nút PC | Mobile của màn chơi).
@@ -636,13 +648,14 @@ cỡ **màn hình** điện thoại (màn ngang, rộng hơn hẳn cửa sổ) n
 giữa cửa sổ, dù cửa sổ rộng hay hẹp. UI game giả định phóng theo **chiều cao** màn (cùng giả định với Cửa sổ nổi PC):
 bước cột ≈ `0,1975 ×` chiều cao màn ở mọi máy ≥ 19,5 : 9 (= `0,0912 ×` bề ngang ở màn của ảnh game); màn hẹp hơn
 (16 : 9, máy tính bảng) theo bề ngang. Máy tính / iPhone không dùng cách này. Bảng lúc dừng và bảng Căn chỉnh có hai chỉ
-báo:
+báo (bố cục **Khớp nút game · dưới nút** chỉ có **Rộng**):
 
 - **Rộng:** **Rộng: vừa** / **Hẹp quá — kéo giãn thêm** / **Rộng hơn cần thiết** — cần = **8 làn** (8 bước cột ≈ 0,73
   bề ngang màn ảnh game — rộng hơn hàng nút chừng 1/4 nút mỗi bên để ô ngoài cùng không sát mép, D-434; trước v1.0.1 =
   hàng nút). Đã dời **Vạch · Dời** tới mức 8 làn ra ngoài mép cửa sổ:
   **Lệch tâm — kéo cửa sổ sang trái / phải rồi đặt "Vạch · Dời" về 0** (cửa sổ đúng cỡ, chỉ lệch chỗ).
-- **Cao:** **Cao: vừa** / **Thấp quá — kéo mép trên lên chạm mép màn hình** / **Cao quá — đang che khung kèn** — mép
+- **Cao** (chỉ bố cục **Khớp nút game**): **Cao: vừa** / **Thấp quá — kéo mép trên lên chạm mép màn hình** / **Cao
+  quá — đang che khung kèn** (tooltip: điện thoại Samsung không thu thấp hơn được thì dùng **Khớp nút game · dưới nút**) — mép
   trên chạm mép trên màn hình, mép dưới từ mép trên khung kèn (≈ 0,327 chiều cao màn) tới đỉnh hàng nút chế độ (≈
   0,361) — không che nút chế độ. Thanh kéo của cửa sổ nổi (trang không đo được) tính ~24 px khi xét "cao quá", tới
   36 px khi xét "thấp quá". Làn + vạch chạm luôn phủ cả chiều cao cửa sổ (vạch chạm = mép dưới).
@@ -653,10 +666,11 @@ cả hàng, px), **Vạch · Giãn** (khoảng cách — cửa sổ nhỏ của 
 Dời** / **Vòng · Giãn** (hàng nút chế độ). Máy không cho biết cỡ màn (cỡ màn ≈ cỡ cửa sổ, màn dọc, 0, không phải
 Android) → không có chỉ báo, dùng cách "cửa sổ = hàng nút" bên dưới (**Vạch · Nút 1** / **Vạch · Nút 1̇**).
 
-**Căn chỉnh** (chỉ ở **Khớp nút game**, chỉ lúc dừng — D-398, D-399, D-416): kéo cửa sổ xuống ngay trên khung kèn
-(không che hàng nút chế độ), kéo
-góc cho mỗi mép ra ngoài nút 1 / nút 1̇ chừng 1/4 nút (khi không có chỉ báo), rồi bấm **Căn chỉnh**: 8 vạch dọc (tâm 8
-làn), 4 vòng (chỗ vòng `CHẠM` đáp, chỉ kiểu Mobile) và vạch mép dưới; nhãn số của vạch hiện ngay trên hàng vòng khi
+**Căn chỉnh** (ở **Khớp nút game** và **Khớp nút game · dưới nút**, chỉ lúc dừng — D-398, D-399, D-416). Ở **Khớp nút
+game**: kéo cửa sổ xuống ngay trên khung kèn (không che hàng nút chế độ), kéo góc cho mỗi mép ra ngoài nút 1 / nút 1̇
+chừng 1/4 nút (khi không có chỉ báo), rồi bấm **Căn chỉnh**. Ở **Khớp nút game · dưới nút**: đặt cửa sổ và xem vạch
+dẫn lật theo đoạn **Căn chỉnh ở Khớp nút game · dưới nút** bên dưới. Bấm **Căn chỉnh** hiện 8 vạch dọc (tâm 8 làn), 4
+vòng (chỗ vòng `CHẠM` đáp, chỉ kiểu Mobile) và vạch mép dưới; nhãn số của vạch hiện ngay trên hàng vòng khi
 còn chỗ. Bảng chỉnh **một số mỗi lúc**; mỗi nút chọn ghi hai dòng — chỉnh **cái gì** (**Vạch** = 8 vạch nút số, **Vòng**
 = 4 vòng nút chế độ) và **thế nào** — thứ đang chọn sáng lên trên vạch dẫn, thứ kia mờ: **Vạch · Dời** / **Vạch · Giãn**
 / **Vòng · Dời** / **Vòng · Giãn** (đúng tỉ lệ thật) hoặc **Vạch · Nút 1** / **Vạch · Nút 1̇** / **Vòng · Dời** / **Vòng ·
@@ -670,13 +684,36 @@ trang mini ở bản 1.0.0 với số mặc định thấy một lần chip **B�
 mở hướng dẫn, đổi số căn chỉnh cũng tắt nó, D-441). **Đặt lại mặc định**; **Xong** hoặc Esc để thoát. Lưu trên máy
 (localStorage `dfht-mini-calibration`). Cửa sổ thấp (≤ 220 px): bảng một hàng ~36 px ở đỉnh, nền gần trong suốt, không
 che vòng / mép dưới. Trong lúc căn, chạm vào cửa sổ / Space / R không chạy bài. Nút ⓘ trong bảng Căn chỉnh = từng nút chọn chỉnh
-cái gì (đoạn đầu — đọc được ngay cả ở cửa sổ thấp), rồi cách kéo / đổi cỡ cửa sổ nổi theo hãng (Samsung dạng xem
-pop-up, Xiaomi / HyperOS, hãng khác); ở cửa sổ thấp hộp thoại phủ cả cửa sổ và cuộn được.
+cái gì (đoạn đầu — đọc được ngay cả ở cửa sổ thấp), rồi **Bố cục nên dùng theo máy**, rồi cách kéo / đổi cỡ cửa sổ nổi
+theo hãng (Samsung dạng xem pop-up, máy tính bảng / máy gập, điện thoại hãng khác); ở cửa sổ thấp hộp thoại phủ cả cửa
+sổ và cuộn được.
+
+Căn chỉnh ở **Khớp nút game · dưới nút** (D-448): vạch dẫn lật theo canvas — vạch sáng ở **mép trên** (= vạch chạm),
+4 vòng ngay dưới nó, không có nhãn số; bảng chỉnh nằm ngay dưới hàng vòng (phần thấy thấp thì được chồng lên hàng vòng
+để không bị cắt). Bảng Căn chỉnh không chỉnh đáy trang (cùng các nút chọn như **Khớp nút game**).
+
+**Khoảng trống đáy** (bố cục **Khớp nút game · dưới nút**, góp ý 2026-10-22): phần cửa sổ ra ngoài mép dưới màn hình
+trang để **trống**, để phần còn trên màn là trọn nội dung trang. Chỉnh ở **hàng trên** của bảng lúc dừng (cùng hàng ◂ /
+tên bài / ⓘ — chưa chạy, tạm dừng hoặc hết bài; ẩn khi chạy và khi đang Căn chỉnh): **Đáy** **◂** số px **▸** —
+**◂** (**Giảm khoảng trống đáy**) = nội dung xuống thấp hơn, **▸** (**Tăng khoảng trống đáy**) = nội dung lên / thấp lại,
+8 px mỗi chạm, **giữ** thì lặp và nhanh dần (24 px mỗi lần); tooltip: **Khoảng trống ở đáy cửa sổ (phần ra ngoài màn
+hình). Tăng tới khi thấy trọn bảng nút và làn**. Bắt đầu từ số trang tự đoán (khoảng trống = cao trang − phần thấy);
+chỉ chạy trong tầm còn đổi trang — phần thấy từ 80 px tới cả trang (khoảng trống 0): hết tầm thì nút đó mờ đi. Lưu
+trên máy cùng số căn chỉnh (`dfht-mini-calibration`, số `edgeShift`); **Đặt lại mặc định** của Căn chỉnh giữ nguyên
+khoảng trống đáy. Lúc dừng (cả khi Căn chỉnh) có một **vạch đứt** ở đáy phần trang đang dùng — đưa nó tới sát mép dưới
+màn hình (không thấy vạch thì bấm **▸**); ô hiện ra từ đó. **Đáy ◂ ▸** nằm ngay trước tên bài (sau ◂ về và huy hiệu
+**Thử nghiệm**) nên bấm liên tục nút không xê dịch; tên bài co "…" trước, hàng chật thì chỉ báo **Rộng** / ⓘ xuống dòng
+(không đè nút khác); số px của chỉ báo chỉ ở tooltip. Cửa sổ hẹp hơn 560 px: hàng trên bỏ thêm huy hiệu **Thử nghiệm**. Phần cửa sổ dưới phần thấy (khi cửa sổ chưa kéo xuống quá mép màn) chỉ
+có dòng nhắc, và chỉ lúc dừng: **Kéo cửa sổ xuống cho mép trên nằm ngay dưới hàng nút số — phần này sẽ ra ngoài màn
+hình. Cửa sổ đã đúng chỗ mà vẫn thấy dòng này: bấm ◂ ở "Đáy ◂ ▸" (hàng trên cùng) cho khoảng trống nhỏ lại.** (trường
+hợp sau: trang đoán phần thấy nhỏ quá — máy thu gọn thanh cửa sổ, thanh địa chỉ ở đáy). Hộp thoại ⓘ / video chỉ hiện
+trong phần thấy.
 
 1. **Mở trang:** màn chơi → kiểu **Mobile** → **Cửa sổ nổi** → (lần đầu) **Android** → hộp thoại **Cửa sổ mini / video
    nổi (thử nghiệm)** cho bài đang mở → **Mở trang mini**.
 2. **Chuyển trình duyệt thành cửa sổ nổi** (cách theo hãng ở dưới). **Khớp nút game:** đặt cửa sổ ngay trên bảng
-   nút kèn rồi **Căn chỉnh** (ở trên). **Thu nhỏ:** kéo nó lên **góc trên** màn hình game, không che 12 nút kèn.
+   nút kèn rồi **Căn chỉnh** (ở trên). **Khớp nút game · dưới nút** (điện thoại Samsung): kéo cửa sổ xuống quá mép dưới
+   màn hình cho mép trên nằm ngay dưới hàng nút số rồi **Căn chỉnh**. **Thu nhỏ:** đặt ở giữa hoặc sát một bên màn hình.
 3. **Bắt đầu** → **chạm vào game** trong lúc đếm ngược (theo Cài đặt → **Phát bài**, **tối thiểu 3 giây**; panel chỉ
    nhắc "Đếm ngược: 3 giây · đổi ở Cài đặt → Phát bài" — D-367, D-381). Đếm vào cũng theo Cài đặt. Bài tự chạy tới hết.
 4. Chạm vào cửa sổ mini = **tạm dừng**; chạm lại = **Chạy tiếp** (đếm ngược lại từ đầu). Hết bài chạm để **Chơi lại**.
@@ -685,18 +722,34 @@ pop-up, Xiaomi / HyperOS, hãng khác); ở cửa sổ thấp hộp thoại ph�
    "Về màn chơi") mở màn chơi đầy đủ của bài (`#/play/<bài>`). Trong lúc đếm ngược và lúc ô đang rơi không có nút nào
    thêm.
 
+**Bố cục nên dùng theo máy** (D-448 — đầu hộp thoại ⓘ của trang mini):
+
+- **Điện thoại Samsung: Khớp nút game · dưới nút.** Cửa sổ pop-up không thu thấp được tới mức nằm
+  gọn trên bảng nút kèn, nhưng kéo xuống quá mép dưới màn hình được: mở dạng xem pop-up, chọn **Khớp nút game · dưới
+  nút**, kéo thanh ở đỉnh cửa sổ xuống cho mép trên nằm ngay dưới hàng nút số (phần dưới ra ngoài màn hình), rồi
+  **Căn chỉnh**.
+- **Máy tính bảng Samsung / OPPO, đa số máy gập (vd. Galaxy Z Fold khi mở ra): Khớp nút game.** Cửa sổ nổi thu thấp
+  được: đặt ngay trên bảng nút kèn rồi **Căn chỉnh**.
+- **Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei: Thu nhỏ.** Vẫn mở bằng cửa sổ
+  nổi / cửa sổ nhỏ của máy, nhưng cửa sổ này **không kéo giãn được cho thẳng hàng nút số** — **Khớp nút game** sẽ không
+  khớp. Dùng **Thu nhỏ** (có bàn nút riêng), đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.
+
 **Cách mở cửa sổ nổi theo hãng:**
 
 - **Samsung:** Đa nhiệm → chạm biểu tượng trình duyệt → **Mở ở dạng xem pop-up**. **Không** mở qua Game Booster /
-  Gaming Hub. Game đứng hoặc ô ngừng rơi: cài Good Lock → MultiStar → bật **Multi Focus**.
+  Gaming Hub. Game đứng hoặc ô ngừng rơi: cài Good Lock → MultiStar → bật **Multi Focus**. Điện thoại: bố cục **Khớp
+  nút game · dưới nút** (kéo cửa sổ xuống quá mép dưới màn hình); máy tính bảng: **Khớp nút game**.
 - **Xiaomi / Redmi / POCO (HyperOS):** Đa nhiệm → nhấn giữ thẻ trình duyệt → **Cửa sổ nhỏ**, hoặc mở từ thanh bên. Vài
-  máy Redmi giá rẻ không có tính năng này.
-- **Huawei / Honor:** vuốt từ mép màn hình vào và giữ → thanh đa cửa sổ → trình duyệt.
+  máy Redmi giá rẻ không có tính năng này. Cửa sổ nhỏ không kéo giãn được cho thẳng hàng nút số → dùng **Thu nhỏ**.
+- **Huawei / Honor:** vuốt từ mép màn hình vào và giữ → thanh đa cửa sổ → trình duyệt. Cửa sổ không kéo giãn được cho
+  thẳng hàng nút số → dùng **Thu nhỏ**.
 - **OPPO / realme / OnePlus:** Thanh bên thông minh → trình duyệt. Chạm ra ngoài cửa sổ trong lúc chơi có thể làm
-  cửa sổ bị giấu vào mép màn hình ("ẩn nhanh" của realme); có máy OnePlus bị văng game khi mở cửa sổ nhỏ.
-- **vivo / iQOO, máy không có cửa sổ nổi:** vivo / iQOO có cửa sổ nhỏ nhưng không phóng to được (chữ khó đọc) và có
-  thể làm treo game. Dùng máy thứ hai đặt cạnh, hoặc thử **Cửa sổ video nổi** bên dưới. iPhone / iPad không có cửa sổ
-  nổi cho trình duyệt — ở màn chơi bấm **Cửa sổ nổi** → **Apple — iPhone / iPad** để mở video nổi của bài.
+  cửa sổ bị giấu vào mép màn hình ("ẩn nhanh" của realme); có máy OnePlus bị văng game khi mở cửa sổ nhỏ. Điện thoại:
+  cửa sổ không kéo giãn được cho thẳng hàng nút số → dùng **Thu nhỏ**; máy tính bảng OPPO: **Khớp nút game**.
+- **vivo / iQOO, máy không có cửa sổ nổi:** vivo / iQOO có cửa sổ nhỏ nhưng không phóng to / kéo giãn được (chữ khó
+  đọc — dùng **Thu nhỏ**) và có thể làm treo game. Dùng máy thứ hai đặt cạnh, hoặc thử **Cửa sổ video nổi** bên dưới.
+  iPhone / iPad không có cửa sổ nổi cho trình duyệt — ở màn chơi bấm **Cửa sổ nổi** → **Apple — iPhone / iPad** để mở
+  video nổi của bài.
 
 **Lưu ý khi chơi:** tắt **con quay hồi chuyển (gyroscope)** trong game (nếu không, kéo cửa sổ nổi sẽ làm xoay góc
 nhìn); **không** mở cửa sổ qua tiện ích chơi game của hãng (Game Booster, Gaming Hub, Game Turbo, Game Space…) — chạm
@@ -810,7 +863,11 @@ phụ trên tile** thành Ẩn (v4); lookahead đang là 8 (mặc định cũ) t
   trong cửa sổ nổi báo cỡ cả màn hình, không thu nhỏ trang và UI game phóng theo chiều cao màn (chưa thử trên máy
   thật — sai thì chỉnh **Vạch · Giãn** / **Vạch · Dời**); chỉ báo **Cao** đoán thanh kéo của cửa sổ nổi ~24 px; cửa sổ
   nổi chỉ có vài cỡ cố định thì có thể không giãn đúng mép hàng nút (chỉnh **Vạch · Dời** / **Vạch · Giãn**, hoặc
-  **Vạch · Nút 1** / **Vạch · Nút 1̇** khi không có chỉ báo). **Cửa sổ video nổi** mở từ trang mini vẫn là bố
+  **Vạch · Nút 1** / **Vạch · Nút 1̇** khi không có chỉ báo). **Khớp nút game · dưới nút** (D-448) chưa thử trên máy
+  Samsung thật: trang đoán phần thấy theo cỡ màn + thanh cửa sổ ~24 px; thanh địa chỉ ở đỉnh cửa sổ pop-up ăn mất phần
+  thấy (màn 360 dp: ~93 → ~37 px, trang không thu nhỏ hơn 80 px nên ô vào từ dưới mép màn), thanh ở đáy cửa sổ làm số
+  đoán nhỏ quá — chỉnh **Đáy ◂ ▸**; cần Chrome / Samsung Internet đời mới (container query — trình duyệt cũ thì bảng
+  lúc dừng của mọi bố cục không gọn lại ở cửa sổ thấp). **Cửa sổ video nổi** mở từ trang mini vẫn là bố
   cục có bàn nút (chưa khớp nút game). Video **Trực tiếp** có thể đứng hình khi trình
   duyệt xuống nền — dùng **Dựng sẵn**.
 - **iPhone / iPad:** không có cửa sổ nổi cho trình duyệt; **video nổi dựng sẵn** chạy được (đã thử trên iPhone thật),

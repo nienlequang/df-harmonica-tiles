@@ -37,6 +37,11 @@
  * Trang mini Android "Khớp nút game" (`lanePadding: 'fit'` + `laneFit`, góp ý 2026-10-16): lane theo tâm 8
  * nút số thật của game (cửa sổ nổi đặt ngay trên bảng nút), hit line sát mép dưới, vòng "CHẠM" rơi trong
  * cột 4 nút chế độ thật và đáp sát trên mép dưới, 4 vòng đích mờ ở đó (không bàn nút — nút thật nằm dưới).
+ * "Khớp nút game · dưới nút" (D-448, điện thoại Samsung: cửa sổ đặt DƯỚI hàng nút số) = 'fit' + `flipY`: cả khung
+ * lật dọc bằng transform của canvas (`setTransform(dpr, 0, 0, −dpr, 0, devH)`, chỉ khi `L.fit`) — ô đi lên, hit line
+ * + vòng "CHẠM" + vòng đích ở mép trên; layout.ts không đổi. Chữ không lộn ngược: khối nhãn tile / thanh dời nguyên
+ * khối tới ảnh gương của hộp bao chữ (collectTiles / collectBar) rồi vẽ bằng transform thẳng (drawTileLabels), chữ
+ * "CHẠM" vẽ thẳng ở y lật (drawCueRing); không vạch / nhãn section; dải highlight của tile nằm ở mép dưới (mép sau).
  *
  * Thanh bấm lặp (D-447, core/repeatRuns.ts): ≥ 4 nốt ngắn liên tiếp cùng một lần bấm vẽ thành MỘT thân tile dài
  * (`collectBar` / `drawBarBody`) — cùng màu / viền / nhãn với tile thường của lần bấm đó, vạch mảnh ở đầu từng nốt
@@ -121,7 +126,7 @@ export interface RendererOptions {
    * Mobile) = 8 cột bằng nhau thẳng tâm bàn nút ở đáy, tile viên thuốc đáp xuống đỉnh nút số (bị cắt
    * tại hit line), không gutter ribbon; 'fit' (trang mini Android "Khớp nút game") = lane theo tâm nút
    * thật của game (`laneFit`), hit line sát mép dưới, vòng "CHẠM" đáp sát trên mép dưới ở cột nút chế độ
-   * thật + 4 vòng đích mờ, không gutter.
+   * thật + 4 vòng đích mờ, không gutter ("dưới nút" = 'fit' + `flipY`, D-448).
    */
   lanePadding: LanePadding;
   /** `lanePadding: 'fit'`: tâm nút số / nút chế độ thật (layout.ts `LaneFit`); null = số đo mặc định. */
@@ -143,6 +148,13 @@ export interface RendererOptions {
    * chế độ (nút thật của game nằm bên dưới). Bố cục không có bàn nút luôn tự vẽ vòng mờ.
    */
   modeTargets: ModeTargets;
+  /**
+   * Lật dọc cả khung (D-448 — trang mini "Khớp nút game · dưới nút": cửa sổ đặt DƯỚI hàng nút số của game): ô đi
+   * lên từ mép dưới, hit line + vòng "CHẠM" ở mép trên. Chỉ là transform của canvas — hình học (layout.ts) không
+   * đổi; chữ, chấm giản phổ, "#", ↓/↑, "×n" vẽ đứng thẳng (khối nhãn dời NGUYÊN KHỐI tới ảnh gương của nó, thứ tự
+   * trên → dưới giữ nguyên). Chỉ áp khi bố cục là 'fit' (hướng dọc); bố cục khác bỏ qua.
+   */
+  flipY: boolean;
 }
 
 export type GridStyle = 'normal' | 'subtle';
@@ -184,6 +196,7 @@ export const DEFAULT_RENDERER_OPTIONS: Readonly<RendererOptions> = {
   tileOpacity: 1,
   gridStyle: 'normal',
   modeTargets: 'pad',
+  flipY: false,
 };
 
 /** Giá trị trong RenderFrame.noteStates (practice mode). */
@@ -312,6 +325,7 @@ export function sanitizeRendererOptions(
     tileOpacity: num(p.tileOpacity, TILE_OPACITY_MIN, TILE_OPACITY_MAX, base.tileOpacity),
     gridStyle: oneOf(p.gridStyle, ['normal', 'subtle'] as const, base.gridStyle),
     modeTargets: oneOf(p.modeTargets, ['pad', 'outline'] as const, base.modeTargets),
+    flipY: bool(p.flipY, base.flipY),
   };
 }
 
@@ -747,6 +761,11 @@ export class TilesRenderer {
   private readonly tmp2: Rect = { x: 0, y: 0, w: 0, h: 0 };
   /** Hộp bao khối chữ của thanh đang thu (x0, y0, x1, y1) — collectBar, không cấp phát. */
   private readonly lbox = new Float64Array(4);
+  /**
+   * Khung đang vẽ lật dọc (`flipY` + bố cục 'fit', D-448) — đặt mỗi khung ở render(); collectTiles / collectBar dời
+   * khối nhãn tới ảnh gương, drawTileLabels / drawCueRing vẽ chữ bằng transform thẳng.
+   */
+  private flip = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -919,7 +938,8 @@ export class TilesRenderer {
       prev.subLabel !== next.subLabel ||
       prev.language !== next.language ||
       prev.modLabels !== next.modLabels ||
-      prev.modeTargets !== next.modeTargets
+      prev.modeTargets !== next.modeTargets ||
+      prev.flipY !== next.flipY
     ) {
       this.dirty = true;
     }
@@ -1033,7 +1053,11 @@ export class TilesRenderer {
 
     const cur = Number.isFinite(frame.beat) ? frame.beat : 0;
 
-    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    // D-448: 'fit' + flipY → cả khung lật dọc bằng transform (y logic → L.height − y): ô đi lên, hit line + vòng ở mép
+    // trên; hình học / cull / thời gian không đổi. Chữ vẽ đứng thẳng (drawTileLabels, drawCueRing).
+    const flip = this.opts.flipY && L.fit !== null;
+    this.flip = flip;
+    ctx.setTransform(this.dpr, 0, 0, flip ? -this.dpr : this.dpr, 0, flip ? this.devH : 0);
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
@@ -1072,7 +1096,8 @@ export class TilesRenderer {
           this.drawGrid(ctx, L, tl, cur - k * loopLen, k === 0 ? -Infinity : loopStart, loopEnd);
         }
       }
-      const sections = this.opts.showSectionLabels && this.secStart.length > 0;
+      // Khung lật (D-448): không vạch / nhãn section (nhãn xoay dọc sẽ bị lật; trang mini vốn đã tắt).
+      const sections = this.opts.showSectionLabels && this.secStart.length > 0 && !flip;
       if (sections) {
         for (let k = 0; k <= copies; k++) {
           this.drawSectionLines(
@@ -2163,11 +2188,16 @@ export class TilesRenderer {
     // Chữ mờ hẳn thì không vẽ (nền chroma trộn màu sẵn: vẽ ở alpha ~0 = tô màu nền lên nút).
     const ta = alpha * textK;
     if (ta < 0.02) return true;
+    // Khung lật (D-448): chữ vẽ bằng transform thẳng ở tâm vòng trên màn (y lật) — không bị lộn ngược.
+    const flip = this.flip;
+    const ty = flip ? L.height - y : y;
+    if (flip) ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.inkStroke(ctx, this.pal.cueHalo, ta);
     ctx.lineWidth = 3;
-    ctx.strokeText(this.cueText, x, y + 0.5);
+    ctx.strokeText(this.cueText, x, ty + 0.5);
     this.inkFill(ctx, this.pal.cueText, ta);
-    ctx.fillText(this.cueText, x, y + 0.5);
+    ctx.fillText(this.cueText, x, ty + 0.5);
+    if (flip) ctx.setTransform(this.dpr, 0, 0, -this.dpr, 0, this.devH);
     return true;
   }
 
@@ -2300,6 +2330,8 @@ export class TilesRenderer {
     // Đáy thấp nhất của khối nhãn tile (dọc): đáy canvas; 'pad' → hit line, hoặc đỉnh dải tên nút chế độ
     // khi tên nằm dưới hình tròn (màn dọc hẹp: tên rộng ~2 cột vắt qua lane 2…6 ngay trên hit line).
     const labelFloor = tileLabelFloor(L);
+    // Khung lật (D-448, chỉ 'fit' dọc): chiều cao khung để dời khối nhãn tới ảnh gương; 0 = không lật.
+    const flipH = this.flip ? L.height : 0;
 
     for (let i = lowerBound(this.nStart, Math.max(lo, winStart - this.maxLenBeats)); i < n; i++) {
       const s = this.nStart[i];
@@ -2440,6 +2472,36 @@ export class TilesRenderer {
           if (rr > 0) {
             bx = x + w - rr * 0.7;
             by = Math.max(y + rr * 0.7, above - rr * 0.3);
+          }
+        }
+        if (flipH > 0) {
+          // D-448: khối nhãn dời NGUYÊN KHỐI sao cho hộp bao chữ theo trục dọc (nhãn phím + chấm giản phổ, nhãn phụ,
+          // ↓/↑, "#" — cả hai thứ này ở lane hẹp nằm TRÊN khối nhãn) rơi đúng ảnh gương của nó: chữ vẽ đứng thẳng, thứ
+          // tự trên → dưới giữ nguyên, mọi thứ trong hộp vẫn nằm trong tile đã lật (cả khi nhãn dính đáy = mép trên).
+          let t0 = Infinity;
+          let t1 = -Infinity;
+          if (hasLabel) {
+            t0 = bottom - cc - block / 2;
+            t1 = t0 + block;
+          }
+          if (!Number.isNaN(sy)) {
+            t0 = Math.min(t0, sy - this.subSize * 0.75);
+            t1 = Math.max(t1, sy + this.subSize * 0.75);
+          }
+          if (!Number.isNaN(ay)) {
+            t0 = Math.min(t0, ay - this.subSize * 0.6);
+            t1 = Math.max(t1, ay + this.subSize * 0.6);
+          }
+          if (rr > 0) {
+            t0 = Math.min(t0, by - rr);
+            t1 = Math.max(t1, by + rr);
+          }
+          if (t0 <= t1) {
+            const d = flipH - (t0 + t1);
+            ky += d;
+            sy += d;
+            ay += d;
+            by += d;
           }
         }
       } else if (truncated) {
@@ -2833,6 +2895,42 @@ export class TilesRenderer {
     this.growLabelBox(ax, ay, glyphW / 2, this.subSize * 0.6);
     if (rr > 0) this.growLabelBox(bx, by, rr, rr);
     if (cn > 0) this.growLabelBox(cx, cy, cw / 2, cl / 2);
+    if (vertical && this.flip && lb[1] <= lb[3]) {
+      // D-448 (khung lật): khối chữ dời NGUYÊN KHỐI tới ảnh gương của hộp bao theo trục dọc (chấm giản phổ tính đúng
+      // phía của nó) — chữ đứng thẳng, nhãn phím trên, "×n" dưới; hộp bao không qua hit line (đáy ≤ hitPos − 1 →
+      // đỉnh ảnh ≥ H − hitPos + 1). `lbox` giữ toạ độ CHƯA lật: drawBarBody vẽ dưới transform lật nên khe vạch đầu
+      // nốt rơi đúng chỗ chữ (hộp bao chứa trọn khối chữ → ảnh của nó chứa trọn chữ đã dời).
+      let t0 = Infinity;
+      let t1 = -Infinity;
+      if (tier >= 0) {
+        t0 = ky - kSize / 2 - exA;
+        t1 = ky + kSize / 2 + exB;
+      }
+      if (!Number.isNaN(sy)) {
+        t0 = Math.min(t0, sy - this.subSize * 0.75);
+        t1 = Math.max(t1, sy + this.subSize * 0.75);
+      }
+      if (!Number.isNaN(ay)) {
+        t0 = Math.min(t0, ay - this.subSize * 0.6);
+        t1 = Math.max(t1, ay + this.subSize * 0.6);
+      }
+      if (rr > 0 && !Number.isNaN(by)) {
+        t0 = Math.min(t0, by - rr);
+        t1 = Math.max(t1, by + rr);
+      }
+      if (cn > 0 && !Number.isNaN(cy)) {
+        t0 = Math.min(t0, cy - cl / 2);
+        t1 = Math.max(t1, cy + cl / 2);
+      }
+      if (t0 <= t1) {
+        const d = L.height - (t0 + t1);
+        ky += d;
+        sy += d;
+        ay += d;
+        by += d;
+        cy += d;
+      }
+    }
 
     const o = count * STRIDE;
     const v = this.vis;
@@ -3199,6 +3297,9 @@ export class TilesRenderer {
   /** Pass 2 + 3 của tile đang thấy (sau drawTileBodies): nhãn phím, chấm giản phổ, nhãn phụ, ↓/↑, "#". */
   private drawTileLabels(ctx: CanvasRenderingContext2D, count: number): void {
     if (count === 0) return;
+    // Khung lật (D-448): nhãn vẽ bằng transform thẳng — toạ độ y đã được collectTiles / collectBar dời tới ảnh gương.
+    const flip = this.flip;
+    if (flip) ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     const v = this.vis;
     const br = this.badgeR;
     const keyMask = this.keyTierMask;
@@ -3289,6 +3390,7 @@ export class TilesRenderer {
       ctx.fillStyle = MOD_COLORS[COLOR_KEYS[this.nColor[this.visIdx[k]]]].text;
       ctx.fillText(text, v[o + F_CX], v[o + F_CY]);
     }
+    if (flip) ctx.setTransform(this.dpr, 0, 0, -this.dpr, 0, this.devH);
     ctx.globalAlpha = 1;
   }
 
@@ -3296,7 +3398,8 @@ export class TilesRenderer {
    * Chi tiết tile kiểu HUD trên thân đã vẽ: dải highlight `hl` px ở mép trên + viền trong tối 1 px.
    * Tile chưa mờ (đa số) gom vào MỘT path mỗi loại → 2 lần vẽ cho cả frame (alpha = tileOpacity);
    * tile mờ dần (đã qua hit line, ô đếm vào) vẽ riêng theo độ đục của nó. Bỏ qua tile quá nhỏ và tile
-   * đang chạm hit line (viền sáng dày).
+   * đang chạm hit line (viền sáng dày). Khung lật (`flipY`, D-448): vẽ theo toạ độ logic → dải highlight hiện ở mép
+   * dưới trên màn = mép sau của tile đang đi lên (cố ý giữ, như mép sau của tile rơi ở bố cục thường).
    */
   private drawTileDetails(
     ctx: CanvasRenderingContext2D,

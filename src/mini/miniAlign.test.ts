@@ -14,28 +14,39 @@ import {
   fitGeometry,
 } from '../player/layout';
 import {
+  BELOW_GAP_FAST_PX,
+  BELOW_GAP_STEP_PX,
+  BELOW_VISIBLE_MIN,
+  CALIBRATION_FIELDS,
   CALIBRATION_RANGES,
   DEFAULT_CALIBRATION,
   FLOAT_BAR_GUESS,
   FLOAT_BAR_MAX,
   GAME_MODE_TOP_H,
+  GAME_NOTE_BOTTOM_H,
   GAME_NOTE_STEP_H,
   GAME_NOTE_STEP_W,
   GAME_PANEL_TOP_H,
   GAME_REF_ASPECT,
   MINI_CALIBRATION_STORAGE_KEY,
   MINI_FIT_NOTICE_STORAGE_KEY,
+  MINI_LAYOUTS,
   MINI_LAYOUT_STORAGE_KEY,
   MIN_CALIBRATION_SPAN,
   NOTE_ROW_STEPS,
   NUDGE_FAST_PX,
+  belowEdgeRange,
+  belowGapOf,
+  belowVisibleOf,
   browserChromeHeight,
   calibrationPerPx,
+  canStepBelowGap,
   defaultMiniLayout,
   dismissFitWindowNotice,
   fitStatusOf,
   isAndroidTouch,
   isDefaultCalibration,
+  isFitLayout,
   laneFitOf,
   needsFitWindowNotice,
   nudgeCalibration,
@@ -44,6 +55,7 @@ import {
   readScreenInfo,
   sanitizeCalibration,
   setCalibrationField,
+  stepBelowGap,
   trueScaleOf,
   writeCalibration,
   writeMiniLayout,
@@ -150,6 +162,21 @@ describe('kẹp / nút − +', () => {
     expect(c.modeShift).toBe(CALIBRATION_RANGES.modeShift.min);
   });
 
+  it('edgeShift (khoảng trống đáy "Đáy ◂ ▸" của "dưới nút", D-448): px; kẹp −600…+400; thiếu → 0; lưu chung số căn chỉnh', () => {
+    expect(DEFAULT_CALIBRATION.edgeShift).toBe(0);
+    expect(calibrationPerPx(DEFAULT_CALIBRATION, 'edgeShift', 624)).toBe(1);
+    expect(sanitizeCalibration({ ...DEFAULT_CALIBRATION, edgeShift: -999 }).edgeShift).toBe(-600);
+    expect(sanitizeCalibration({ ...DEFAULT_CALIBRATION, edgeShift: 999 }).edgeShift).toBe(400);
+    expect(sanitizeCalibration({ ...DEFAULT_CALIBRATION, edgeShift: 'x' }).edgeShift).toBe(0);
+    expect(CALIBRATION_FIELDS).toContain('edgeShift');
+    // Chỉ đổi edgeShift vẫn là số riêng (lưu vào dfht-mini-calibration).
+    expect(isDefaultCalibration({ ...DEFAULT_CALIBRATION, edgeShift: -3 })).toBe(false);
+    // Không ảnh hưởng hình học lane.
+    expect(laneFitOf({ ...DEFAULT_CALIBRATION, edgeShift: -50 })).toEqual(
+      laneFitOf(DEFAULT_CALIBRATION),
+    );
+  });
+
   it('thanh trượt: bước ≈ 0,6 px lane ở cửa sổ ~620 px (phím mũi tên chỉnh tinh)', () => {
     expect(CALIBRATION_RANGES.first.sliderStep * 624).toBeLessThan(1);
     expect(CALIBRATION_RANGES.last.sliderStep * 624).toBeLessThan(1);
@@ -184,6 +211,20 @@ describe('lưu theo máy', () => {
     localStorage.removeItem(MINI_LAYOUT_STORAGE_KEY);
   });
 
+  it('"dưới nút" (D-448): bố cục thứ ba, cùng khóa lưu; khớp nút = game + below; mặc định không đổi', () => {
+    expect(MINI_LAYOUTS).toEqual(['game', 'below', 'compact']);
+    writeMiniLayout('below');
+    expect(localStorage.getItem(MINI_LAYOUT_STORAGE_KEY)).toBe('below');
+    expect(readMiniLayout('mobile')).toBe('below');
+    expect(readMiniLayout('pc')).toBe('below');
+    localStorage.removeItem(MINI_LAYOUT_STORAGE_KEY);
+    expect(readMiniLayout('mobile')).toBe('game');
+    expect(readMiniLayout('pc')).toBe('compact');
+    expect(isFitLayout('game')).toBe(true);
+    expect(isFitLayout('below')).toBe(true);
+    expect(isFitLayout('compact')).toBe(false);
+  });
+
   it('số căn chỉnh: ghi / đọc lại; bằng mặc định ("Đặt lại mặc định") → xóa khóa', () => {
     expect(readCalibration()).toEqual(DEFAULT_CALIBRATION);
     const c = {
@@ -193,16 +234,18 @@ describe('lưu theo máy', () => {
       stepScale: 1.04,
       modeShift: -0.1,
       modeSpacing: 1.05,
+      edgeShift: -8,
     };
     writeCalibration(c);
     expect(JSON.parse(localStorage.getItem(MINI_CALIBRATION_STORAGE_KEY) ?? '{}')).toEqual(c);
     expect(readCalibration()).toEqual(c);
-    // Số lưu trước khi có đúng tỉ lệ thật (thiếu shift / stepScale) vẫn đọc được — trường thiếu = mặc định.
+    // Số lưu trước khi có đúng tỉ lệ thật (thiếu shift / stepScale) / trước "dưới nút" (thiếu edgeShift — D-448)
+    // vẫn đọc được — trường thiếu = mặc định.
     localStorage.setItem(
       MINI_CALIBRATION_STORAGE_KEY,
       JSON.stringify({ first: 0.06, last: 0.94, modeShift: -0.1, modeSpacing: 1.05 }),
     );
-    expect(readCalibration()).toEqual({ ...c, shift: 0, stepScale: 1 });
+    expect(readCalibration()).toEqual({ ...c, shift: 0, stepScale: 1, edgeShift: 0 });
     writeCalibration({ ...DEFAULT_CALIBRATION });
     expect(localStorage.getItem(MINI_CALIBRATION_STORAGE_KEY)).toBeNull();
     expect(readCalibration()).toEqual(DEFAULT_CALIBRATION);
@@ -638,5 +681,194 @@ describe('chỉ báo cỡ cửa sổ', () => {
       }
     }
     expect(readScreenInfo()).toEqual({ width: 0, height: 0, landscape: null }); // jsdom
+  });
+});
+
+// ---------------------------------------------------------------------------
+// "Khớp nút game · dưới nút" (D-448): phần thấy của cửa sổ đặt dưới hàng nút số
+// ---------------------------------------------------------------------------
+
+describe('"dưới nút": phần thấy (belowVisibleOf)', () => {
+  const c0 = DEFAULT_CALIBRATION;
+  const with_ = (edgeShift: number) => ({ ...DEFAULT_CALIBRATION, edgeShift });
+
+  it('đáy hàng nút số của ảnh game = 426,5 / 633; màn của ảnh → phần thấy = đáy màn − đáy hàng nút − thanh cửa sổ', () => {
+    expect(GAME_NOTE_BOTTOM_H).toBeCloseTo((383.5 + 86 / 2) / 633, 9);
+    const scale = trueScaleOf(scr(REF_W, REF_H), 1001, ANDROID);
+    const v = belowVisibleOf(scale, 0, 400, c0);
+    expect(Math.abs(v - (REF_H - 426.5 - FLOAT_BAR_GUESS))).toBeLessThanOrEqual(0.5);
+  });
+
+  it.each([
+    // màn, cửa sổ rộng, thanh trình duyệt, cao trang, edgeShift → phần thấy
+    [780, 360, 640, 0, 300, 0, 93],
+    [915, 412, 660, 0, 300, 0, 110],
+    [780, 360, 640, 0, 300, 10, 103],
+    // thanh địa chỉ ở đỉnh trang ăn mất phần thấy; không bao giờ dưới BELOW_VISIBLE_MIN (bảng lúc dừng / Căn chỉnh)
+    [780, 360, 640, 20, 300, 0, BELOW_VISIBLE_MIN],
+    [780, 360, 640, 56, 300, 0, BELOW_VISIBLE_MIN],
+    [915, 412, 660, 20, 300, 0, 90],
+    // trang thấp hơn số đoán → cả trang
+    [780, 360, 640, 0, 70, 0, 70],
+  ] as const)(
+    'màn %d×%d, cửa sổ %d px, thanh %d, trang %d, edgeShift %d → %d px',
+    (sw, sh, w, chrome, page, shift, want) => {
+      const scale = trueScaleOf(scr(sw, sh), w, ANDROID);
+      expect(scale).not.toBeNull();
+      expect(belowVisibleOf(scale, chrome, page, with_(shift))).toBe(want);
+    },
+  );
+
+  it('không biết cỡ màn (máy tính, màn không đọc được) → cả trang + edgeShift (tầm đủ lùi gần hết trang); chưa đo → 0', () => {
+    expect(BELOW_VISIBLE_MIN).toBeGreaterThanOrEqual(80);
+    expect(belowVisibleOf(null, 0, 300, c0)).toBe(300);
+    expect(belowVisibleOf(null, 0, 300, with_(-100))).toBe(200);
+    // Cửa sổ pop-up để cao 400 px mà chỉ thấy ~90 px: −310 vẫn trong tầm (−600).
+    const c = setCalibrationField(c0, 'edgeShift', -310);
+    expect(c.edgeShift).toBe(-310);
+    expect(belowVisibleOf(null, 0, 400, c)).toBe(90);
+    expect(belowVisibleOf(null, 0, 400, with_(-600))).toBe(BELOW_VISIBLE_MIN);
+    expect(belowVisibleOf(null, 0, 400, with_(200))).toBe(400);
+    expect(belowVisibleOf(null, 0, 0, c0)).toBe(0);
+    expect(belowVisibleOf(null, 0, Number.NaN, c0)).toBe(0);
+    expect(belowVisibleOf(null, Number.NaN, 300, c0)).toBe(300);
+  });
+});
+
+describe('"dưới nút": tầm edgeShift còn có tác dụng (belowEdgeRange)', () => {
+  const with_ = (edgeShift: number) => ({ ...DEFAULT_CALIBRATION, edgeShift });
+  const vis = (scale: TrueScale | null, chrome: number, page: number, s: number) =>
+    belowVisibleOf(scale, chrome, page, with_(s));
+
+  it.each([
+    // màn, cửa sổ rộng, thanh trình duyệt, cao trang
+    [780, 360, 640, 0, 300],
+    [780, 360, 640, 0, 768],
+    [915, 412, 660, 0, 300],
+    [915, 412, 660, 20, 200],
+    [1371, 633, 1001, 0, 400],
+  ] as const)(
+    'màn %d×%d, cửa sổ %d px, thanh %d, trang %d: mỗi bước trong tầm đổi phần thấy 1 px, ngoài tầm không đổi',
+    (sw, sh, w, chrome, page) => {
+      const scale = trueScaleOf(scr(sw, sh), w, ANDROID);
+      expect(scale).not.toBeNull();
+      const r = belowEdgeRange(scale, chrome, page)!;
+      expect(r.min).toBeLessThan(r.max);
+      expect(r.min).toBeGreaterThanOrEqual(CALIBRATION_RANGES.edgeShift.min);
+      expect(r.max).toBeLessThanOrEqual(CALIBRATION_RANGES.edgeShift.max);
+      // Đầu dưới: thấp nhất (80 px), bước dưới nữa không đổi; đầu trên: cả trang (hoặc mép tầm cố định).
+      expect(vis(scale, chrome, page, r.min)).toBe(BELOW_VISIBLE_MIN);
+      expect(vis(scale, chrome, page, r.min - 1)).toBe(BELOW_VISIBLE_MIN);
+      expect(vis(scale, chrome, page, r.min - 50)).toBe(BELOW_VISIBLE_MIN);
+      if (r.max < CALIBRATION_RANGES.edgeShift.max) {
+        expect(vis(scale, chrome, page, r.max)).toBe(page);
+        expect(vis(scale, chrome, page, r.max + 1)).toBe(page);
+      }
+      for (let s = r.min + 1; s <= r.max; s++) {
+        expect(vis(scale, chrome, page, s) - vis(scale, chrome, page, s - 1)).toBe(1);
+      }
+    },
+  );
+
+  it('ví dụ của review: màn 780 × 360 → đoán ≈ 93 px, tầm −13…+207 ở trang 300 px (không còn −600 … +400)', () => {
+    const scale = trueScaleOf(scr(780, 360), 640, ANDROID);
+    expect(belowEdgeRange(scale, 0, 300)).toEqual({ min: -13, max: 207 });
+    // Trang cao hơn số đoán + 400: đầu trên là tầm cố định.
+    expect(belowEdgeRange(scale, 0, 768)?.max).toBe(CALIBRATION_RANGES.edgeShift.max);
+  });
+
+  it('không biết cỡ màn → đoán = cả trang: chỉ lùi được (đầu trên 0, không −0), đầu dưới theo tầm cố định', () => {
+    const r = belowEdgeRange(null, 0, 300)!;
+    expect(r).toEqual({ min: BELOW_VISIBLE_MIN - 300, max: 0 });
+    expect(Object.is(r.max, 0)).toBe(true);
+    expect(belowEdgeRange(null, 0, 768)).toEqual({ min: CALIBRATION_RANGES.edgeShift.min, max: 0 });
+  });
+
+  it('trang thấp hơn 80 px → một điểm (cả trang); chưa đo trang → null', () => {
+    const r = belowEdgeRange(null, 0, 60)!;
+    expect(r.min).toBe(r.max);
+    expect(belowVisibleOf(null, 0, 60, with_(r.min))).toBe(60);
+    expect(belowEdgeRange(null, 0, 0)).toBeNull();
+    expect(belowEdgeRange(null, 0, Number.NaN)).toBeNull();
+  });
+});
+
+describe('"dưới nút": khoảng trống đáy "Đáy ◂ ▸" (belowGapOf / canStepBelowGap / stepBelowGap)', () => {
+  const with_ = (edgeShift: number) => ({ ...DEFAULT_CALIBRATION, edgeShift });
+  const PAGE = 300;
+  const scale780 = () => trueScaleOf(scr(780, 360), 640, ANDROID);
+
+  it('khoảng trống = cao trang − phần thấy (≥ 0); chưa đo → 0', () => {
+    expect(belowGapOf(300, 93)).toBe(207);
+    expect(belowGapOf(300, 300)).toBe(0);
+    expect(belowGapOf(300, 320)).toBe(0);
+    expect(belowGapOf(0, 93)).toBe(0);
+    expect(belowGapOf(300, 0)).toBe(0);
+    expect(belowGapOf(Number.NaN, 93)).toBe(0);
+  });
+
+  it('▸ (+1) = khoảng trống lớn hơn BELOW_GAP_STEP_PX (edgeShift giảm), ◂ (−1) = nhỏ hơn; giữ = BELOW_GAP_FAST_PX; số khác giữ nguyên', () => {
+    const scale = scale780();
+    const r = belowEdgeRange(scale, 0, PAGE)!;
+    const gap = (c: ReturnType<typeof with_>) =>
+      belowGapOf(PAGE, belowVisibleOf(scale, 0, PAGE, c));
+    const c0 = { ...DEFAULT_CALIBRATION, shift: 12, modeSpacing: 1.1 };
+    expect(BELOW_GAP_STEP_PX).toBe(8);
+    expect(BELOW_GAP_FAST_PX).toBeGreaterThan(BELOW_GAP_STEP_PX);
+    expect(gap(c0)).toBe(207);
+    const less = stepBelowGap(c0, -1, r);
+    expect(less.edgeShift).toBe(BELOW_GAP_STEP_PX);
+    expect(gap(less)).toBe(207 - BELOW_GAP_STEP_PX);
+    const more = stepBelowGap(c0, 1, r);
+    expect(more.edgeShift).toBe(-BELOW_GAP_STEP_PX);
+    expect(gap(more)).toBe(207 + BELOW_GAP_STEP_PX);
+    expect(stepBelowGap(c0, -1, r, BELOW_GAP_FAST_PX).edgeShift).toBe(BELOW_GAP_FAST_PX);
+    expect({ ...less, edgeShift: 0 }).toEqual(c0);
+    // Mặc định của tham số px = BELOW_GAP_STEP_PX; bước nhanh bị kẹp ở mép tầm (−13).
+    expect(stepBelowGap(c0, 1, r, BELOW_GAP_FAST_PX).edgeShift).toBe(r.min);
+  });
+
+  it('kẹp hai đầu: ▸ tới phần thấy BELOW_VISIBLE_MIN, ◂ tới cả trang (khoảng trống 0); mỗi chạm trong tầm đều đổi trang', () => {
+    const scale = scale780();
+    const r = belowEdgeRange(scale, 0, PAGE)!;
+    const vis = (c: ReturnType<typeof with_>) => belowVisibleOf(scale, 0, PAGE, c);
+    let c = with_(0);
+    while (canStepBelowGap(c, r, 1)) {
+      const n = stepBelowGap(c, 1, r);
+      expect(vis(n)).toBeLessThan(vis(c));
+      c = n;
+    }
+    expect(c.edgeShift).toBe(r.min);
+    expect(vis(c)).toBe(BELOW_VISIBLE_MIN);
+    expect(stepBelowGap(c, 1, r)).toBe(c);
+    expect(canStepBelowGap(c, r, -1)).toBe(true);
+    let presses = 0;
+    while (canStepBelowGap(c, r, -1)) {
+      const n = stepBelowGap(c, -1, r);
+      expect(vis(n)).toBeGreaterThan(vis(c));
+      c = n;
+      presses++;
+    }
+    expect(c.edgeShift).toBe(r.max);
+    expect(vis(c)).toBe(PAGE);
+    expect(belowGapOf(PAGE, vis(c))).toBe(0);
+    expect(stepBelowGap(c, -1, r)).toBe(c);
+    expect(presses).toBe(Math.ceil((r.max - r.min) / BELOW_GAP_STEP_PX));
+  });
+
+  it('số lưu ngoài tầm tính như đã kẹp (lần bấm đầu đã đổi trang); chưa đo trang → tầm cố định −600…+400', () => {
+    const r = { min: -13, max: 207 };
+    const low = with_(-600);
+    expect(canStepBelowGap(low, r, 1)).toBe(false);
+    expect(stepBelowGap(low, 1, r)).toBe(low);
+    expect(stepBelowGap(low, -1, r).edgeShift).toBe(-13 + BELOW_GAP_STEP_PX);
+    const high = with_(300);
+    expect(canStepBelowGap(high, r, -1)).toBe(false);
+    expect(stepBelowGap(high, 1, r).edgeShift).toBe(207 - BELOW_GAP_STEP_PX);
+    const fixed = CALIBRATION_RANGES.edgeShift;
+    expect(stepBelowGap(DEFAULT_CALIBRATION, 1, null).edgeShift).toBe(-BELOW_GAP_STEP_PX);
+    expect(stepBelowGap(with_(fixed.min + 3), 1, null).edgeShift).toBe(fixed.min);
+    expect(canStepBelowGap(with_(fixed.min), null, 1)).toBe(false);
+    expect(canStepBelowGap(with_(fixed.max), null, -1)).toBe(false);
   });
 });

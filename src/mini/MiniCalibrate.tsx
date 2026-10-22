@@ -18,6 +18,11 @@
  * Hiểu được ở cỡ cửa sổ nổi thật (~550–650 × 90–140 px, D-416): mỗi nút chọn ghi hai dòng — nó chỉnh CÁI GÌ ("Vạch"
  * = 8 vạch nút số, "Vòng" = 4 vòng nút chế độ) và chỉnh THẾ NÀO ("Dời" / "Giãn") — và thứ đang chỉnh được tô sáng
  * trên vạch dẫn (`focus`), thứ kia mờ đi; vòng nút chế độ giữ tên tới Ø GUIDE_NAME_MIN_D.
+ *
+ * "Khớp nút game · dưới nút" (D-448 — cửa sổ DƯỚI hàng nút số, canvas lật): vạch dẫn lật theo (`flip` — mép sáng ở
+ * đỉnh, vòng ngay dưới, không nhãn số), chỉ báo chỉ có "Rộng" (`showHeight` false — chiều cao cửa sổ ở bố cục này không
+ * có nghĩa: phần dưới ra ngoài màn), bảng nằm ngay dưới hàng vòng. Khoảng trống đáy (`edgeShift`) KHÔNG chỉnh ở đây mà ở
+ * hàng trên của bảng lúc dừng: MiniBelowGap "Đáy ◂ 120 px ▸" (góp ý 2026-10-22, thay số "Đáy · Dời" cũ của Căn chỉnh).
  */
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type {
@@ -72,13 +77,16 @@ export function MiniFitLabels({ geo, scheme }: { geo: FitGeometry; scheme: Contr
  */
 export const GUIDE_NAME_MIN_D = 30;
 
-/** Thứ đang chỉnh trong Căn chỉnh: 8 vạch nút số hoặc 4 vòng nút chế độ (tô sáng trên vạch dẫn). */
+/** Thứ đang chỉnh trong Căn chỉnh: 8 vạch nút số hoặc 4 vòng nút chế độ — tô sáng trên vạch dẫn. */
 export type AlignFocus = 'lines' | 'rings';
 
 /** Số căn chỉnh → thứ nó dời (vòng = hàng nút chế độ; còn lại = vạch nút số). */
 export function alignFocusOf(field: CalibrationField): AlignFocus {
   return field === 'modeShift' || field === 'modeSpacing' ? 'rings' : 'lines';
 }
+
+/** Chiều cao vạch mép sáng của vạch dẫn (px, = `.mini-guide-edge` trong mini.css). */
+export const GUIDE_EDGE_H = 3;
 
 /** Chiều cao nhãn số của vạch (px, khớp `.mini-guide-key` trong mini.css) và khe trên hàng vòng. */
 export const GUIDE_KEY_H = 20;
@@ -101,7 +109,9 @@ export function guideKeyTop(
 /**
  * Vạch căn chỉnh trên canvas: 8 vạch dọc tại tâm 8 nút số (nhãn ngay trên hàng vòng, khi còn chỗ), 4 vòng nút
  * chế độ đúng chỗ vòng "CHẠM" đáp (kiểu Mobile; tên chế độ trong vòng — vòng nhỏ hơn GUIDE_NAME_MIN_D thì
- * chỉ có màu), mép dưới sáng = hit line. `focus` = thứ đang chỉnh (tô sáng; thứ kia mờ).
+ * chỉ có màu), mép dưới sáng = hit line. `focus` = thứ đang chỉnh (tô sáng; thứ kia mờ). `flip` ("dưới nút",
+ * D-448 — renderer `flipY`): mọi thứ lật dọc như canvas — mép sáng ở đỉnh, vòng ngay dưới nó; không nhãn số (bảng
+ * Căn chỉnh nằm ngay dưới hàng vòng).
  */
 export function MiniAlignGuides({
   geo,
@@ -109,6 +119,7 @@ export function MiniAlignGuides({
   labels,
   topInset = 0,
   focus = null,
+  flip = false,
 }: {
   geo: FitGeometry;
   scheme: ControlScheme;
@@ -116,10 +127,14 @@ export function MiniAlignGuides({
   /** Đáy bảng Căn chỉnh (px từ đỉnh khung): nhãn số không bao giờ nằm trên đó. */
   topInset?: number;
   focus?: AlignFocus | null;
+  /** Lật dọc (bố cục "dưới nút"). */
+  flip?: boolean;
 }) {
   const mobile = scheme === 'mobile';
   const d = geo.modeD;
-  const keyTop = guideKeyTop(geo, scheme, topInset);
+  const keyTop = flip ? null : guideKeyTop(geo, scheme, topInset);
+  // Đỉnh của một hộp cao `h` đặt ở `top` trong khung chưa lật → trong khung lật (gương quanh giữa khung).
+  const y = (top: number, h: number): number => (flip ? geo.height - top - h : top);
   const style = {
     '--mini-mode-d': `${d}px`,
     '--mini-key-top': `${keyTop ?? 0}px`,
@@ -131,6 +146,7 @@ export function MiniAlignGuides({
       data-small={d < GUIDE_NAME_MIN_D ? 'true' : undefined}
       data-keys={keyTop === null ? 'hidden' : undefined}
       data-focus={focus ?? undefined}
+      data-flip={flip ? 'true' : undefined}
       style={style}
     >
       {geo.laneCx.map((x, i) => (
@@ -148,7 +164,7 @@ export function MiniAlignGuides({
               data-mode={MOBILE_BUTTONS[j]}
               style={{
                 left: `${x - d / 2}px`,
-                top: `${geo.hitPos - CUE_TARGET_GAP - d}px`,
+                top: `${y(geo.hitPos - CUE_TARGET_GAP - d, d)}px`,
                 width: `${d}px`,
                 height: `${d}px`,
               }}
@@ -157,7 +173,7 @@ export function MiniAlignGuides({
             </span>
           ))
         : null}
-      <span className="mini-guide-edge" style={{ top: `${geo.hitPos - 1}px` }} />
+      <span className="mini-guide-edge" style={{ top: `${y(geo.hitPos - 1, GUIDE_EDGE_H)}px` }} />
     </div>
   );
 }
@@ -224,7 +240,8 @@ export const SCALE_ALIGN_CONTROLS: readonly ControlDef[] = [
 
 /**
  * Trường chỉnh được theo kiểu điều khiển (PC không có vòng "CHẠM" → không có hàng chế độ) và theo việc trang
- * có biết cỡ màn hình không (`scaled` = đúng tỉ lệ thật).
+ * có biết cỡ màn hình không (`scaled` = đúng tỉ lệ thật). Hai bố cục khớp nút giống nhau: khoảng trống đáy của "dưới
+ * nút" (`edgeShift`) nằm ở hàng trên của bảng lúc dừng (MiniBelowGap), không ở đây.
  */
 export function alignControlsFor(scheme: ControlScheme, scaled = false): readonly ControlDef[] {
   const all = scaled ? SCALE_ALIGN_CONTROLS : ALIGN_CONTROLS;
@@ -250,16 +267,32 @@ const HEIGHT_TEXT: Readonly<Record<FitStatus['height'], readonly [StringKey, Str
  * cần thiết / Lệch tâm — kéo cửa sổ sang trái | phải" + "Cao: vừa / Thấp quá — kéo mép trên lên chạm mép màn hình / Cao
  * quá — đang che khung kèn" (chữ dài khi đủ chỗ, chữ ngắn giữ ý của chữ dài — D-416). Cập nhật
  * khi kéo / đổi cỡ cửa sổ; `role="status"` đọc lại khi trạng thái đổi (chỉ chữ trạng thái — số px nằm ở tooltip và
- * dòng số chỉ hiện ở cửa sổ cao, không đọc, để không đọc liên tục khi đang kéo).
+ * dòng số chỉ hiện ở cửa sổ cao, không đọc, để không đọc liên tục khi đang kéo). "Cao quá": tooltip nhắc điện thoại
+ * Samsung dùng "dưới nút" (cửa sổ pop-up không thu thấp được — D-448). `showHeight` false ("dưới nút": phần dưới cửa
+ * sổ ra ngoài màn, chiều cao không có nghĩa) → chỉ chip "Rộng", số chỉ có bề ngang.
  */
-export function MiniFitStatus({ status }: { status: FitStatus }) {
+export function MiniFitStatus({
+  status,
+  showHeight = true,
+}: {
+  status: FitStatus;
+  showHeight?: boolean;
+}) {
   const t = useT();
-  const numbers = t('mini.fit.numbers', {
-    w: Math.round(status.widthPx),
-    h: Math.round(status.heightPx),
-    nw: Math.round(status.needWidth),
-    nh: Math.round(status.needHeight),
-  });
+  const w = Math.round(status.widthPx);
+  const nw = Math.round(status.needWidth);
+  const numbers = showHeight
+    ? t('mini.fit.numbers', {
+        w,
+        h: Math.round(status.heightPx),
+        nw,
+        nh: Math.round(status.needHeight),
+      })
+    : t('mini.fit.numbersWidth', { w, nw });
+  const title =
+    showHeight && status.height === 'tall'
+      ? `${numbers} · ${t('mini.fit.height.tallHint')}`
+      : numbers;
   const chip = (dim: 'width' | 'height', state: string, keys: readonly [StringKey, StringKey]) => (
     <span className="mini-fit-chip" data-dim={dim} data-state={state}>
       <span className="mini-long" aria-hidden="true">
@@ -275,12 +308,12 @@ export function MiniFitStatus({ status }: { status: FitStatus }) {
     <span
       className="mini-fit-status"
       role="status"
-      title={numbers}
+      title={title}
       data-width={status.width}
-      data-height={status.height}
+      data-height={showHeight ? status.height : undefined}
     >
       {chip('width', status.width, WIDTH_TEXT[status.width])}
-      {chip('height', status.height, HEIGHT_TEXT[status.height])}
+      {showHeight ? chip('height', status.height, HEIGHT_TEXT[status.height]) : null}
       <span className="mini-fit-numbers" aria-hidden="true">
         {numbers}
       </span>
@@ -324,6 +357,8 @@ export interface MiniAlignPanelProps {
   scaled?: boolean;
   /** Chỉ báo cỡ cửa sổ (chỉ khi đúng tỉ lệ thật). */
   status?: FitStatus | null;
+  /** Bố cục "dưới nút" (D-448): lời nhắc riêng, chỉ báo chỉ có "Rộng". */
+  below?: boolean;
   /** Đặt một trường (MiniView kẹp tầm + lưu). */
   onField: (field: CalibrationField, value: number) => void;
   /** Nút − / + (`fast` = đang giữ nút đủ lâu → bước lớn). */
@@ -340,6 +375,20 @@ export interface MiniAlignPanelProps {
   onActiveField?: (field: CalibrationField) => void;
 }
 
+/** Lời nhắc của bảng Căn chỉnh: [bố cục][đúng tỉ lệ thật][kiểu điều khiển]. */
+const ALIGN_HELP: Readonly<
+  Record<'game' | 'below', Readonly<Record<'scale' | 'plain', Record<ControlScheme, StringKey>>>>
+> = {
+  game: {
+    scale: { mobile: 'mini.align.helpScale', pc: 'mini.align.helpScalePc' },
+    plain: { mobile: 'mini.align.help', pc: 'mini.align.helpPc' },
+  },
+  below: {
+    scale: { mobile: 'mini.align.helpBelowScale', pc: 'mini.align.helpBelowScalePc' },
+    plain: { mobile: 'mini.align.helpBelow', pc: 'mini.align.helpBelowPc' },
+  },
+};
+
 /**
  * Bảng "Căn chỉnh" (chỉ khi đang dừng): tiêu đề + lời nhắc (cửa sổ cao) + ⓘ + "Đặt lại mặc định" + "Xong";
  * nhóm nút chọn số cần chỉnh (Mobile 4, PC 2) + − / thanh trượt / giá trị / + của số đang chọn. Esc = Xong.
@@ -349,6 +398,7 @@ export function MiniAlignPanel({
   scheme,
   scaled = false,
   status = null,
+  below = false,
   onField,
   onNudge,
   onReset,
@@ -363,7 +413,6 @@ export function MiniAlignPanel({
   const pct = useNumberFormat(lang, 1);
   const cols = useNumberFormat(lang, 2, true);
   const pxs = useNumberFormat(lang, 0, true);
-  const mobile = scheme === 'mobile';
   const controls = alignControlsFor(scheme, scaled);
   const [field, setField] = useState<CalibrationField>(controls[0].field);
   // Đổi kiểu (vd. cỡ màn đọc được sau lần đo đầu) → số đang chọn không còn → số đầu của kiểu mới.
@@ -381,13 +430,7 @@ export function MiniAlignPanel({
       : f === 'shift'
         ? t('mini.align.px', { n: pxs.format(v) })
         : t('mini.align.pct', { n: pct.format(v * 100) });
-  const help: StringKey = scaled
-    ? mobile
-      ? 'mini.align.helpScale'
-      : 'mini.align.helpScalePc'
-    : mobile
-      ? 'mini.align.help'
-      : 'mini.align.helpPc';
+  const help = ALIGN_HELP[below ? 'below' : 'game'][scaled ? 'scale' : 'plain'][scheme];
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>): void => {
     // Esc trên thanh trượt (useHotkeys bỏ qua phím khi focus ở ô nhập) = Xong.
     if (e.key === 'Escape' && !e.defaultPrevented) {
@@ -404,6 +447,7 @@ export function MiniAlignPanel({
       data-scheme={scheme}
       data-scaled={scaled ? 'true' : undefined}
       data-status={status ? 'true' : undefined}
+      data-below={below ? 'true' : undefined}
       onKeyDown={onKeyDown}
     >
       <span className="mini-align-title">{t('mini.align.title')}</span>
@@ -455,7 +499,7 @@ export function MiniAlignPanel({
           {t('mini.align.done')}
         </Button>
       </span>
-      {status ? <MiniFitStatus status={status} /> : null}
+      {status ? <MiniFitStatus status={status} showHeight={!below} /> : null}
     </div>
   );
 }
@@ -484,10 +528,11 @@ export const HOLD_FAST_AFTER = 6;
 
 /**
  * Nút bấm một lần / giữ để lặp: chạm (hoặc Enter / Space, TalkBack) = một bước qua `click`; giữ con trỏ quá
- * HOLD_DELAY_MS → lặp mỗi HOLD_REPEAT_MS (`fast` sau HOLD_FAST_AFTER lần) cho tới khi nhả / trượt ra / bị hủy,
- * và `click` ngay sau lần giữ đó bị bỏ (không thêm một bước). Mọi hẹn giờ dọn khi nhả / unmount.
+ * HOLD_DELAY_MS → lặp mỗi HOLD_REPEAT_MS (`fast` sau HOLD_FAST_AFTER lần) cho tới khi nhả / trượt ra / bị hủy
+ * (hoặc `onStep` trả `false` — hết tầm, MiniBelowGap), và `click` ngay sau lần giữ đó bị bỏ (không thêm một bước). Mọi
+ * hẹn giờ dọn khi nhả / unmount.
  */
-function useHoldRepeat(onStep: (fast: boolean) => void) {
+function useHoldRepeat(onStep: (fast: boolean) => boolean | void) {
   const stepRef = useRef(onStep);
   useLayoutEffect(() => {
     stepRef.current = onStep;
@@ -510,7 +555,11 @@ function useHoldRepeat(onStep: (fast: boolean) => void) {
   const tick = (): void => {
     repeated.current = true;
     count.current += 1;
-    stepRef.current(count.current > HOLD_FAST_AFTER);
+    // Hết tầm → thôi lặp (click của lần nhả vẫn bị bỏ — `repeated` còn true).
+    if (stepRef.current(count.current > HOLD_FAST_AFTER) === false) {
+      timer.current = null;
+      return;
+    }
     timer.current = setTimeout(tick, HOLD_REPEAT_MS);
   };
   const stop = (): void => {
@@ -599,5 +648,66 @@ function AlignControl({ field, label, value, display, onField, onNudge }: AlignC
         <span aria-hidden="true">+</span>
       </IconButton>
     </div>
+  );
+}
+
+export interface MiniBelowGapProps {
+  /** Khoảng trống đáy hiện có (px CSS — `belowGapOf`). */
+  gap: number;
+  /** ◂ (nhỏ hơn) / ▸ (lớn hơn) còn đổi được không (`canStepBelowGap`) — hết tầm thì nút đó tắt. */
+  canLess: boolean;
+  canMore: boolean;
+  /** Một bước: −1 = ◂ khoảng trống nhỏ hơn (nội dung xuống thấp hơn), +1 = ▸ lớn hơn; `fast` = đang giữ đủ lâu. */
+  onStep: (dir: -1 | 1, fast: boolean) => void;
+}
+
+/**
+ * "Dưới nút" (góp ý 2026-10-22, sau khi thử trên điện thoại Samsung thật): KHOẢNG TRỐNG ở đáy cửa sổ — phần cửa sổ ra
+ * ngoài mép dưới màn hình, trang để trống — để phần còn trên màn là TRỌN nội dung trang. Nằm ở hàng trên của bảng lúc
+ * dừng (cùng hàng ◂ / tên bài / ⓘ, nên chỉ hiện khi chưa chạy): "Đáy" ◂ giá trị ▸ — ◂ nhỏ lại, ▸ lớn ra; giữ để lặp như
+ * − / + của Căn chỉnh. Hết tầm → nút đó tắt bằng `aria-disabled` (không `disabled`: nút đang giữ / đang focus không mất
+ * sự kiện / focus) và lần lặp kế dừng. Giá trị là `<output>` (TalkBack đọc số mới). Một nguồn: `edgeShift` của số căn
+ * chỉnh (MiniView đổi + lưu).
+ */
+export function MiniBelowGap({ gap, canLess, canMore, onStep }: MiniBelowGapProps) {
+  const t = useT();
+  const hint = t('mini.gap.hint');
+  const less = useHoldRepeat((fast) => {
+    if (!canLess) return false;
+    onStep(-1, fast);
+    return true;
+  });
+  const more = useHoldRepeat((fast) => {
+    if (!canMore) return false;
+    onStep(1, fast);
+    return true;
+  });
+  return (
+    <span className="mini-gap" role="group" aria-label={t('mini.gap.group')} title={hint}>
+      <span className="mini-gap-label" aria-hidden="true">
+        {t('mini.gap.label')}
+      </span>
+      <IconButton
+        size="sm"
+        className="mini-gap-btn"
+        label={t('mini.gap.less')}
+        title={hint}
+        aria-disabled={canLess ? undefined : true}
+        {...less}
+      >
+        <span aria-hidden="true">◂</span>
+      </IconButton>
+      <output className="mini-gap-value">{t('mini.gap.value', { n: gap })}</output>
+      <IconButton
+        size="sm"
+        className="mini-gap-btn"
+        label={t('mini.gap.more')}
+        title={hint}
+        aria-disabled={canMore ? undefined : true}
+        {...more}
+      >
+        <span aria-hidden="true">▸</span>
+      </IconButton>
+    </span>
   );
 }

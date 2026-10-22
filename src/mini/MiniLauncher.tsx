@@ -2,7 +2,8 @@
  * Nút "Cửa sổ nổi" của màn chơi trên điện thoại (kiểu Mobile, hoặc điện thoại không có Document PiP) —
  * `songId` = bài đang mở. Góp ý R7-6: hỏi trước "Điện thoại của bạn: Apple (iPhone / iPad) hay Android?"
  * (nhớ theo máy — src/pip/phonePref.ts; UA chỉ chọn sẵn nút), rồi:
- * - Android → hộp thoại "Cửa sổ mini / video nổi (thử nghiệm)": 2 dòng giải thích + link "Mở trang mini"
+ * - Android → hộp thoại "Cửa sổ mini / video nổi (thử nghiệm)": câu dẫn + 3 nhóm máy và bố cục nên dùng
+ *   (`LauncherIntro`) + link "Mở trang mini"
  *   (`#/mini/<id>` — link thật nên copy / mở tab mới được; bấm link thì đóng hộp thoại, trình duyệt đổi hash).
  * - Apple → thẳng tới "Cửa sổ video nổi": dựng sẵn ngay (tiến độ %), rồi nút lớn "Mở video nổi" (một cú chạm —
  *   trình duyệt chỉ cho mở PiP trong cú chạm). Phần này tải lười (MiniLauncherVideo.tsx: videoPip + WebM chỉ
@@ -24,6 +25,43 @@ import { href, paths } from '../ui/router';
 import { readLastMiniSong } from './miniControl';
 import './mini.css';
 import './MiniLauncher.css';
+
+/** Ba nhóm máy của hộp thoại Android (góp ý 2026-10-22): tên nhóm, vài dòng máy phổ biến, bố cục nên dùng. */
+const LAUNCHER_DEVICES = [
+  {
+    title: 'mini.launcherDev.free.title',
+    models: 'mini.launcherDev.free.models',
+    use: 'mini.launcherDev.free',
+  },
+  {
+    title: 'mini.launcherDev.samsungPhone.title',
+    models: 'mini.launcherDev.samsungPhone.models',
+    use: 'mini.launcherDev.samsungPhone',
+  },
+  {
+    title: 'mini.launcherDev.other.title',
+    models: 'mini.launcherDev.other.models',
+    use: 'mini.launcherDev.other',
+  },
+] as const;
+
+/** Đoạn mở đầu hộp thoại: câu dẫn + danh sách "loại máy (dòng máy): dùng bố cục nào". */
+function LauncherIntro() {
+  const t = useT();
+  return (
+    <>
+      <p>{t('mini.launcherIntro')}</p>
+      <ul className="mini-launch-devices">
+        {LAUNCHER_DEVICES.map((d) => (
+          <li key={d.title}>
+            <strong>{t(d.title)}</strong>{' '}
+            <span className="mini-launch-models">({t(d.models)})</span>: {t(d.use)}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
 
 const SongVideoPip = lazy(() =>
   import('./MiniLauncherVideo').then((m) => ({ default: m.SongVideoPip })),
@@ -200,7 +238,7 @@ function FixedSongBody({
   const t = useT();
   return (
     <div className="mini-launch">
-      <p>{t('mini.launcherIntro')}</p>
+      <LauncherIntro />
       <p className="mini-launch-song">{t('mini.launcherFor', { title })}</p>
       <p className="mini-launch-note">{t('mini.launcherNoFloat')}</p>
       <div className="mini-launch-actions">
@@ -246,7 +284,7 @@ function LauncherBody({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="mini-launch">
-      <p>{t('mini.launcherIntro')}</p>
+      <LauncherIntro />
       {songs.length > 0 ? (
         <div className="field field-select">
           <label htmlFor={selectId}>{t('pip.song')}</label>

@@ -4,6 +4,32 @@
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-10-22
+
+### Thêm
+
+- **Trang mini: bố cục "Khớp nút game · dưới nút"** cho điện thoại Samsung (D-448, thử nghiệm): cửa sổ pop-up của
+  điện thoại Samsung không thu thấp được tới mức nằm gọn trên bảng nút kèn, nhưng kéo xuống quá mép dưới màn hình được —
+  nên đặt nó ngay **dưới** hàng nút số, phần dưới ra ngoài màn hình. Ô **đi lên** từ mép dưới màn hình, vạch chạm + 4
+  vòng `CHẠM` ở mép trên cửa sổ (cùng cột nút chế độ như "Khớp nút game"); 8 làn thẳng 8 nút số, dùng chung số
+  **Căn chỉnh** với "Khớp nút game" (vạch dẫn lật theo). Trang tự đoán phần cửa sổ còn trên màn theo cỡ màn hình và để
+  **trống phần ra ngoài màn** ở đáy cửa sổ; lệch thì chỉnh **Đáy ◂ ▸** ở hàng trên của bảng lúc dừng (trước khi vào bài):
+  **▸** = khoảng trống lớn hơn, **◂** = nhỏ hơn, 8 px mỗi chạm, giữ để lặp, số px đang dùng ở giữa — tăng tới khi thấy
+  trọn bảng nút và làn trên màn điện thoại; lúc dừng có vạch đứt ở đáy phần trang đang dùng (đưa nó sát mép dưới màn
+  hình). Thấy trước bao nhiêu phách vẫn là **Lookahead** ở màn chơi.
+
+### Thay đổi
+
+- Hướng dẫn ⓘ của trang mini có mục **Bố cục nên dùng theo máy**: điện thoại Samsung → "Khớp nút game · dưới nút";
+  máy tính bảng Samsung / OPPO, đa số máy gập → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme,
+  OnePlus, vivo / iQOO, Honor, Huawei → "Thu nhỏ" (cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số)
+  đặt ở giữa hoặc sát một bên màn hình. Các lưu ý cũ theo hãng giữ nguyên.
+- Chỉ báo **Cao quá** của "Khớp nút game" (tooltip) nhắc điện thoại Samsung dùng "dưới nút".
+- Hộp thoại **Cửa sổ mini / video nổi (thử nghiệm)** (Android) chia theo 3 nhóm máy, kèm vài dòng máy phổ biến: máy
+  tính bảng Samsung / OPPO và điện thoại gập cho kéo giãn cửa sổ nổi tự do (Galaxy Tab S9, S10, S10 FE, Tab A9+; OPPO
+  Pad Air, Pad Neo, Pad 2; Galaxy Z Fold, OPPO Find N khi mở ra) → "Khớp nút game"; điện thoại Samsung (Galaxy S23 –
+  S26, Galaxy A07, A17, A26, A36, A56) → "Khớp nút game · dưới nút"; điện thoại Android khác → "Thu nhỏ".
+
 ## [1.0.7] - 2026-10-20
 
 ### Thêm

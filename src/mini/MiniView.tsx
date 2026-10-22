@@ -8,11 +8,16 @@
  * "◂" về màn chơi của bài (chỉ khi đang dừng). Số lớn chỉ hiện lúc đếm ngược (ô đứng yên); đếm vào 1 ô
  * nhịp sau đó chỉ là đoạn ô rơi dẫn vào, không có số (góp ý 2026-10-16).
  *
- * Hai bố cục (nhớ theo máy — miniAlign.ts, góp ý 2026-10-16): "Khớp nút game" (mặc định của kiểu Mobile) =
+ * Ba bố cục (nhớ theo máy — miniAlign.ts, góp ý 2026-10-16): "Khớp nút game" (mặc định của kiểu Mobile) =
  * cửa sổ nổi đặt NGAY TRÊN bảng nút kèn thật: 8 làn thẳng 8 nút số, hit line sát mép dưới, vòng "CHẠM" đáp
  * ngay trên nút chế độ thật (renderer `lanePadding: 'fit'`), không bàn nút / banner riêng, nhãn làn nhỏ;
- * "Căn chỉnh" (chỉ khi đang dừng) = vạch dẫn + bảng chỉnh một số mỗi lúc. "Thu nhỏ" (mặc định của kiểu PC) =
- * trang mini cũ (bàn nút / game bar riêng). Kiểu PC: panel lúc dừng nhắc "Đổi sang Mobile" (D-402).
+ * "Căn chỉnh" (chỉ khi đang dừng) = vạch dẫn + bảng chỉnh một số mỗi lúc. "Khớp nút game · dưới nút" (D-448,
+ * điện thoại Samsung) = cửa sổ đặt NGAY DƯỚI hàng nút số, phần dưới ra ngoài màn: cùng 'fit' + `laneFit` + số căn
+ * chỉnh, renderer `flipY` (ô đi lên, hit line + vòng ở mép trên), trang thu về phần thấy (`belowVisibleOf` →
+ * `--mini-visible-h` + `data-mini-layout` trên `:root` — hộp thoại cũng nằm trong phần đó), vạch dẫn lật; khoảng trống
+ * đáy (phần cửa sổ ra ngoài màn) chỉnh bằng "Đáy ◂ ▸" ở hàng trên của panel lúc dừng, vạch đứt ở đáy phần thấy lúc dừng.
+ * "Thu nhỏ" (mặc định của kiểu PC) = trang mini cũ (bàn nút / game bar riêng). Kiểu PC: panel lúc dừng nhắc "Đổi sang
+ * Mobile" (D-402).
  * Đúng tỉ lệ thật (D-405, D-412…D-415): máy Android cảm ứng đọc được cỡ màn hình (màn ngang, rộng hơn hẳn cửa sổ) →
  * lane đúng khoảng cách nút thật, hàng nút căn giữa cửa sổ; panel lúc dừng + Căn chỉnh có chỉ báo "Rộng" / "Cao" của
  * cửa sổ (MiniFitStatus).
@@ -21,10 +26,12 @@
  * Phím: Space chạy / dừng, R chơi lại (không phím nốt Z X C V B N M ,); Esc thoát Căn chỉnh.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { RefObject } from 'react';
+import type { CSSProperties, RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { GAME_SCROLL_DIR } from '../core/keys';
 import { buildTimeline } from '../core/timeline';
 import type { Timeline } from '../core/types';
+import type { StringKey } from '../i18n/strings';
 import { useT } from '../i18n/useT';
 import { entryTitle, useSong } from '../library/store';
 import type { LibraryEntry } from '../library/store';
@@ -36,7 +43,7 @@ import { MIN_VIDEO_COUNTDOWN } from '../pip/videoPip';
 import type { GuideVideoOptions } from '../pip/videoPip';
 import { GameBar } from '../player/GameBar';
 import { HoldBanner } from '../player/HoldBanner';
-import { fitGeometry } from '../player/layout';
+import { CUE_TARGET_GAP, fitGeometry } from '../player/layout';
 import type { FitGeometry, LaneFit } from '../player/layout';
 import { MobilePad } from '../player/MobilePad';
 import type { RendererOptions } from '../player/renderer';
@@ -50,22 +57,30 @@ import { PLAYER_HOTKEYS, useHotkeys } from '../ui/useHotkeys';
 import {
   MiniAlignGuides,
   MiniAlignPanel,
+  MiniBelowGap,
   MiniFitLabels,
   MiniFitNotice,
   MiniFitStatus,
   ShortLong,
   alignFocusOf,
 } from './MiniCalibrate';
-import type { AlignFocus } from './MiniCalibrate';
+import type { AlignFocus, MiniBelowGapProps } from './MiniCalibrate';
 import {
+  BELOW_GAP_FAST_PX,
+  BELOW_GAP_STEP_PX,
   DEFAULT_CALIBRATION,
   MINI_LAYOUTS,
   NUDGE_FAST_PX,
   NUDGE_PX,
+  belowEdgeRange,
+  belowGapOf,
+  belowVisibleOf,
   browserChromeHeight,
+  canStepBelowGap,
   dismissFitWindowNotice,
   fitStatusOf,
   isAndroidTouch,
+  isFitLayout,
   laneFitOf,
   needsFitWindowNotice,
   nudgeCalibration,
@@ -73,6 +88,7 @@ import {
   readMiniLayout,
   readScreenInfo,
   setCalibrationField,
+  stepBelowGap,
   trueScaleOf,
   writeCalibration,
   writeMiniLayout,
@@ -114,23 +130,34 @@ export const MINI_RENDERER_OPTIONS: Readonly<Partial<RendererOptions>> = Object.
   showRibbons: true,
   showBarLines: true,
   showSectionLabels: false,
+  // Luôn gửi rõ (option renderer gộp vào option cũ): rời "dưới nút" → hết lật.
+  flipY: false,
 });
 
 /**
- * Option canvas cố định theo kiểu điều khiển + bố cục. "Khớp nút game" (`layout` = 'game'): lane theo nút thật
- * của game (`lanePadding: 'fit'` + `laneFit` từ Căn chỉnh) ở cả PC lẫn Mobile; "Thu nhỏ" (mặc định của hàm —
- * trang mini cũ): Mobile = bàn nút 'pad', PC = 'none' + game bar.
+ * Option canvas cố định theo kiểu điều khiển + bố cục. "Khớp nút game" (`layout` = 'game') / "dưới nút" ('below'):
+ * lane theo nút thật của game (`lanePadding: 'fit'` + `laneFit` từ Căn chỉnh) ở cả PC lẫn Mobile, 'below' lật dọc
+ * (`flipY`, D-448); "Thu nhỏ" (mặc định của hàm — trang mini cũ): Mobile = bàn nút 'pad', PC = 'none' + game bar.
  */
 export function miniRendererOptions(
   scheme: ControlScheme,
   layout: MiniLayout = 'compact',
   laneFit: LaneFit | null = null,
 ): Partial<RendererOptions> {
-  if (layout === 'game') return { ...MINI_RENDERER_OPTIONS, lanePadding: 'fit', laneFit };
+  if (isFitLayout(layout)) {
+    return { ...MINI_RENDERER_OPTIONS, lanePadding: 'fit', laneFit, flipY: layout === 'below' };
+  }
   return scheme === 'mobile'
     ? { ...MINI_RENDERER_OPTIONS, lanePadding: 'pad' }
     : { ...MINI_RENDERER_OPTIONS };
 }
+
+/**
+ * Phần thấy của "dưới nút" thấp tới chừng này (px CSS) → hộp thoại gọn như ở cửa sổ thấp (`@media (max-height: 240px)`
+ * của app.css xét cả cửa sổ — ở bố cục này cửa sổ cao hơn hẳn phần thấy; mini.css lặp lại các luật đó dưới
+ * `:root[data-mini-short]`).
+ */
+const MODAL_SHORT_MAX = 240;
 
 /** Hệ số ô theo bề rộng làn: 300 px → 0.6, ≥ 520 px → 1 (bậc 0.05 để không vẽ lại liên tục). */
 export function miniTileScale(width: number): number {
@@ -272,6 +299,17 @@ interface ViewportInfo {
   screen: ScreenInfo | null;
   /** outerHeight − innerHeight khi hợp lý (thanh địa chỉ của trình duyệt trong cửa sổ nổi), không thì 0. */
   chromeH: number;
+  /** `window.innerHeight` (px CSS; lỗi / không hữu hạn / ≤ 0 → 0) — cả trang, cho phần thấy của "dưới nút". */
+  innerH: number;
+}
+
+function readInnerHeight(): number {
+  try {
+    const h = window.innerHeight;
+    return Number.isFinite(h) && h > 0 ? h : 0;
+  } catch {
+    return 0;
+  }
 }
 
 function readChromeHeight(screen: ScreenInfo | null): number {
@@ -288,11 +326,11 @@ function readChromeHeight(screen: ScreenInfo | null): number {
 
 function readViewportInfo(): ViewportInfo {
   const screen = readScreenInfo();
-  return { screen, chromeH: readChromeHeight(screen) };
+  return { screen, chromeH: readChromeHeight(screen), innerH: readInnerHeight() };
 }
 
 function sameViewportInfo(a: ViewportInfo, b: ViewportInfo): boolean {
-  if (a.chromeH !== b.chromeH) return false;
+  if (a.chromeH !== b.chromeH || a.innerH !== b.innerH) return false;
   if (a.screen === b.screen) return true;
   if (!a.screen || !b.screen) return false;
   return (
@@ -395,7 +433,9 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
   const [calibrating, setCalibrating] = useState(false);
   // Thứ đang chỉnh trong Căn chỉnh (8 vạch / 4 vòng) — tô sáng trên vạch dẫn (D-416).
   const [alignFocus, setAlignFocus] = useState<AlignFocus>('lines');
-  const game = layout === 'game';
+  // Hai bố cục khớp nút thật ('fit' + Căn chỉnh); "dưới nút" = cửa sổ dưới hàng nút số, canvas lật (D-448).
+  const fit = isFitLayout(layout);
+  const below = layout === 'below';
   // Đúng tỉ lệ thật (D-405): màn ngang rộng hơn hẳn cửa sổ → bước cột theo px của màn; không → cửa sổ = hàng nút.
   const viewport = useViewportInfo();
   // Chỉ máy Android cảm ứng mới đặt cửa sổ nổi trên game (D-412): máy tính / iPhone → kiểu "cửa sổ = hàng nút".
@@ -407,17 +447,37 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
   const laneFit = useMemo(() => laneFitOf(calib, scale), [calib, scale]);
   // Hình học "Khớp nút game" của khung hiện tại (chưa đo được → chưa có vạch / nhãn).
   const fitGeo = useMemo<FitGeometry | null>(
-    () => (game && box.w > 0 && box.h > 0 ? fitGeometry(box.w, box.h, laneFit) : null),
-    [game, box, laneFit],
+    () => (fit && box.w > 0 && box.h > 0 ? fitGeometry(box.w, box.h, laneFit) : null),
+    [fit, box, laneFit],
   );
-  // Chỉ báo "Rộng" / "Cao" của cửa sổ so với hàng nút thật (chỉ khi biết cỡ màn).
+  // Chỉ báo "Rộng" / "Cao" của cửa sổ so với hàng nút thật (chỉ khi biết cỡ màn; "dưới nút" chỉ hiện "Rộng").
   const fitStatus = useMemo<FitStatus | null>(
     () =>
-      game && scale && box.w > 0 && box.h > 0
+      fit && scale && box.w > 0 && box.h > 0
         ? fitStatusOf(box, viewport.chromeH, scale, calib)
         : null,
-    [game, scale, box, viewport.chromeH, calib],
+    [fit, scale, box, viewport.chromeH, calib],
   );
+  // "Dưới nút" (D-448): trang chỉ dùng phần THẤY của cửa sổ (đỉnh cửa sổ → mép dưới màn hình) — canvas, panel, Căn
+  // chỉnh, đếm ngược, hộp thoại đều nằm trong đó; phần cửa sổ ra ngoài màn chỉ là nền trang. Không phụ thuộc cỡ khung
+  // đo được (box) → không vòng lặp đo ↔ đổi cỡ.
+  const visibleH = useMemo(
+    () => (below ? belowVisibleOf(scale, viewport.chromeH, viewport.innerH, calib) : 0),
+    [below, scale, viewport.chromeH, viewport.innerH, calib],
+  );
+  useLayoutEffect(() => {
+    if (!below || !(visibleH > 0)) return;
+    // Trên :root (không chỉ .mini): hộp thoại portal vào body cũng phải nằm trong phần thấy.
+    const el = document.documentElement;
+    el.dataset.miniLayout = 'below';
+    if (visibleH <= MODAL_SHORT_MAX) el.dataset.miniShort = 'true';
+    el.style.setProperty('--mini-visible-h', `${visibleH}px`);
+    return () => {
+      delete el.dataset.miniLayout;
+      delete el.dataset.miniShort;
+      el.style.removeProperty('--mini-visible-h');
+    };
+  }, [below, visibleH]);
   // Máy đã dùng trang mini trước v1.0.1, số căn chỉnh mặc định (D-441): cửa sổ vừa của kiểu "cửa sổ = 8 làn" rộng hơn
   // bản cũ ~1/4 nút mỗi bên mà kiểu này không có chỉ báo "Rộng" → nhắc một lần ở chỗ chỉ báo (đọc trước khi MiniView
   // ghi bài mở lần này). Chạm nhắc (mở hướng dẫn) / đổi số căn chỉnh → không nhắc nữa.
@@ -430,7 +490,7 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
   const setLayout = (next: MiniLayout): void => {
     setLayoutState(next);
     writeMiniLayout(next);
-    if (next !== 'game') setCalibrating(false);
+    if (!isFitLayout(next)) setCalibrating(false);
   };
   const updateCalib = (next: MiniCalibration): void => {
     calibRef.current = next;
@@ -446,6 +506,20 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
   const onAlignNudge = (field: CalibrationField, dir: -1 | 1, fast: boolean): void => {
     const cur = calibRef.current;
     const next = nudgeCalibration(cur, field, dir, box.w, fast ? NUDGE_FAST_PX : NUDGE_PX, scale);
+    if (next !== cur) updateCalib(next);
+  };
+  // "Đặt lại mặc định" của Căn chỉnh: khoảng trống đáy ("Đáy ◂ ▸" — không thuộc bảng đó) giữ nguyên.
+  const onAlignReset = (): void =>
+    updateCalib({ ...DEFAULT_CALIBRATION, edgeShift: calibRef.current.edgeShift });
+  // Khoảng trống đáy của "dưới nút" ("Đáy ◂ ▸" ở hàng trên của panel lúc dừng — góp ý 2026-10-22): `edgeShift` chỉ
+  // trong tầm còn đổi phần thấy (ngoài đó số chạy mà trang đứng yên — review D-448), mỗi chạm BELOW_GAP_STEP_PX.
+  const edgeRange = useMemo(
+    () => (below ? belowEdgeRange(scale, viewport.chromeH, viewport.innerH) : null),
+    [below, scale, viewport.chromeH, viewport.innerH],
+  );
+  const onGapStep = (dir: -1 | 1, fast: boolean): void => {
+    const cur = calibRef.current;
+    const next = stepBelowGap(cur, dir, edgeRange, fast ? BELOW_GAP_FAST_PX : BELOW_GAP_STEP_PX);
     if (next !== cur) updateCalib(next);
   };
 
@@ -527,9 +601,18 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
   const [videoOpen, setVideoOpen] = useState(false);
 
   // Căn chỉnh chỉ khi đang dừng; vào → focus nút chọn đầu ("Nút 1"), ra → focus lại nút "Căn chỉnh".
-  const aligning = calibrating && game && !running;
+  const aligning = calibrating && fit && !running;
   // Đáy bảng Căn chỉnh: nhãn số của vạch chỉ hiện bên dưới (không nằm sau bảng ở cửa sổ thấp).
   const alignPanelH = useElementHeight(alignPanelRef, aligning);
+  // "Dưới nút": bảng Căn chỉnh ngay dưới hàng vòng (đã lật: mép trên + khe + Ø vòng — PC không vòng — + 2 px), nhưng
+  // luôn trọn trong phần thấy (phần thấy thấp → bảng được chồng lên hàng vòng, không bị cắt mất hàng nút).
+  const alignTop = useMemo<number | null>(() => {
+    if (!below || !fitGeo) return null;
+    const rings = scheme === 'mobile' ? fitGeo.modeD : 0;
+    const under = Math.ceil(fitGeo.height - fitGeo.hitPos + CUE_TARGET_GAP + rings + 2);
+    const room = alignPanelH > 0 ? Math.floor(fitGeo.height - alignPanelH) : under;
+    return Math.max(0, Math.min(under, room));
+  }, [below, fitGeo, scheme, alignPanelH]);
   const wasAligning = useRef(false);
   useEffect(() => {
     const was = wasAligning.current;
@@ -592,6 +675,25 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
           ? t('mini.tapResume')
           : t('mini.start');
 
+  // Phần cửa sổ dưới phần thấy ("dưới nút"): có nghĩa là cửa sổ chưa kéo xuống quá mép màn — một dòng nhắc nằm ở đó,
+  // tự ra ngoài màn khi cửa sổ đặt đúng chỗ. Chỉ lúc dừng: khoảng trống đáy lớn quá (số đoán phần thấy nhỏ quá — máy
+  // thu gọn thanh cửa sổ, thanh địa chỉ ở đáy) thì dòng này lộ ra dù cửa sổ đã đúng chỗ — lời nhắc nói cả cách sửa đó
+  // (◂ của "Đáy ◂ ▸"), và không nằm trên màn suốt lúc chơi (review D-448).
+  const gap = belowGapOf(viewport.innerH, visibleH);
+  const belowRest = below && !running && visibleH > 0 && gap >= 24;
+  // "Đáy ◂ ▸" ở hàng trên của panel lúc dừng (chỉ "dưới nút", đã đo được trang).
+  const gapControl: MiniBelowGapProps | null =
+    below && visibleH > 0
+      ? {
+          gap,
+          canLess: canStepBelowGap(calib, edgeRange, -1),
+          canMore: canStepBelowGap(calib, edgeRange, 1),
+          onStep: onGapStep,
+        }
+      : null;
+  const rootStyle =
+    alignTop !== null ? ({ '--mini-align-top': `${alignTop}px` } as CSSProperties) : undefined;
+
   return (
     <div
       ref={rootRef}
@@ -600,9 +702,10 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
       data-scheme={scheme}
       data-layout={layout}
       data-aligning={aligning ? 'true' : undefined}
-      data-scale={game && scale ? 'true' : undefined}
+      data-scale={fit && scale ? 'true' : undefined}
       role="region"
       aria-label={t('mini.region')}
+      style={rootStyle}
     >
       <div ref={lanesRef} className="mini-lanes">
         <canvas
@@ -611,12 +714,13 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
           role="img"
           aria-label={t('player.canvas', { title })}
         />
-        {/* Khớp nút game: không bàn nút riêng (nút thật nằm ngay dưới cửa sổ) — nhãn làn nhỏ ở đỉnh. */}
+        {/* Khớp nút game: không bàn nút riêng (nút thật nằm ngay dưới cửa sổ) — nhãn làn nhỏ ở đỉnh ("dưới nút":
+            ở đáy — phía ô đi vào). */}
         {fitGeo && !aligning ? <MiniFitLabels geo={fitGeo} scheme={scheme} /> : null}
-        {/* Banner ở đỉnh vùng làn (khung nhỏ: không che ô sắp chạm hit line). Khớp nút game + Mobile: không
-            banner (D-403) — nó nằm chắn đường rơi của vòng "CHẠM" ở cột giữa, còn vòng + nút thật của game
-            đã cho biết chế độ. PC vẫn có ("ĐANG GIỮ: …" chỉ lúc giữ). */}
-        {game && scheme === 'mobile' ? null : (
+        {/* Banner ở đỉnh vùng làn (khung nhỏ: không che ô sắp chạm hit line; "dưới nút": ở đáy). Khớp nút game +
+            Mobile: không banner (D-403) — nó nằm chắn đường rơi của vòng "CHẠM" ở cột giữa, còn vòng + nút thật
+            của game đã cho biết chế độ. PC vẫn có ("ĐANG GIỮ: …" chỉ lúc giữ). */}
+        {fit && scheme === 'mobile' ? null : (
           <div className="mini-banner">
             <MiniBanner engine={engine} scheme={scheme} labels={labels} />
           </div>
@@ -628,14 +732,13 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
             labels={labels}
             topInset={alignPanelH}
             focus={alignFocus}
+            flip={below}
           />
         ) : null}
         {/* Thu nhỏ, Mobile: bàn nút giống màn chơi kèn phủ đáy khu làn (chỉ hiển thị — chạm là lớp chạm). */}
-        {scheme === 'mobile' && !game ? (
-          <MiniMobilePad engine={engine} timeline={timeline} />
-        ) : null}
+        {scheme === 'mobile' && !fit ? <MiniMobilePad engine={engine} timeline={timeline} /> : null}
       </div>
-      {scheme === 'mobile' || game ? null : (
+      {scheme === 'mobile' || fit ? null : (
         <MiniGameBar engine={engine} timeline={timeline} scheme={scheme} labels={labels} />
       )}
 
@@ -676,9 +779,11 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
           layout={layout}
           scheme={scheme}
           fit={fitStatus}
+          heightChip={!below}
+          gap={gapControl}
           fitNotice={
             // Chỉ khi đã đo khung (trước khi đo `scale` luôn null — máy biết cỡ màn không được nháy nhắc).
-            fitNotice && game && !scale && box.w > 0
+            fitNotice && fit && !scale && box.w > 0
               ? () => {
                   dismissFitNotice();
                   setHelpOpen('fit');
@@ -701,15 +806,21 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
           scheme={scheme}
           scaled={scale !== null}
           status={fitStatus}
+          below={below}
           onField={onAlignField}
           onNudge={onAlignNudge}
-          onReset={() => updateCalib({ ...DEFAULT_CALIBRATION })}
+          onReset={onAlignReset}
           onDone={() => setCalibrating(false)}
           onHelp={() => setHelpOpen('fit')}
           firstRef={alignFirstRef}
           panelRef={alignPanelRef}
           onActiveField={(f) => setAlignFocus(alignFocusOf(f))}
         />
+      ) : null}
+      {/* "Dưới nút", lúc dừng (cả Căn chỉnh): vạch đứt ở đáy phần thấy = chỗ nội dung trang hết — "Đáy ◂ ▸" đưa nó tới
+          sát mép dưới màn hình. */}
+      {below && !running && visibleH > 0 ? (
+        <span className="mini-edge-mark" aria-hidden="true" />
       ) : null}
 
       <div ref={videoHostRef} className="mini-video-host" aria-hidden="true" />
@@ -724,6 +835,15 @@ function MiniStage({ entry, scheme, countIn, delay: delaySec }: StageProps) {
         pip={pip}
         countdownSec={videoCountdown}
       />
+      {/* Phần cửa sổ dưới phần thấy ("dưới nút"): portal vào body — `.mini` chỉ cao bằng phần thấy. */}
+      {belowRest
+        ? createPortal(
+            <div className="mini-below-rest">
+              <p className="mini-below-rest-text">{t('mini.below.rest')}</p>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -736,12 +856,23 @@ interface PanelProps {
   delay: number;
   hasNotes: boolean;
   playRef: RefObject<HTMLButtonElement>;
-  /** Bố cục đang dùng (nút "Khớp nút game" | "Thu nhỏ"; "Căn chỉnh" chỉ ở "Khớp nút game"). */
+  /**
+   * Bố cục đang dùng (nút "Khớp nút game" | "Khớp nút game · dưới nút" | "Thu nhỏ"; "Căn chỉnh" chỉ ở hai bố cục
+   * khớp nút).
+   */
   layout: MiniLayout;
   /** Kiểu PC → dòng nhắc "Chơi bản điện thoại?" + nút "Đổi sang Mobile" (D-402). */
   scheme: ControlScheme;
   /** Chỉ báo cỡ cửa sổ (Khớp nút game + biết cỡ màn) — ở hàng đầu, trước ⓘ. */
   fit: FitStatus | null;
+  /** Chỉ báo có chip "Cao" (false ở "dưới nút" — phần dưới cửa sổ ra ngoài màn). */
+  heightChip?: boolean;
+  /**
+   * "Dưới nút": "Đáy ◂ giá trị ▸" = khoảng trống ở đáy cửa sổ (góp ý 2026-10-22) — ở hàng đầu, ngay trước tên bài (sau
+   * ◂ + huy hiệu: chỗ cố định, bấm liên tục không xê dịch; tên bài co lại "…"; hàng chật: chỉ báo / ⓘ xuống dòng, nút
+   * này vẫn ở dòng đầu). null = không có.
+   */
+  gap?: MiniBelowGapProps | null;
   /**
    * Nhắc một lần "cửa sổ rộng thêm ¼ nút mỗi bên" (máy dùng trang mini trước v1.0.1, Khớp nút game, không biết cỡ màn —
    * D-441): chạm = mở hướng dẫn + thôi nhắc. null = không nhắc. Ở chỗ chỉ báo (hai thứ không bao giờ cùng có).
@@ -756,6 +887,22 @@ interface PanelProps {
   onAlign: () => void;
   onUseMobile: () => void;
 }
+
+/**
+ * Chữ của nút chọn bố cục: tên đầy đủ (tên đọc), chữ ngắn ở cửa sổ thấp (nằm trong tên đầy đủ — WCAG 2.5.3; null =
+ * tên đã ngắn), tooltip.
+ */
+const LAYOUT_TEXT: Readonly<
+  Record<MiniLayout, { name: StringKey; short: StringKey | null; hint: StringKey }>
+> = {
+  game: { name: 'mini.layout.game', short: 'mini.layout.gameShort', hint: 'mini.layout.gameHint' },
+  below: {
+    name: 'mini.layout.below',
+    short: 'mini.layout.belowShort',
+    hint: 'mini.layout.belowHint',
+  },
+  compact: { name: 'mini.layout.compact', short: null, hint: 'mini.layout.compactHint' },
+};
 
 /**
  * Lớp điều khiển khi chưa chạy / tạm dừng / hết bài (ô rơi vẫn thấy phía sau). Nút "◂" (góp ý 2026-10-16:
@@ -781,6 +928,8 @@ function MiniPanel({
   onAlign,
   scheme,
   fit,
+  heightChip = true,
+  gap = null,
   fitNotice = null,
   onUseMobile,
 }: PanelProps) {
@@ -800,9 +949,12 @@ function MiniPanel({
           <span aria-hidden="true">◂</span>
         </a>
         <span className="mini-badge">{t('mini.experimental')}</span>
+        {/* Trước tên bài: bên trái chỉ có ◂ + huy hiệu (bề ngang cố định) → ◂ / ▸ không xê dịch khi bấm làm phần thấy
+            qua các ngưỡng cao (220 / 130 px) đổi những thứ bên phải; tên bài co "…" nhận mọi đổi bề ngang. */}
+        {gap ? <MiniBelowGap {...gap} /> : null}
         <span className="mini-title">{title}</span>
         {fit ? (
-          <MiniFitStatus status={fit} />
+          <MiniFitStatus status={fit} showHeight={heightChip} />
         ) : fitNotice ? (
           <MiniFitNotice onOpen={fitNotice} />
         ) : null}
@@ -860,10 +1012,11 @@ function MiniPanel({
         ) : null}
       </div>
       <div className="mini-layout-row">
-        {/* Bố cục (nhớ theo máy): hai nút bật / tắt kiểu PC | Mobile của thanh dọc màn chơi. */}
+        {/* Bố cục (nhớ theo máy): ba nút bật / tắt kiểu PC | Mobile của thanh dọc màn chơi. */}
         <span className="mini-seg" role="group" aria-label={t('mini.layout.group')}>
           {MINI_LAYOUTS.map((value) => {
-            const name = t(value === 'game' ? 'mini.layout.game' : 'mini.layout.compact');
+            const text = LAYOUT_TEXT[value];
+            const name = t(text.name);
             return (
               <button
                 key={value}
@@ -871,19 +1024,15 @@ function MiniPanel({
                 className="btn btn-sm mini-seg-btn"
                 aria-pressed={layout === value}
                 aria-label={name}
-                title={t(value === 'game' ? 'mini.layout.gameHint' : 'mini.layout.compactHint')}
+                title={t(text.hint)}
                 onClick={() => onLayout(value)}
               >
-                {value === 'game' ? (
-                  <ShortLong long={name} short={t('mini.layout.gameShort')} />
-                ) : (
-                  name
-                )}
+                {text.short ? <ShortLong long={name} short={t(text.short)} /> : name}
               </button>
             );
           })}
         </span>
-        {layout === 'game' ? (
+        {isFitLayout(layout) ? (
           <button
             ref={alignRef}
             type="button"
