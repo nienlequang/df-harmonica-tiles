@@ -298,7 +298,7 @@ tiêu đề (giới hạn của trình duyệt).
   dưới ngay trên nút chế độ phải chạm — cách căn ở dưới. Điện thoại Samsung: chọn **Khớp nút game · dưới nút** — kéo
   cửa sổ pop-up xuống quá mép dưới màn hình cho mép trên nằm ngay dưới hàng nút số (ô đi lên, vòng `CHẠM` ở mép trên
   cửa sổ). **Thu nhỏ** = trang gọn có bàn nút riêng (~300 × 300, đặt ở giữa hoặc sát một bên màn hình) — dùng cho
-  điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (cửa sổ nổi không kéo giãn được
+  điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia (cửa sổ nổi không kéo giãn được
   cho thẳng hàng nút số); app nhớ lựa chọn. Nút ⓘ có mục **Bố cục nên dùng theo máy**. Trang mini còn ở kiểu **PC** thì bấm **Đổi sang Mobile**. Chạm cửa sổ mini = tạm dừng. Lúc đang dừng, nút **◂** ở góc trên trái đưa bạn về màn chơi.
 - **Cửa sổ video nổi (thử nghiệm)** (trong trang mini): ô rơi thành video Picture-in-Picture luôn nằm trên mọi app.
   **Trực tiếp** mở nhanh nhưng có thể đứng hình khi trình duyệt xuống nền; **Dựng sẵn** (chờ dựng tới 100 %) chạy cả

@@ -1335,7 +1335,7 @@ const vi = {
     'dùng "Khớp nút game · dưới nút": kéo cửa sổ pop-up xuống quá mép dưới màn hình cho mép trên nằm ngay dưới hàng nút số, chỉnh "Đáy ◂ ▸" tới khi thấy trọn trang, rồi bấm "Căn chỉnh".',
   'mini.launcherDev.other.title': 'Điện thoại Android khác',
   'mini.launcherDev.other.models':
-    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei',
+    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia',
   'mini.launcherDev.other':
     'dùng "Thu nhỏ" (có bàn nút riêng). Cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số, nên đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.',
   'mini.launcherNoFloat':
@@ -1371,7 +1371,7 @@ const vi = {
   'mini.help.device.tablet':
     'Cửa sổ nổi thu thấp được: đặt ngay trên bảng nút kèn — mép trên chạm mép trên màn hình, mép dưới ngay trên khung kèn — rồi bấm "Căn chỉnh". Ô rơi xuống, vòng CHẠM đáp ngay trên nút chế độ.',
   'mini.help.device.chinaPhone.title':
-    'Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei: "Thu nhỏ"',
+    'Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: "Thu nhỏ"',
   'mini.help.device.chinaPhone':
     'Vẫn mở bằng cửa sổ nổi / cửa sổ nhỏ của máy (cách mở ở dưới), nhưng lưu ý: cửa sổ này không kéo giãn được cho thẳng hàng nút số — "Khớp nút game" sẽ không khớp. Dùng bố cục "Thu nhỏ" (có bàn nút riêng) và đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.',
   'mini.help.samsung.title': 'Samsung',
@@ -1580,7 +1580,7 @@ const vi = {
     'Kéo thanh ở đỉnh cửa sổ để di chuyển, kéo góc để đổi cỡ: mép trên chạm mép trên màn hình, mép dưới ngay trên khung kèn ("Khớp nút game").',
   'mini.help.fit.other.title': 'Điện thoại hãng khác',
   'mini.help.fit.other':
-    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei: cửa sổ nổi không kéo giãn được cho thẳng hàng nút số — dùng "Thu nhỏ", đặt ở giữa hoặc sát một bên màn hình. Vẫn muốn thử "Khớp nút game": thường kéo thanh ở đỉnh cửa sổ để di chuyển, kéo góc / cạnh để đổi cỡ; không đổi cỡ được thì đặt cửa sổ ngay trên bảng nút rồi chỉnh "Vạch · Dời" / "Vạch · Giãn" trong "Căn chỉnh" ("Vạch · Nút 1" / "Vạch · Nút 1̇" khi không có chỉ báo cỡ) — làn ngoài cùng được tràn ra ngoài cửa sổ; cửa sổ nhỏ thu cả trang lại (8 vạch thưa / dày hơn nút thật) thì chỉnh "Vạch · Giãn".',
+    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: cửa sổ nổi không kéo giãn được cho thẳng hàng nút số — dùng "Thu nhỏ", đặt ở giữa hoặc sát một bên màn hình. Vẫn muốn thử "Khớp nút game": thường kéo thanh ở đỉnh cửa sổ để di chuyển, kéo góc / cạnh để đổi cỡ; không đổi cỡ được thì đặt cửa sổ ngay trên bảng nút rồi chỉnh "Vạch · Dời" / "Vạch · Giãn" trong "Căn chỉnh" ("Vạch · Nút 1" / "Vạch · Nút 1̇" khi không có chỉ báo cỡ) — làn ngoài cùng được tràn ra ngoài cửa sổ; cửa sổ nhỏ thu cả trang lại (8 vạch thưa / dày hơn nút thật) thì chỉnh "Vạch · Giãn".',
 
   // ── end ─────────────────────────────────────────────────────────────────
 } as const;
@@ -2913,7 +2913,7 @@ const en: Record<StringKey, string> = {
     'use "Match game buttons · below the buttons": drag the pop-up window down past the bottom of the screen until its top edge sits right under the number buttons, adjust "Bottom ◂ ▸" until the whole page shows, then press "Calibrate".',
   'mini.launcherDev.other.title': 'Other Android phones',
   'mini.launcherDev.other.models':
-    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei',
+    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia',
   'mini.launcherDev.other':
     'use "Compact" (it has its own button pad). Their floating window cannot be stretched to line up with the number buttons, so put a small window in the centre or along one side of the screen.',
   'mini.launcherNoFloat':
@@ -2948,7 +2948,7 @@ const en: Record<StringKey, string> = {
   'mini.help.device.tablet':
     'The floating window can be made short: put it right above the harmonica panel — top edge at the top of the screen, bottom edge just above the harmonica panel — then press "Calibrate". Tiles fall down, TAP rings land right above the mode buttons.',
   'mini.help.device.chinaPhone.title':
-    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei phones: "Compact"',
+    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia phones: "Compact"',
   'mini.help.device.chinaPhone':
     'Still open it in the floating / small window of the phone (steps below), but note: that window cannot be stretched to line up with the number buttons — "Match game buttons" will not match. Use the "Compact" layout (it has its own button pad) and put the small window in the centre or along one side of the screen.',
   'mini.help.samsung.title': 'Samsung',
@@ -3141,7 +3141,7 @@ const en: Record<StringKey, string> = {
     'Drag the bar at the top of the window to move it, drag a corner to resize it: top edge at the top of the screen, bottom edge just above the harmonica panel ("Match game buttons").',
   'mini.help.fit.other.title': 'Other phones',
   'mini.help.fit.other':
-    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei: the floating window cannot be stretched to line up with the number buttons — use "Compact", in the centre or along one side of the screen. Still want to try "Match game buttons": usually drag the bar at the top of the window to move it, drag a corner / edge to resize it; if it cannot be resized, place it right above the panel and adjust "Lines · Move" / "Lines · Spacing" in "Calibrate" ("Lines · Btn 1" / "Lines · Btn 1̇" when there are no size indicators) — the outer lanes may extend past the window; if the small window shrinks the whole page (the 8 lines further apart / closer than the real buttons), adjust "Lines · Spacing".',
+    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: the floating window cannot be stretched to line up with the number buttons — use "Compact", in the centre or along one side of the screen. Still want to try "Match game buttons": usually drag the bar at the top of the window to move it, drag a corner / edge to resize it; if it cannot be resized, place it right above the panel and adjust "Lines · Move" / "Lines · Spacing" in "Calibrate" ("Lines · Btn 1" / "Lines · Btn 1̇" when there are no size indicators) — the outer lanes may extend past the window; if the small window shrinks the whole page (the 8 lines further apart / closer than the real buttons), adjust "Lines · Spacing".',
 
   // ── end ─────────────────────────────────────────────────────────────────
 };

@@ -3166,7 +3166,7 @@ một commit mới từ cây hiện tại (lịch sử riêng không đưa lên)
   - **Hướng dẫn theo loại máy (`MINI_HELP_DEVICES`, đầu hộp thoại ⓘ; mở từ Căn chỉnh thì ngay sau đoạn nút chọn — giữ
     D-416):** điện thoại Samsung → "dưới nút"; máy tính bảng Samsung / OPPO, đa số máy gập (vd.
     Galaxy Z Fold khi mở ra) → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO,
-    Honor, Huawei → vẫn mở bằng cửa sổ nổi của máy nhưng cảnh báo không kéo giãn được cho thẳng hàng nút số → "Thu nhỏ"
+    Honor, Huawei, nubia → vẫn mở bằng cửa sổ nổi của máy nhưng cảnh báo không kéo giãn được cho thẳng hàng nút số → "Thu nhỏ"
     đặt "ở giữa hoặc sát một bên màn hình" — đúng lời chủ dự án (review: bản trước tự hiểu "giữa" là giữa MÉP TRÊN, vì
     bảng nút kèn chiếm dải giữa màn — y ≈ 33–70 %, x ≈ 15–85 % ảnh game — nên cửa sổ ~300 × 300 ở giữa màn che nút kèn —
     chữ giờ theo đúng lời; chủ dự án muốn "giữa mép trên" thì đổi lại chữ). Lưu ý cũ theo hãng giữ nguyên (thêm một câu

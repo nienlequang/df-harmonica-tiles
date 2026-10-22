@@ -22,7 +22,7 @@
 
 - Hướng dẫn ⓘ của trang mini có mục **Bố cục nên dùng theo máy**: điện thoại Samsung → "Khớp nút game · dưới nút";
   máy tính bảng Samsung / OPPO, đa số máy gập → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme,
-  OnePlus, vivo / iQOO, Honor, Huawei → "Thu nhỏ" (cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số)
+  OnePlus, vivo / iQOO, Honor, Huawei, nubia → "Thu nhỏ" (cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số)
   đặt ở giữa hoặc sát một bên màn hình. Các lưu ý cũ theo hãng giữ nguyên.
 - Chỉ báo **Cao quá** của "Khớp nút game" (tooltip) nhắc điện thoại Samsung dùng "dưới nút".
 - Hộp thoại **Cửa sổ mini / video nổi (thử nghiệm)** (Android) chia theo 3 nhóm máy, kèm vài dòng máy phổ biến: máy

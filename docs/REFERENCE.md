@@ -730,7 +730,7 @@ trong phần thấy.
   **Căn chỉnh**.
 - **Máy tính bảng Samsung / OPPO, đa số máy gập (vd. Galaxy Z Fold khi mở ra): Khớp nút game.** Cửa sổ nổi thu thấp
   được: đặt ngay trên bảng nút kèn rồi **Căn chỉnh**.
-- **Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei: Thu nhỏ.** Vẫn mở bằng cửa sổ
+- **Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: Thu nhỏ.** Vẫn mở bằng cửa sổ
   nổi / cửa sổ nhỏ của máy, nhưng cửa sổ này **không kéo giãn được cho thẳng hàng nút số** — **Khớp nút game** sẽ không
   khớp. Dùng **Thu nhỏ** (có bàn nút riêng), đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.
 
