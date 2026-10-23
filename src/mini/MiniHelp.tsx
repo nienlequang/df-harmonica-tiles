@@ -39,6 +39,7 @@ export const MINI_HELP_DEVICES: readonly VendorStep[] = [
 /** Thứ tự: hãng có cửa sổ nổi kiểm chứng trước, máy không có cửa sổ nổi cuối. */
 export const MINI_HELP_VENDORS: readonly VendorStep[] = [
   { id: 'samsung', title: 'mini.help.samsung.title', body: 'mini.help.samsung' },
+  { id: 'sony', title: 'mini.help.sony.title', body: 'mini.help.sony' },
   { id: 'xiaomi', title: 'mini.help.xiaomi.title', body: 'mini.help.xiaomi' },
   { id: 'huawei', title: 'mini.help.huawei.title', body: 'mini.help.huawei' },
   { id: 'oppo', title: 'mini.help.oppo.title', body: 'mini.help.oppo' },

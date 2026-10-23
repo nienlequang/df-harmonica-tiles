@@ -1329,13 +1329,14 @@ const vi = {
     'vd. Galaxy Tab S9, S10, S10 FE, Tab A9+; OPPO Pad Air, Pad Neo, Pad 2; Galaxy Z Fold, OPPO Find N khi mở ra',
   'mini.launcherDev.free':
     'dùng "Khớp nút game": đặt cửa sổ ngay trên bảng nút kèn rồi bấm "Căn chỉnh" cho 8 làn rơi thẳng 8 nút.',
-  'mini.launcherDev.samsungPhone.title': 'Điện thoại Samsung',
-  'mini.launcherDev.samsungPhone.models': 'vd. Galaxy S23 – S26, Galaxy A07, A17, A26, A36, A56',
+  'mini.launcherDev.samsungPhone.title': 'Điện thoại Samsung, Sony Xperia',
+  'mini.launcherDev.samsungPhone.models':
+    'vd. Galaxy S23 – S26, Galaxy A07, A17, A26, A36, A56; Xperia 1, 5, 10 chạy Android 15 trở lên',
   'mini.launcherDev.samsungPhone':
     'dùng "Khớp nút game · dưới nút": kéo cửa sổ pop-up xuống quá mép dưới màn hình cho mép trên nằm ngay dưới hàng nút số, chỉnh "Đáy ◂ ▸" tới khi thấy trọn trang, rồi bấm "Căn chỉnh".',
   'mini.launcherDev.other.title': 'Điện thoại Android khác',
   'mini.launcherDev.other.models':
-    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia',
+    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei (cả máy gập), nubia',
   'mini.launcherDev.other':
     'dùng "Thu nhỏ" (có bàn nút riêng). Cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số, nên đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.',
   'mini.launcherNoFloat':
@@ -1363,26 +1364,30 @@ const vi = {
     'Mở cửa sổ nổi của Android cho trình duyệt đang hiện trang này rồi đặt theo bố cục hợp với máy (mục "Bố cục nên dùng theo máy" ở trên). Cách mở theo hãng:',
   // Bố cục nên dùng theo loại máy (D-448, góp ý 2026-10-21 — thử thật trên điện thoại Samsung).
   'mini.help.devicesTitle': 'Bố cục nên dùng theo máy',
-  'mini.help.device.samsungPhone.title': 'Điện thoại Samsung: "Khớp nút game · dưới nút"',
+  'mini.help.device.samsungPhone.title':
+    'Điện thoại Samsung, Sony Xperia: "Khớp nút game · dưới nút"',
   'mini.help.device.samsungPhone':
-    'Cửa sổ pop-up của điện thoại Samsung không thu thấp được tới mức nằm gọn trên bảng nút kèn, nhưng kéo xuống quá mép dưới màn hình được. Mở dạng xem pop-up (cách mở ở dưới), chọn "Khớp nút game · dưới nút", kéo thanh ở đỉnh cửa sổ xuống cho mép trên cửa sổ nằm ngay dưới hàng nút số (phần dưới ra ngoài màn hình), rồi bấm "Căn chỉnh". Chưa thấy trọn bảng nút và làn của trang: chỉnh "Đáy ◂ ▸" ở hàng trên cùng (▸ = khoảng trống ở đáy lớn hơn). Ô đi lên từ mép dưới màn hình; vạch chạm và vòng CHẠM ở mép trên cửa sổ. Khe nhỏ giữa hàng nút số và vạch chạm (thanh của cửa sổ pop-up) là bình thường.',
+    'Cửa sổ pop-up của điện thoại Samsung và Sony Xperia (Android 15 trở lên) không thu thấp được tới mức nằm gọn trên bảng nút kèn, nhưng kéo xuống quá mép dưới màn hình được. Mở dạng xem pop-up (cách mở ở dưới), chọn "Khớp nút game · dưới nút", kéo thanh ở đỉnh cửa sổ xuống cho mép trên cửa sổ nằm ngay dưới hàng nút số (phần dưới ra ngoài màn hình), rồi bấm "Căn chỉnh". Chưa thấy trọn bảng nút và làn của trang: chỉnh "Đáy ◂ ▸" ở hàng trên cùng (▸ = khoảng trống ở đáy lớn hơn). Ô đi lên từ mép dưới màn hình; vạch chạm và vòng CHẠM ở mép trên cửa sổ. Khe nhỏ giữa hàng nút số và vạch chạm (thanh của cửa sổ pop-up) là bình thường.',
   'mini.help.device.tablet.title':
-    'Máy tính bảng Samsung / OPPO, đa số máy gập (vd. Galaxy Z Fold khi mở ra): "Khớp nút game"',
+    'Máy tính bảng Samsung / OPPO, đa số máy gập (vd. Galaxy Z Fold, OPPO Find N khi mở ra; trừ máy gập Huawei): "Khớp nút game"',
   'mini.help.device.tablet':
     'Cửa sổ nổi thu thấp được: đặt ngay trên bảng nút kèn — mép trên chạm mép trên màn hình, mép dưới ngay trên khung kèn — rồi bấm "Căn chỉnh". Ô rơi xuống, vòng CHẠM đáp ngay trên nút chế độ.',
   'mini.help.device.chinaPhone.title':
-    'Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: "Thu nhỏ"',
+    'Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (cả máy gập), nubia: "Thu nhỏ"',
   'mini.help.device.chinaPhone':
     'Vẫn mở bằng cửa sổ nổi / cửa sổ nhỏ của máy (cách mở ở dưới), nhưng lưu ý: cửa sổ này không kéo giãn được cho thẳng hàng nút số — "Khớp nút game" sẽ không khớp. Dùng bố cục "Thu nhỏ" (có bàn nút riêng) và đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.',
   'mini.help.samsung.title': 'Samsung',
   'mini.help.samsung':
     'Đa nhiệm → chạm biểu tượng trình duyệt → "Mở ở dạng xem pop-up". KHÔNG mở qua Game Booster / Gaming Hub. Game đứng hoặc ô ngừng rơi: Good Lock → MultiStar → bật Multi Focus. Điện thoại: bố cục "Khớp nút game · dưới nút" (kéo cửa sổ xuống quá mép dưới màn hình); máy tính bảng: "Khớp nút game".',
+  'mini.help.sony.title': 'Sony Xperia',
+  'mini.help.sony':
+    'Đa nhiệm → chạm biểu tượng ở đầu thẻ trình duyệt → chọn mục cửa sổ bật lên (tiếng Anh: "Pop-up window"). Mở từ Đa nhiệm, không qua Game enhancer. Android 15 trở lên: kéo một góc bất kỳ để đổi cỡ, kéo cửa sổ xuống quá mép dưới màn hình được → bố cục "Khớp nút game · dưới nút" như điện thoại Samsung.',
   'mini.help.xiaomi.title': 'Xiaomi / Redmi / POCO (HyperOS)',
   'mini.help.xiaomi':
     'Đa nhiệm → nhấn giữ thẻ trình duyệt → Cửa sổ nhỏ, hoặc mở từ thanh bên. Vài máy Redmi giá rẻ không có tính năng này. Cửa sổ nhỏ không kéo giãn được cho thẳng hàng nút số → dùng "Thu nhỏ".',
   'mini.help.huawei.title': 'Huawei / Honor',
   'mini.help.huawei':
-    'Vuốt từ mép màn hình vào và giữ → thanh đa cửa sổ → trình duyệt. Cửa sổ không kéo giãn được cho thẳng hàng nút số → dùng "Thu nhỏ".',
+    'Vuốt từ mép màn hình vào và giữ → thanh đa cửa sổ → trình duyệt. Cửa sổ không kéo giãn được cho thẳng hàng nút số → dùng "Thu nhỏ" (cả máy gập Huawei).',
   'mini.help.oppo.title': 'OPPO / realme / OnePlus',
   'mini.help.oppo':
     'Thanh bên thông minh → trình duyệt. Lưu ý: chạm ra ngoài cửa sổ trong lúc chơi có thể làm cửa sổ bị giấu vào mép màn hình ("ẩn nhanh" của realme); OnePlus có máy bị văng game khi mở cửa sổ nhỏ. Điện thoại: cửa sổ không kéo giãn được cho thẳng hàng nút số → dùng "Thu nhỏ"; máy tính bảng OPPO: "Khớp nút game".',
@@ -1572,15 +1577,15 @@ const vi = {
     'Cửa sổ nổi che mất phần nằm dưới nó. "Khớp nút game": đặt nó NGAY TRÊN bảng nút kèn — mép trên chạm mép trên màn hình, mép dưới ngay trên khung kèn, không che hàng nút chế độ (Nửa Cung … Cúi Xuống). "Khớp nút game · dưới nút" (điện thoại Samsung): mép trên NGAY DƯỚI hàng nút số, phần dưới cửa sổ ra ngoài mép màn hình. Trang đọc cỡ màn hình để làn đúng khoảng cách nút thật: kéo giãn cửa sổ tới khi chỉ báo "Rộng" (và "Cao" ở "Khớp nút game") ghi "vừa", rồi bấm "Căn chỉnh" và kéo cửa sổ sang trái / phải cho 8 vạch thẳng 8 nút số. Không có chỉ báo (máy không cho biết cỡ màn hình): kéo hai mép trái / phải ra ngoài nút 1 và nút 1̇ chừng 1/4 nút mỗi bên. Cách kéo / đổi cỡ theo hãng:',
   'mini.help.fit.controls':
     'Trong "Căn chỉnh" (chỉ cần khi kéo cửa sổ chưa đủ thẳng): "Vạch · Dời" / "Vạch · Giãn" dời / giãn 8 vạch nút số; "Vòng · Dời" / "Vòng · Giãn" dời / giãn 4 vòng nút chế độ; thứ đang chỉnh sáng lên trên màn. Bố cục "dưới nút": "Đáy ◂ ▸" ở hàng trên cùng (lúc dừng, ngoài Căn chỉnh) đổi khoảng trống ở đáy cửa sổ — phần ra ngoài màn hình: tăng (▸) tới khi thấy trọn bảng nút và làn, vạch đứt ở đáy sát mép dưới màn hình — ô hiện ra từ đó (thấy trước bao nhiêu phách = Lookahead ở màn chơi). Chỉ báo "Cao" đã trừ hao thanh kéo của cửa sổ nổi; cửa sổ thấp quá để đọc phần này thì tạm kéo cửa sổ cao hơn.',
-  'mini.help.fit.samsung.title': 'Samsung (dạng xem pop-up)',
+  'mini.help.fit.samsung.title': 'Samsung, Sony Xperia (cửa sổ pop-up)',
   'mini.help.fit.samsung':
     'Kéo thanh nhỏ ở đỉnh cửa sổ pop-up để di chuyển; kéo một góc cửa sổ để đổi cỡ. Điện thoại: kéo xuống quá mép dưới màn hình được — đặt mép trên ngay dưới hàng nút số ("dưới nút"). Khe giữa hàng nút số và vạch chạm (thanh của cửa sổ) là bình thường; vài máy thu gọn thanh này.',
-  'mini.help.fit.tablet.title': 'Máy tính bảng / máy gập',
+  'mini.help.fit.tablet.title': 'Máy tính bảng / máy gập (trừ máy gập Huawei)',
   'mini.help.fit.tablet':
     'Kéo thanh ở đỉnh cửa sổ để di chuyển, kéo góc để đổi cỡ: mép trên chạm mép trên màn hình, mép dưới ngay trên khung kèn ("Khớp nút game").',
   'mini.help.fit.other.title': 'Điện thoại hãng khác',
   'mini.help.fit.other':
-    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: cửa sổ nổi không kéo giãn được cho thẳng hàng nút số — dùng "Thu nhỏ", đặt ở giữa hoặc sát một bên màn hình. Vẫn muốn thử "Khớp nút game": thường kéo thanh ở đỉnh cửa sổ để di chuyển, kéo góc / cạnh để đổi cỡ; không đổi cỡ được thì đặt cửa sổ ngay trên bảng nút rồi chỉnh "Vạch · Dời" / "Vạch · Giãn" trong "Căn chỉnh" ("Vạch · Nút 1" / "Vạch · Nút 1̇" khi không có chỉ báo cỡ) — làn ngoài cùng được tràn ra ngoài cửa sổ; cửa sổ nhỏ thu cả trang lại (8 vạch thưa / dày hơn nút thật) thì chỉnh "Vạch · Giãn".',
+    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (cả máy gập), nubia: cửa sổ nổi không kéo giãn được cho thẳng hàng nút số — dùng "Thu nhỏ", đặt ở giữa hoặc sát một bên màn hình. Vẫn muốn thử "Khớp nút game": thường kéo thanh ở đỉnh cửa sổ để di chuyển, kéo góc / cạnh để đổi cỡ; không đổi cỡ được thì đặt cửa sổ ngay trên bảng nút rồi chỉnh "Vạch · Dời" / "Vạch · Giãn" trong "Căn chỉnh" ("Vạch · Nút 1" / "Vạch · Nút 1̇" khi không có chỉ báo cỡ) — làn ngoài cùng được tràn ra ngoài cửa sổ; cửa sổ nhỏ thu cả trang lại (8 vạch thưa / dày hơn nút thật) thì chỉnh "Vạch · Giãn".',
 
   // ── end ─────────────────────────────────────────────────────────────────
 } as const;
@@ -2907,13 +2912,14 @@ const en: Record<StringKey, string> = {
     'e.g. Galaxy Tab S9, S10, S10 FE, Tab A9+; OPPO Pad Air, Pad Neo, Pad 2; Galaxy Z Fold, OPPO Find N unfolded',
   'mini.launcherDev.free':
     'use "Match game buttons": put the window right above the harmonica panel, then press "Calibrate" so the 8 lanes fall onto the 8 buttons.',
-  'mini.launcherDev.samsungPhone.title': 'Samsung phones',
-  'mini.launcherDev.samsungPhone.models': 'e.g. Galaxy S23 – S26, Galaxy A07, A17, A26, A36, A56',
+  'mini.launcherDev.samsungPhone.title': 'Samsung and Sony Xperia phones',
+  'mini.launcherDev.samsungPhone.models':
+    'e.g. Galaxy S23 – S26, Galaxy A07, A17, A26, A36, A56; Xperia 1, 5, 10 on Android 15 or later',
   'mini.launcherDev.samsungPhone':
     'use "Match game buttons · below the buttons": drag the pop-up window down past the bottom of the screen until its top edge sits right under the number buttons, adjust "Bottom ◂ ▸" until the whole page shows, then press "Calibrate".',
   'mini.launcherDev.other.title': 'Other Android phones',
   'mini.launcherDev.other.models':
-    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia',
+    'Xiaomi / Redmi / POCO, OPPO (Reno, A), realme, OnePlus, vivo / iQOO, Honor, Huawei (foldables too), nubia',
   'mini.launcherDev.other':
     'use "Compact" (it has its own button pad). Their floating window cannot be stretched to line up with the number buttons, so put a small window in the centre or along one side of the screen.',
   'mini.launcherNoFloat':
@@ -2940,26 +2946,30 @@ const en: Record<StringKey, string> = {
   'mini.helpIntro':
     'Open an Android floating window for the browser showing this page, then place it for the layout that suits your device ("Which layout for your device" above). Steps by brand:',
   'mini.help.devicesTitle': 'Which layout for your device',
-  'mini.help.device.samsungPhone.title': 'Samsung phones: "Match game buttons · below the buttons"',
+  'mini.help.device.samsungPhone.title':
+    'Samsung and Sony Xperia phones: "Match game buttons · below the buttons"',
   'mini.help.device.samsungPhone':
-    'The pop-up window of a Samsung phone cannot be made short enough to fit above the harmonica panel, but it can be dragged down past the bottom of the screen. Open pop-up view (steps below), choose "Match game buttons · below the buttons", drag the bar at the top of the window down until the top edge of the window sits right under the number buttons (its lower part goes off the screen), then press "Calibrate". Cannot see the whole button panel and the lanes of the page: adjust "Bottom ◂ ▸" in the top row (▸ = bigger gap at the bottom). Tiles rise from the bottom of the screen; the hit line and the TAP rings are at the top edge of the window. A small gap between the number buttons and the hit line (the pop-up window bar) is normal.',
+    'The pop-up window of a Samsung or Sony Xperia phone (Android 15 or later) cannot be made short enough to fit above the harmonica panel, but it can be dragged down past the bottom of the screen. Open pop-up view (steps below), choose "Match game buttons · below the buttons", drag the bar at the top of the window down until the top edge of the window sits right under the number buttons (its lower part goes off the screen), then press "Calibrate". Cannot see the whole button panel and the lanes of the page: adjust "Bottom ◂ ▸" in the top row (▸ = bigger gap at the bottom). Tiles rise from the bottom of the screen; the hit line and the TAP rings are at the top edge of the window. A small gap between the number buttons and the hit line (the pop-up window bar) is normal.',
   'mini.help.device.tablet.title':
-    'Samsung / OPPO tablets, most foldables (e.g. Galaxy Z Fold unfolded): "Match game buttons"',
+    'Samsung / OPPO tablets, most foldables (e.g. Galaxy Z Fold, OPPO Find N unfolded; not Huawei foldables): "Match game buttons"',
   'mini.help.device.tablet':
     'The floating window can be made short: put it right above the harmonica panel — top edge at the top of the screen, bottom edge just above the harmonica panel — then press "Calibrate". Tiles fall down, TAP rings land right above the mode buttons.',
   'mini.help.device.chinaPhone.title':
-    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia phones: "Compact"',
+    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (foldables too), nubia phones: "Compact"',
   'mini.help.device.chinaPhone':
     'Still open it in the floating / small window of the phone (steps below), but note: that window cannot be stretched to line up with the number buttons — "Match game buttons" will not match. Use the "Compact" layout (it has its own button pad) and put the small window in the centre or along one side of the screen.',
   'mini.help.samsung.title': 'Samsung',
   'mini.help.samsung':
     'Recents → tap the browser icon → "Open in pop-up view". Do NOT open it through Game Booster / Gaming Hub. If the game freezes or the tiles stop: Good Lock → MultiStar → turn on Multi Focus. Phones: the "Match game buttons · below the buttons" layout (drag the window down past the bottom of the screen); tablets: "Match game buttons".',
+  'mini.help.sony.title': 'Sony Xperia',
+  'mini.help.sony':
+    'Recents → tap the icon at the top of the browser card → choose "Pop-up window". Open it from Recents, not through Game enhancer. Android 15 or later: drag any corner to resize; the window can be dragged down past the bottom of the screen → the "Match game buttons · below the buttons" layout, as on Samsung phones.',
   'mini.help.xiaomi.title': 'Xiaomi / Redmi / POCO (HyperOS)',
   'mini.help.xiaomi':
     'Recents → long-press the browser card → Small window, or open it from the sidebar. Some budget Redmi phones lack this feature. The small window cannot be stretched to line up with the number buttons → use "Compact".',
   'mini.help.huawei.title': 'Huawei / Honor',
   'mini.help.huawei':
-    'Swipe in from the screen edge and hold → multi-window dock → browser. The window cannot be stretched to line up with the number buttons → use "Compact".',
+    'Swipe in from the screen edge and hold → multi-window dock → browser. The window cannot be stretched to line up with the number buttons → use "Compact" (Huawei foldables too).',
   'mini.help.oppo.title': 'OPPO / realme / OnePlus',
   'mini.help.oppo':
     'Smart sidebar → browser. Note: touching outside the window while gaming may hide it at the screen edge (realme "quick-hide"); some OnePlus phones crash the game when opening a small window. Phones: the window cannot be stretched to line up with the number buttons → use "Compact"; OPPO tablets: "Match game buttons".',
@@ -3133,15 +3143,15 @@ const en: Record<StringKey, string> = {
     'A floating window hides whatever is under it. "Match game buttons": put it RIGHT ABOVE the harmonica panel — top edge at the top of the screen, bottom edge just above the harmonica panel, not covering the mode buttons. "Match game buttons · below the buttons" (Samsung phones): top edge RIGHT UNDER the number buttons, the lower part of the window off the bottom of the screen. The page reads your screen size so the lanes sit at the real button spacing: resize the window until the "Width" indicator (and "Height" in "Match game buttons") says OK, then press "Calibrate" and drag the window left / right until the 8 lines sit on the 8 note buttons. No indicators (the phone does not report its screen size): put the left / right edges about a quarter of a button beyond buttons 1 and 1̇. Moving / resizing by brand:',
   'mini.help.fit.controls':
     'In "Calibrate" (only needed when dragging the window is not exact enough): "Lines · Move" / "Lines · Spacing" move / space the 8 note lines; "Rings · Move" / "Rings · Spacing" move / space the 4 mode rings; whatever you are adjusting lights up on screen. The "below the buttons" layout: "Bottom ◂ ▸" in the top row (when stopped, outside Calibrate) changes the empty gap at the bottom of the window — the part off the screen: increase it (▸) until you see the whole button panel and the lanes, with the dashed line at the bottom right at the bottom of the screen — tiles appear from there (how many beats you see ahead = Lookahead on the play screen). The "Height" indicator already allows for the floating window\'s drag bar; if the window is too short to read this, make it taller for a moment.',
-  'mini.help.fit.samsung.title': 'Samsung (pop-up view)',
+  'mini.help.fit.samsung.title': 'Samsung, Sony Xperia (pop-up window)',
   'mini.help.fit.samsung':
     'Drag the small bar at the top of the pop-up window to move it; drag a corner of the window to resize it. Phones: it can be dragged down past the bottom of the screen — put its top edge right under the number buttons ("below the buttons"). A gap between the number buttons and the hit line (the window bar) is normal; some phones shrink that bar.',
-  'mini.help.fit.tablet.title': 'Tablets / foldables',
+  'mini.help.fit.tablet.title': 'Tablets / foldables (not Huawei foldables)',
   'mini.help.fit.tablet':
     'Drag the bar at the top of the window to move it, drag a corner to resize it: top edge at the top of the screen, bottom edge just above the harmonica panel ("Match game buttons").',
   'mini.help.fit.other.title': 'Other phones',
   'mini.help.fit.other':
-    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: the floating window cannot be stretched to line up with the number buttons — use "Compact", in the centre or along one side of the screen. Still want to try "Match game buttons": usually drag the bar at the top of the window to move it, drag a corner / edge to resize it; if it cannot be resized, place it right above the panel and adjust "Lines · Move" / "Lines · Spacing" in "Calibrate" ("Lines · Btn 1" / "Lines · Btn 1̇" when there are no size indicators) — the outer lanes may extend past the window; if the small window shrinks the whole page (the 8 lines further apart / closer than the real buttons), adjust "Lines · Spacing".',
+    'Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (foldables too), nubia: the floating window cannot be stretched to line up with the number buttons — use "Compact", in the centre or along one side of the screen. Still want to try "Match game buttons": usually drag the bar at the top of the window to move it, drag a corner / edge to resize it; if it cannot be resized, place it right above the panel and adjust "Lines · Move" / "Lines · Spacing" in "Calibrate" ("Lines · Btn 1" / "Lines · Btn 1̇" when there are no size indicators) — the outer lanes may extend past the window; if the small window shrinks the whole page (the 8 lines further apart / closer than the real buttons), adjust "Lines · Spacing".',
 
   // ── end ─────────────────────────────────────────────────────────────────
 };

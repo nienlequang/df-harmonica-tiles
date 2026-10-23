@@ -628,7 +628,7 @@ tùy máy: xem **Bố cục nên dùng theo máy** bên dưới:
   dưới (4 vòng mờ đánh dấu chỗ đáp), ngay trên nút phải chạm. Không có bàn nút riêng, không banner chế độ (kiểu Mobile —
   vòng + nút thật của game đã cho biết chế độ, D-403); nhãn làn nhỏ ở đỉnh. Cần **Căn chỉnh** một lần (bên dưới).
   Cửa sổ đặt trên bảng nút chỉ cao ~80–150 px: bảng lúc dừng gói thành 2 hàng (D-401).
-- **Khớp nút game · dưới nút** (D-448, thử nghiệm — cho **điện thoại Samsung**: cửa sổ pop-up có chiều cao tối thiểu
+- **Khớp nút game · dưới nút** (D-448, thử nghiệm — cho **điện thoại Samsung, Sony Xperia** (Android 15 trở lên): cửa sổ pop-up có chiều cao tối thiểu
   ~220 dp nên không nằm gọn trên bảng nút được, nhưng kéo xuống quá mép dưới màn hình được): đặt cửa sổ **ngay dưới hàng
   nút số**, phần dưới ra ngoài màn hình. Ô **đi lên** từ mép dưới màn hình; vạch chạm là **mép trên cửa sổ**, vòng
   `CHẠM` đáp ngay dưới nó ở cột nút chế độ (4 vòng mờ). 8 làn và số **Căn chỉnh** dùng chung với **Khớp nút game**.
@@ -712,7 +712,7 @@ trong phần thấy.
 1. **Mở trang:** màn chơi → kiểu **Mobile** → **Cửa sổ nổi** → (lần đầu) **Android** → hộp thoại **Cửa sổ mini / video
    nổi (thử nghiệm)** cho bài đang mở → **Mở trang mini**.
 2. **Chuyển trình duyệt thành cửa sổ nổi** (cách theo hãng ở dưới). **Khớp nút game:** đặt cửa sổ ngay trên bảng
-   nút kèn rồi **Căn chỉnh** (ở trên). **Khớp nút game · dưới nút** (điện thoại Samsung): kéo cửa sổ xuống quá mép dưới
+   nút kèn rồi **Căn chỉnh** (ở trên). **Khớp nút game · dưới nút** (điện thoại Samsung, Sony Xperia): kéo cửa sổ xuống quá mép dưới
    màn hình cho mép trên nằm ngay dưới hàng nút số rồi **Căn chỉnh**. **Thu nhỏ:** đặt ở giữa hoặc sát một bên màn hình.
 3. **Bắt đầu** → **chạm vào game** trong lúc đếm ngược (theo Cài đặt → **Phát bài**, **tối thiểu 3 giây**; panel chỉ
    nhắc "Đếm ngược: 3 giây · đổi ở Cài đặt → Phát bài" — D-367, D-381). Đếm vào cũng theo Cài đặt. Bài tự chạy tới hết.
@@ -724,13 +724,13 @@ trong phần thấy.
 
 **Bố cục nên dùng theo máy** (D-448 — đầu hộp thoại ⓘ của trang mini):
 
-- **Điện thoại Samsung: Khớp nút game · dưới nút.** Cửa sổ pop-up không thu thấp được tới mức nằm
+- **Điện thoại Samsung, Sony Xperia: Khớp nút game · dưới nút.** Cửa sổ pop-up không thu thấp được tới mức nằm
   gọn trên bảng nút kèn, nhưng kéo xuống quá mép dưới màn hình được: mở dạng xem pop-up, chọn **Khớp nút game · dưới
   nút**, kéo thanh ở đỉnh cửa sổ xuống cho mép trên nằm ngay dưới hàng nút số (phần dưới ra ngoài màn hình), rồi
   **Căn chỉnh**.
-- **Máy tính bảng Samsung / OPPO, đa số máy gập (vd. Galaxy Z Fold khi mở ra): Khớp nút game.** Cửa sổ nổi thu thấp
+- **Máy tính bảng Samsung / OPPO, đa số máy gập (vd. Galaxy Z Fold, OPPO Find N khi mở ra; trừ máy gập Huawei): Khớp nút game.** Cửa sổ nổi thu thấp
   được: đặt ngay trên bảng nút kèn rồi **Căn chỉnh**.
-- **Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei, nubia: Thu nhỏ.** Vẫn mở bằng cửa sổ
+- **Điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO, Honor, Huawei (cả máy gập), nubia: Thu nhỏ.** Vẫn mở bằng cửa sổ
   nổi / cửa sổ nhỏ của máy, nhưng cửa sổ này **không kéo giãn được cho thẳng hàng nút số** — **Khớp nút game** sẽ không
   khớp. Dùng **Thu nhỏ** (có bàn nút riêng), đặt cửa sổ nhỏ ở giữa hoặc sát một bên màn hình.
 

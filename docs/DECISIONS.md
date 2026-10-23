@@ -3166,7 +3166,7 @@ một commit mới từ cây hiện tại (lịch sử riêng không đưa lên)
   - **Hướng dẫn theo loại máy (`MINI_HELP_DEVICES`, đầu hộp thoại ⓘ; mở từ Căn chỉnh thì ngay sau đoạn nút chọn — giữ
     D-416):** điện thoại Samsung → "dưới nút"; máy tính bảng Samsung / OPPO, đa số máy gập (vd.
     Galaxy Z Fold khi mở ra) → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme, OnePlus, vivo / iQOO,
-    Honor, Huawei, nubia → vẫn mở bằng cửa sổ nổi của máy nhưng cảnh báo không kéo giãn được cho thẳng hàng nút số → "Thu nhỏ"
+    Honor, Huawei (cả máy gập), nubia → vẫn mở bằng cửa sổ nổi của máy nhưng cảnh báo không kéo giãn được cho thẳng hàng nút số → "Thu nhỏ"
     đặt "ở giữa hoặc sát một bên màn hình" — đúng lời chủ dự án (review: bản trước tự hiểu "giữa" là giữa MÉP TRÊN, vì
     bảng nút kèn chiếm dải giữa màn — y ≈ 33–70 %, x ≈ 15–85 % ảnh game — nên cửa sổ ~300 × 300 ở giữa màn che nút kèn —
     chữ giờ theo đúng lời; chủ dự án muốn "giữa mép trên" thì đổi lại chữ). Lưu ý cũ theo hãng giữ nguyên (thêm một câu
@@ -3213,3 +3213,10 @@ một commit mới từ cây hiện tại (lịch sử riêng không đưa lên)
     cửa sổ ~420–540 px và ~560–585 px — hàng trên xuống 2 dòng (cùng hàng với "Đổi sang Mobile") nên hàng ▶ bị cắt một
     phần (chấp nhận: không control nào đè nhau, ⓘ vẫn chạm được; cửa sổ đặt đúng trên điện thoại Samsung rộng ≥ ~570 px,
     và kiểu PC nên "Đổi sang Mobile").
+  - **Sửa đổi 2026-10-23 — Sony Xperia, máy gập Huawei (chủ dự án thử trên máy thật):** pop-up của Sony Xperia
+    (Android 15 trở lên — kéo góc bất kỳ, nhiều pop-up) hành xử y như Samsung: kéo riêng rộng / cao, có kích thước tối
+    thiểu, kéo được quá mép dưới màn hình → xếp cùng nhóm "dưới nút" (hộp thoại Android: "Điện thoại Samsung, Sony
+    Xperia", vd. Xperia 1, 5, 10 chạy Android 15 trở lên; ⓘ thêm mục cách mở `mini.help.sony` — Đa nhiệm → mục cửa sổ
+    bật lên, không qua Game enhancer; bản Android 17 của Sony đã bỏ đường mở từ Game enhancer). Bản Android 14 trở về
+    trước dùng pop-up kiểu cũ (một tay nắm đổi cỡ) — chưa thử nên không nhắc. Máy gập Huawei KHÔNG có cửa sổ kéo giãn
+    tự do → nhóm "Thu nhỏ" ("Huawei (cả máy gập)"; nhóm máy gập ghi "trừ máy gập Huawei"). Vẫn v1.0.8 (tag dời).

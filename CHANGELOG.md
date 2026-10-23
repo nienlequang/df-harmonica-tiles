@@ -20,15 +20,16 @@
 
 ### Thay đổi
 
-- Hướng dẫn ⓘ của trang mini có mục **Bố cục nên dùng theo máy**: điện thoại Samsung → "Khớp nút game · dưới nút";
-  máy tính bảng Samsung / OPPO, đa số máy gập → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme,
-  OnePlus, vivo / iQOO, Honor, Huawei, nubia → "Thu nhỏ" (cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số)
+- Hướng dẫn ⓘ của trang mini có mục **Bố cục nên dùng theo máy**: điện thoại Samsung, Sony Xperia (Android 15 trở lên) → "Khớp nút game · dưới nút";
+  máy tính bảng Samsung / OPPO, đa số máy gập (trừ máy gập Huawei) → "Khớp nút game"; điện thoại Xiaomi / Redmi / POCO, OPPO, realme,
+  OnePlus, vivo / iQOO, Honor, Huawei (cả máy gập), nubia → "Thu nhỏ" (cửa sổ nổi của các máy này không kéo giãn được cho thẳng hàng nút số)
   đặt ở giữa hoặc sát một bên màn hình. Các lưu ý cũ theo hãng giữ nguyên.
 - Chỉ báo **Cao quá** của "Khớp nút game" (tooltip) nhắc điện thoại Samsung dùng "dưới nút".
 - Hộp thoại **Cửa sổ mini / video nổi (thử nghiệm)** (Android) chia theo 3 nhóm máy, kèm vài dòng máy phổ biến: máy
   tính bảng Samsung / OPPO và điện thoại gập cho kéo giãn cửa sổ nổi tự do (Galaxy Tab S9, S10, S10 FE, Tab A9+; OPPO
   Pad Air, Pad Neo, Pad 2; Galaxy Z Fold, OPPO Find N khi mở ra) → "Khớp nút game"; điện thoại Samsung (Galaxy S23 –
-  S26, Galaxy A07, A17, A26, A36, A56) → "Khớp nút game · dưới nút"; điện thoại Android khác → "Thu nhỏ".
+  S26, Galaxy A07, A17, A26, A36, A56) và Sony Xperia (Xperia 1, 5, 10 chạy Android 15 trở lên) → "Khớp nút game · dưới
+  nút"; điện thoại Android khác (cả máy gập Huawei) → "Thu nhỏ". Hướng dẫn ⓘ có thêm cách mở pop-up của **Sony Xperia**.
 
 ## [1.0.7] - 2026-10-20
 

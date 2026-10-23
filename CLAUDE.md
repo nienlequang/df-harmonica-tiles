@@ -299,8 +299,9 @@ src/
              showHeight={false}` = chỉ chip "Rộng"; "Cao quá" có tooltip nhắc Samsung dùng "dưới nút"; `MiniBelowGap`
              = "Đáy ◂ px ▸" của panel lúc dừng — `useHoldRepeat` dùng chung, `onStep` trả `false` thì thôi lặp),
              wakeLock, MiniHelp (hướng dẫn theo hãng; `MINI_HELP_DEVICES` "Bố cục nên dùng theo máy" — điện thoại
-             Samsung → dưới nút, máy tính bảng Samsung / OPPO + đa số máy gập → Khớp nút game, điện thoại hãng Trung Quốc
-             → Thu nhỏ, đứng đầu hộp thoại / ngay sau đoạn nút chọn ở `section="fit"`, class `mini-help-device*` riêng —
+             Samsung + Sony Xperia (Android 15+) → dưới nút, máy tính bảng Samsung / OPPO + đa số máy gập (trừ máy gập
+             Huawei) → Khớp nút game, điện thoại hãng Trung Quốc (cả máy gập Huawei) → Thu nhỏ; cách mở theo hãng có
+             `mini.help.sony`, đứng đầu hộp thoại / ngay sau đoạn nút chọn ở `section="fit"`, class `mini-help-device*` riêng —
              D-448; `section="fit"` = kéo / đổi cỡ cửa sổ khớp nút game), MiniLauncher + MiniLauncher.css (nút Cửa sổ nổi của Player trên
              điện thoại, prop `songId` = bài đang mở: hỏi "Apple / Android" trước — PhoneChooser, chân hộp thoại
              PhoneKindLine "Đổi loại điện thoại" —, Android → hộp thoại "Cửa sổ mini / video nổi (thử nghiệm)" + "Mở
